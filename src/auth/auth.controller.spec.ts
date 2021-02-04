@@ -2,58 +2,59 @@ import { config as configure } from 'dotenv'
 configure()
 
 import { Test, TestingModule } from '@nestjs/testing'
-import { AuthController } from './auth.controller'
-import { AuthService } from './auth.service'
-import { LocalStrategy } from './local.strategy'
-import { JwtSrategy } from './jwt.strategy'
-import { JwtModule } from '@nestjs/jwt'
+import { INestApplication, ValidationPipe } from '@nestjs/common'
+import * as request from 'supertest'
+import { AppModule } from '../app.module'
 import config from '../config'
 
-describe('AuthController', () => {
-  let controller: AuthController
+jest.setTimeout(3600000)
+
+// ===============================================
+// Make sure you have enough tokens before testing
+// ===============================================
+
+describe('auth controller', () => {
+  let app: INestApplication
+  let req: () => request.SuperTest<request.Test>
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        JwtModule.register({
-          secret: config().jwt.secret,
-          signOptions: { expiresIn: config().jwt.validTime }
-        })
-      ],
-      providers: [AuthService, LocalStrategy, JwtSrategy],
-      controllers: [AuthController]
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule]
     }).compile()
 
-    controller = module.get<AuthController>(AuthController)
+    app = moduleFixture.createNestApplication()
+    app.useGlobalPipes(new ValidationPipe())
+
+    await app.init()
+
+    req = () => request(app.getHttpServer())
   })
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined()
+  describe('POST /auth/login', () => {
+    it('valid request', async () => {
+      const credentials = config().admin
+      const res = await req().post('/auth/login').send(credentials).expect(201)
+
+      const token = res.body.access_token
+
+      expect(typeof token).toBe('string')
+
+      await req()
+        .get('/devices')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
+    })
+
+    it('invalid credentials', async () => {
+      const credentials = {
+        username: '363456435636',
+        password: '546364536345'
+      }
+      await req().post('/auth/login').send(credentials).expect(401)
+    })
+
+    it('empty request', async () => {
+      await req().post('/auth/login').expect(401)
+    })
   })
-
-  // I DUNNO ....
-
-  // describe('valid credentials', () => {
-  //   it('should return access token', async () => {
-  //     const res = await controller.login({
-  //       username: process.env.ADMIN_USERNAME,
-  //       password: process.env.ADMIN_PASSWORD
-  //     })
-  //     const token = res.access_token
-  //     expect(token).toBeDefined()
-  //     expect(typeof token).toBe('string')
-  //   })
-  // })
-
-  // describe('invalid credentials', () => {
-  //   it('should return access token', async () => {
-  //     const res = await controller.login({
-  //       username: 'aaaaaaaaaaaaaaaa',
-  //       password: 'uuuuuuuuuuuuuuuu'
-  //     })
-  //     const token = res.access_token
-  //     expect(token).toBeDefined()
-  //     expect(token.length).toBeGreaterThan(1)
-  //   })
-  // })
 })
