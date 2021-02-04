@@ -56,10 +56,10 @@ npm run test:e2e
 - **WAVES_CHAIN_ID** - Waves chain id. For example testnet is 'T'  
 **Example value** - `T`
 
-- **ORANGE_URL** - Orange live object API url  
-**Example value** - `https://liveobjects.orange-business.com/api/v1`
+- **SUPPLIER_URL** - Supplier API url  
+**Example value** - `https://liveobjects.Supplier-business.com/api/v1`
 
-- **ORANGE_API_KEY** - Orange live object API key  
+- **SUPPLIER_API_KEY** - Supplier API key  
 **Example value** - `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 - **FAUCET_DEVICE** - Amount of tokens to transfer when creating new device  

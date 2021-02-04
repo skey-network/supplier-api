@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 import { WavesModule } from './waves/waves.module'
-import { OrangeModule } from './orange/orange.module'
+import { SupplierModule } from './supplier/supplier.module'
 import { AuthModule } from './auth/auth.module'
 import { DevicesModule } from './devices/devices.module'
 import { UsersModule } from './users/users.module'
@@ -11,7 +11,7 @@ import { UtilsModule } from './utils/utils.module'
   imports: [
     DevicesModule,
     WavesModule,
-    OrangeModule,
+    SupplierModule,
     AuthModule,
     UsersModule,
     KeysModule,

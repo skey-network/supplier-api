@@ -4,7 +4,7 @@ import { WavesWriteService } from '../waves/waves.write.service'
 import { WavesCompilerService } from '../waves/waves.compiler.service'
 import config from '../config'
 import { CreateConnectionDto, EditDeviceDto } from './devices.model'
-import { OrangeService } from '../orange/orange.service'
+import { SupplierService } from '../supplier/supplier.service'
 
 @Injectable()
 export class DevicesService {
@@ -12,7 +12,7 @@ export class DevicesService {
     private readonly wavesReadService: WavesReadService,
     private readonly wavesWriteService: WavesWriteService,
     private readonly wavesCompilerService: WavesCompilerService,
-    private readonly orangeService: OrangeService
+    private readonly SupplierService: SupplierService
   ) {}
 
   private deviceKey(address: string) {
@@ -107,7 +107,7 @@ export class DevicesService {
 
     const payload = { ...data, address }
     const secret = this.wavesReadService.randomString()
-    const res = await this.orangeService.connectDevice(payload, secret)
+    const res = await this.SupplierService.connectDevice(payload, secret)
 
     if (res.ok) {
       await this.wavesWriteService.insertData([
@@ -120,7 +120,7 @@ export class DevicesService {
   async disconnect(address: string) {
     await this.deviceExists(address)
 
-    const res = await this.orangeService.disconnectDevice(address)
+    const res = await this.SupplierService.disconnectDevice(address)
 
     if (res.ok) {
       await this.wavesWriteService.insertData([
@@ -132,7 +132,7 @@ export class DevicesService {
 
   async connection(address: string) {
     await this.deviceExists(address)
-    const res = await this.orangeService.connectionInfo(address)
+    const res = await this.SupplierService.connectionInfo(address)
     return { status: 'connection details', details: res.data }
   }
 

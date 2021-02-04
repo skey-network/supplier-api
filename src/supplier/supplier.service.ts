@@ -1,13 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
-import { ConnectionData } from './orange.interfaces'
+import { ConnectionData } from './supplier.interfaces'
 import config from '../config'
 import fetch, { RequestInit } from 'node-fetch'
 
 const DEVICE_NAME_PREFIX = 'urn:lo:nsid:sms:'
-const env = config().orange
+const env = config().supplier
 
 @Injectable()
-export class OrangeService {
+export class SupplierService {
   async connectDevice(connectionData: ConnectionData, secret: string) {
     const payload = this.createDevicePayload(connectionData, secret)
 
