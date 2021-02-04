@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common'
 import { DevicesController } from './devices.controller'
 import { DevicesService } from './devices.service'
-import { OrangeModule } from '../orange/orange.module'
+import { SupplierModule } from '../supplier/supplier.module'
 import { WavesModule } from '../waves/waves.module'
 
 @Module({
-  imports: [OrangeModule, WavesModule],
+  imports: [SupplierModule, WavesModule],
   controllers: [DevicesController],
   providers: [DevicesService]
 })

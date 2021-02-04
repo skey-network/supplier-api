@@ -290,7 +290,7 @@
           "devices"
         ],
         "summary": "Connect device to provider",
-        "description": "Connect device to orange live objects and update status in dApp",
+        "description": "Connect device to Supplier live objects and update status in dApp",
         "parameters": [
           {
             "name": "deviceAddress",
@@ -354,7 +354,7 @@
           "devices"
         ],
         "summary": "Disconnect device from provider",
-        "description": "Disconnect device from orange live objects and update status in dApp",
+        "description": "Disconnect device from Supplier live objects and update status in dApp",
         "parameters": [
           {
             "name": "deviceAddress",
@@ -1002,7 +1002,7 @@
           },
           "details": {
             "type": "object",
-            "description": "Additional data from orange liveobject",
+            "description": "Additional data from Supplier liveobject",
             "example": {}
           }
         }
