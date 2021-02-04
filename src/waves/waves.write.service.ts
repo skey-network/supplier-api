@@ -1,0 +1,196 @@
+import { BadRequestException, Injectable } from '@nestjs/common'
+import * as Transactions from '@waves/waves-transactions'
+import { IInvokeScriptCallStringArgument } from '@waves/waves-transactions/dist/transactions'
+import config from '../config'
+
+const { nodeUrl, seed, chainId } = config().waves
+const feeMultiplier = 10 ** 5
+
+interface Entry {
+  key: string
+  value: string | number | boolean | undefined
+}
+
+@Injectable()
+export class WavesWriteService {
+  // save data in dApp data storage
+  async insertData(data: Entry[], accountSeed = seed) {
+    const params: Transactions.IDataParams = {
+      data: data,
+      fee: 5 * feeMultiplier,
+      chainId
+    }
+
+    const tx = Transactions.data(params, accountSeed)
+    return await this.broadcast(tx)
+  }
+
+  // generate NFT key for device
+  async generateKey(address: string, validTo: number) {
+    const params: Transactions.IIssueParams = {
+      name: 'SmartKey',
+      description: `${address}_${validTo}`,
+      reissuable: false,
+      quantity: 1,
+      decimals: 0,
+      chainId,
+      fee: 5 * feeMultiplier
+    }
+
+    const tx = Transactions.issue(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  // generate n amount of NTF keys for device
+  async generateNKeys(address: string, validTo: number, amount: number) {
+    const arr = Array(amount).fill(null)
+    const promises = arr.map(() => this.generateKey(address, validTo))
+    return await Promise.all(promises)
+  }
+
+  // transfer NFT key from dApp to address
+  async transfer(address: string, assetId: string) {
+    const params: Transactions.ITransferParams = {
+      recipient: address,
+      amount: 1,
+      assetId,
+      fee: 5 * feeMultiplier,
+      chainId
+    }
+
+    const tx = Transactions.transfer(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  // transfer funds from dApp to address
+  async faucet(address: string, amount: number) {
+    const params: Transactions.ITransferParams = {
+      recipient: address,
+      fee: 5 * feeMultiplier,
+      chainId,
+      amount
+    }
+
+    const tx = Transactions.transfer(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  // set script on address
+  async setScript(script: string, seed: string) {
+    const params: Transactions.ISetScriptParams = {
+      fee: 14 * feeMultiplier,
+      script,
+      chainId
+    }
+
+    const tx = Transactions.setScript(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  // add key to device data storage
+  async addKeyToDevice(assetId: string, device: string) {
+    const params: Transactions.IInvokeScriptParams = {
+      dApp: device,
+      call: {
+        function: 'addKey',
+        args: [{ type: 'string', value: assetId }]
+      },
+      chainId,
+      fee: 9 * feeMultiplier
+    }
+
+    const tx = Transactions.invokeScript(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  // add multiple keys to device data storage
+  async addNKeysToDevice(assetIds: string[], device: string) {
+    const entries = assetIds.map((id) => ({
+      type: 'string',
+      value: id
+    })) as IInvokeScriptCallStringArgument[]
+
+    const params: Transactions.IInvokeScriptParams = {
+      dApp: device,
+      call: {
+        function: 'addManyKeys',
+        args: [{ type: 'list', value: entries }]
+      },
+      chainId,
+      fee: 9 * feeMultiplier
+    }
+
+    const tx = Transactions.invokeScript(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  // remove key from device data storage
+  async removeKeyFromDevice(assetId: string, device: string) {
+    const params: Transactions.IInvokeScriptParams = {
+      dApp: device,
+      call: {
+        function: 'removeKey',
+        args: [{ type: 'string', value: assetId }]
+      },
+      chainId,
+      fee: 9 * feeMultiplier
+    }
+
+    const tx = Transactions.invokeScript(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  // update data storage on device
+  async updateDeviceData(device: string, entries: Entry[]) {
+    const parsedEntries = this.parseEntries(entries)
+
+    const params: Transactions.IInvokeScriptParams = {
+      dApp: device,
+      call: {
+        function: 'updateData',
+        args: [{ type: 'list', value: parsedEntries }]
+      },
+      chainId,
+      fee: 9 * feeMultiplier
+    }
+
+    const tx = Transactions.invokeScript(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  // Burn key if is on dApp account
+  async burnKey(assetId: string) {
+    const params: Transactions.IBurnParams = {
+      assetId,
+      amount: 1,
+      chainId,
+      fee: 5 * feeMultiplier
+    }
+
+    const tx = Transactions.burn(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  private parseEntries(entries: Entry[]): IInvokeScriptCallStringArgument[] {
+    return entries.map((entry) => {
+      const type = typeof entry.value === 'number' ? 'int' : 'string'
+      const insert = `set#${type}#${entry.key}#${entry.value}`
+      const remove = `delete#${entry.key}`
+      const isUndefined = entry.value === undefined
+      return { type: 'string', value: isUndefined ? remove : insert }
+    })
+  }
+
+  private async broadcast(payload: Transactions.TTx) {
+    try {
+      const tx = await Transactions.broadcast(payload, nodeUrl)
+      await Transactions.waitForTx(tx.id, { apiBase: nodeUrl })
+      return tx.id
+    } catch (err) {
+      throw new BadRequestException({
+        message: 'transaction failed',
+        details: err
+      })
+    }
+  }
+}

@@ -1,0 +1,1288 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "SmartKey Api",
+    "description": "SmartKey Api documentation\n",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "email": "support@smartkeyplatform.io"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "1.0.0"
+  },
+  "externalDocs": {
+    "description": "Find out more about Swagger",
+    "url": "http://swagger.io"
+  },
+  "servers": [
+    {
+      "url": "https://virtserver.swaggerhub.com/privat19/smartkey-api/1.0.0",
+      "description": "SwaggerHub API Auto Mocking"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    },
+    {
+      "url": "https://nest-test3.herokuapp.com",
+      "description": "Production server"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "auth"
+    },
+    {
+      "name": "devices"
+    },
+    {
+      "name": "users"
+    },
+    {
+      "name": "utils"
+    },
+    {
+      "name": "keys"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Log in",
+        "description": "Log in and get JWT token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User logged in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6eyJ1c2VybmFtZSI6ImFkbWluIn0sImlhdCI6MTYxMTc1MjI4NCwiZXhwIjoxNjExODM4Njg0fQ.WWILuDGagf382Xx9Jiaur0qnVM4LI0jei_z2Q-BlQjY"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/devices": {
+      "get": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "List all devices",
+        "description": "Fetch all devices from dApp and forward to client",
+        "responses": {
+          "200": {
+            "description": "All devices listed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "example": [
+                  "3MwzVVTXiYGQsp48VX8adQ8cpqERGusRZfD",
+                  "2NBPqqjDH2eYmoHeXNPnHhLvA7D4UDQXQcx",
+                  "7MvTY6UrP8PHPv5DYTs1uCQ8HSQ3tkP6JdQ"
+                ]
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Add new device.",
+        "description": "This request performs multiple actions\n- create new waves account\n- transfer funds to this account\n- set account script on this account\n- add device address to dApp storage\n",
+        "responses": {
+          "201": {
+            "description": "Device created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{deviceAddress}": {
+      "get": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Get details of device",
+        "description": "Fetches device details",
+        "parameters": [
+          {
+            "name": "deviceAddress",
+            "in": "path",
+            "description": "Device address",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device data fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Remove device",
+        "description": "Remove device from dApp",
+        "parameters": [
+          {
+            "name": "deviceAddress",
+            "in": "path",
+            "description": "Device address",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {}
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{deviceAddress}/connect": {
+      "post": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Connect device to provider",
+        "description": "Connect device to orange live objects and update status in dApp",
+        "parameters": [
+          {
+            "name": "deviceAddress",
+            "in": "path",
+            "description": "Device address",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveObjectInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Device connected successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveObject"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{deviceAddress}/disconnect": {
+      "delete": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Disconnect device from provider",
+        "description": "Disconnect device from orange live objects and update status in dApp",
+        "parameters": [
+          {
+            "name": "deviceAddress",
+            "in": "path",
+            "description": "Device address",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device disconnected successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices/{deviceAddress}/connection": {
+      "get": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Get details of provider connection",
+        "description": "Get details of live object connection",
+        "parameters": [
+          {
+            "name": "deviceAddress",
+            "in": "path",
+            "description": "Device address",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connection details fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveObject"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Add new user",
+        "description": "Create new address, transfer funds and save in dApp storage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{userAddress}": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Get details of user",
+        "description": "Fetch user data",
+        "parameters": [
+          {
+            "name": "userAddress",
+            "in": "path",
+            "description": "User address",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User data fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/utils/faucet": {
+      "post": {
+        "tags": [
+          "utils"
+        ],
+        "summary": "Transfer funds for given address",
+        "description": "Transfer funds from dApp address to given address",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/body_1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transfer completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_201"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/utils/setup": {
+      "post": {
+        "tags": [
+          "utils"
+        ],
+        "summary": "Set dApp data",
+        "description": "Set dapp name, description and script template",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Script set",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SetupAction"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keys": {
+      "get": {
+        "tags": [
+          "keys"
+        ],
+        "summary": "List all keys",
+        "description": "Fetch keys from dApp",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of keys to be returned (defaults to 50)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "integer"
+            },
+            "example": 100
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "description": "AssetId of key to paginate after (defaults to first token)",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All users listed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Key"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "keys"
+        ],
+        "summary": "Generate new key",
+        "description": "Generate new key",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/body_2"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Key generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_201_1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keys/{assetId}/transfer/{address}": {
+      "put": {
+        "tags": [
+          "keys"
+        ],
+        "summary": "Transfer key to address",
+        "description": "Transfer key to address",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "description": "Key asset id",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Address to transfer key",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key transferred successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keys/{assetId}": {
+      "get": {
+        "tags": [
+          "keys"
+        ],
+        "summary": "Get details of key",
+        "description": "Fetches data from blockchain",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "description": "Key asset id",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key data fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Key"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keys/{assetId}/device/{address}": {
+      "delete": {
+        "tags": [
+          "keys"
+        ],
+        "summary": "Remove key from device",
+        "description": "Remove key from device data storage",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "description": "Key asset id",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Device address",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {}
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Account": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Waves address",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          },
+          "seed": {
+            "type": "string",
+            "description": "Waves backup phrase",
+            "example": "hurry elder trip wealth ring else session alarm relax grow alley polar manual hen vocal"
+          }
+        }
+      },
+      "LiveObject": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "message",
+            "example": "messgage"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional data from orange liveobject",
+            "example": {}
+          }
+        }
+      },
+      "LiveObjectInput": {
+        "type": "object",
+        "properties": {
+          "msisdn": {
+            "type": "string",
+            "description": "msisdn number from device provider",
+            "example": "3213213213"
+          },
+          "serverPhoneNumber": {
+            "type": "string",
+            "description": "serverPhoneNumber from device provider",
+            "example": "45623"
+          }
+        }
+      },
+      "SetupAction": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "example": "setScript"
+          },
+          "txHash": {
+            "type": "string",
+            "example": "F62XWdbizUTrEM6g8fukKb1z31SoMg6Pcv1dbJjxGXHj"
+          }
+        }
+      },
+      "Device": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          },
+          "balance": {
+            "type": "integer",
+            "example": 500000000
+          },
+          "ownerDapp": {
+            "type": "string",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          },
+          "connected": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "SetupPayload": {
+        "type": "object",
+        "properties": {
+          "setScript": {
+            "type": "boolean",
+            "example": true
+          },
+          "name": {
+            "type": "string",
+            "example": "RBB"
+          },
+          "description": {
+            "type": "string",
+            "example": "RBB description"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          },
+          "name": {
+            "type": "string",
+            "example": "Public user"
+          },
+          "description": {
+            "type": "string",
+            "example": "Description"
+          },
+          "balance": {
+            "type": "integer",
+            "example": 200000000
+          }
+        }
+      },
+      "Key": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "example": "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
+          },
+          "issuer": {
+            "type": "string",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          },
+          "device": {
+            "type": "string",
+            "example": "6HAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          },
+          "issuedAt": {
+            "type": "integer",
+            "example": 1592861516794
+          },
+          "validTo": {
+            "type": "integer",
+            "example": 1594861516794
+          }
+        }
+      },
+      "LoginPayload": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "admin"
+          },
+          "password": {
+            "type": "string",
+            "example": "111111"
+          }
+        }
+      },
+      "inline_response_401": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "example": 401
+          },
+          "message": {
+            "example": "Unauthorized"
+          }
+        }
+      },
+      "inline_response_400": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Short name of error",
+            "example": "custom error message"
+          },
+          "details": {
+            "type": "string",
+            "description": "Error details. For example stringified JSON body from different API",
+            "example": "{ status: 409 }"
+          }
+        }
+      },
+      "inline_response_404": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "example": 404
+          },
+          "message": {
+            "example": "Item not found"
+          }
+        }
+      },
+      "body": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Public user name",
+            "example": "RBB"
+          },
+          "description": {
+            "type": "string",
+            "description": "Public user description",
+            "example": "RBB description"
+          }
+        }
+      },
+      "body_1": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Address to transfer funds to",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Amount",
+            "example": 5000000
+          }
+        }
+      },
+      "inline_response_201": {
+        "type": "object",
+        "properties": {
+          "txHash": {
+            "type": "string",
+            "description": "Transaction hash",
+            "example": "AP5d8fLsWuQfzSVm35eU1Rhh58MVbYp1b1nnSUrSDZXW"
+          }
+        }
+      },
+      "body_2": {
+        "type": "object",
+        "properties": {
+          "device": {
+            "type": "string",
+            "description": "Address of device for key to open",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          },
+          "validTo": {
+            "type": "integer",
+            "description": "Time when key expirates",
+            "example": 1594861516794
+          }
+        }
+      },
+      "inline_response_201_1": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "description": "Asset id of key",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          }
+        }
+      },
+      "inline_response_200": {
+        "type": "object",
+        "properties": {
+          "txHash": {
+            "type": "string",
+            "description": "txHash",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          }
+        }
+      }
+    },
+    "responses": {
+      "unauthorized": {
+        "description": "User not authorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/inline_response_401"
+            }
+          }
+        }
+      },
+      "error": {
+        "description": "Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/inline_response_400"
+            }
+          }
+        }
+      },
+      "notFound": {
+        "description": "Item not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/inline_response_404"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
