@@ -4,7 +4,9 @@ import {
   IsString,
   IsNumber,
   IsBoolean,
-  IsOptional
+  IsOptional,
+  IsPositive,
+  IsInt
 } from 'class-validator'
 
 export class FaucetDto {
@@ -14,7 +16,8 @@ export class FaucetDto {
   address: string
 
   @IsNotEmpty()
-  @IsNumber()
+  @IsInt()
+  @IsPositive()
   amount: number
 }
 
