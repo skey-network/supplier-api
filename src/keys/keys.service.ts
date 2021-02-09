@@ -85,6 +85,16 @@ export class KeysService {
   }
 
   async burn(assetId: string) {
+    const { dappAddress } = config().waves
+    const balance = await this.wavesReadService.assetBalance(
+      dappAddress,
+      assetId
+    )
+
+    if (balance !== 1) {
+      throw new NotFoundException()
+    }
+
     const txHash = await this.wavesWriteService.burnKey(assetId)
     return { txHash }
   }
