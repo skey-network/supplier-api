@@ -34,7 +34,7 @@ export class WavesReadService {
 
   async assetBalance(address: string, asset: string) {
     const res = await this.request(`/assets/balance/${address}/${asset}`)
-    return res.balance
+    return res.balance as number
   }
 
   async fetchAsset(assetId: string) {
