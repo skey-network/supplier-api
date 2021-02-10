@@ -81,7 +81,7 @@ export class SupplierService {
       id: `${DEVICE_NAME_PREFIX}${args.address}`,
       name: args.iccid,
       defaultDataStreamId: args.defaultDataStreamId,
-      properties: { secretKey },
+      properties: { secretKey, keyTransferred: false },
       interfaces: [
         {
           connector: 'sms',
