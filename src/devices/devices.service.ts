@@ -110,9 +110,6 @@ export class DevicesService {
     const res = await this.SupplierService.connectDevice(payload, secret)
 
     if (res.ok) {
-      await this.wavesWriteService.insertData([
-        { key: this.deviceKey(address), value: true }
-      ])
       return { status: 'device connected', details: res.data }
     }
   }
@@ -123,9 +120,6 @@ export class DevicesService {
     const res = await this.SupplierService.disconnectDevice(address)
 
     if (res.ok) {
-      await this.wavesWriteService.insertData([
-        { key: this.deviceKey(address), value: false }
-      ])
       return { status: 'device disconnected', details: res.data }
     }
   }
