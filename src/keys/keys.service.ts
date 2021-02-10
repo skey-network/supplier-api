@@ -7,12 +7,14 @@ import { WavesWriteService } from '../waves/waves.write.service'
 import { WavesReadService } from '../waves/waves.read.service'
 import { CreateAndTransferKeyDto, CreateKeyDto } from './keys.model'
 import config from '../config'
+import { SupplierService } from 'src/supplier/supplier.service'
 
 @Injectable()
 export class KeysService {
   constructor(
     private readonly wavesWriteService: WavesWriteService,
-    private readonly wavesReadService: WavesReadService
+    private readonly wavesReadService: WavesReadService,
+    private readonly supplierService: SupplierService
   ) {}
 
   async index(limit: number, after: string) {
@@ -103,6 +105,8 @@ export class KeysService {
     const { amount, device, validTo, user } = createAndTransferKeyDto
     this.validateKeyLimit(amount)
     this.validateTimestamp(validTo)
+
+    await this.supplierService.updateTransferStatus(device, true)
 
     const keys = await this.wavesWriteService.generateNKeys(
       device,

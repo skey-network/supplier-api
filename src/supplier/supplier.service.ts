@@ -54,6 +54,22 @@ export class SupplierService {
     return res
   }
 
+  async updateTransferStatus(address: string, status: boolean) {
+    const id = `${DEVICE_NAME_PREFIX}${address}`
+    const payload = { properties: { keyTransferred: status } }
+    const res = await this.request(`/deviceMgt/devices/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+      throw new BadRequestException({
+        status: 'cannot change device status',
+        details: res.data
+      })
+    }
+  }
+
   private async request(path: string, options?: RequestInit) {
     const url = `${env.url}${path}`
 
