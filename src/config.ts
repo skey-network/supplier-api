@@ -1,6 +1,7 @@
 import * as Crypto from '@waves/ts-lib-crypto'
 
 export default () => ({
+  logs: process.env.ENABLE_LOGS === 'true',
   admin: {
     username: process.env.ADMIN_USERNAME,
     password: process.env.ADMIN_PASSWORD
