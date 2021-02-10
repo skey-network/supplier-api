@@ -8,8 +8,8 @@ const env = config().supplier
 
 @Injectable()
 export class SupplierService {
-  async connectDevice(connectionData: ConnectionData, secret: string) {
-    const payload = this.createDevicePayload(connectionData, secret)
+  async connectDevice(connectionData: ConnectionData, secretKey: string) {
+    const payload = this.createDevicePayload(connectionData, secretKey)
 
     const res = await this.request('/deviceMgt/devices', {
       method: 'POST',
@@ -76,12 +76,12 @@ export class SupplierService {
     }
   }
 
-  private createDevicePayload(args: ConnectionData, secret: string) {
+  private createDevicePayload(args: ConnectionData, secretKey: string) {
     return {
       id: `${DEVICE_NAME_PREFIX}${args.address}`,
       name: args.iccid,
       defaultDataStreamId: args.defaultDataStreamId,
-      properties: { secret },
+      properties: { secretKey },
       interfaces: [
         {
           connector: 'sms',
