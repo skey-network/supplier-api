@@ -19,6 +19,10 @@
   },
   "servers": [
     {
+      "url": "https://virtserver.swaggerhub.com/smart-key/SmartKeyRestApi/1.0.0",
+      "description": "SwaggerHub API Auto Mocking"
+    },
+    {
       "url": "https://virtserver.swaggerhub.com/privat19/smartkey-api/1.0.0",
       "description": "SwaggerHub API Auto Mocking"
     },
@@ -134,7 +138,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": true
       },
       "post": {
         "tags": [
@@ -228,6 +233,76 @@
               }
             }
           }
+        },
+        "deprecated": true
+      },
+      "put": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "edit device data",
+        "description": "Edit any values in device data storage",
+        "parameters": [
+          {
+            "name": "deviceAddress",
+            "in": "path",
+            "description": "Device address",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "key1": "value1",
+                  "key2": 2
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device date updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "txHash": "3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
         }
       },
       "delete": {
@@ -256,7 +331,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "example": {}
+                  "$ref": "#/components/schemas/inline_response_200"
                 }
               }
             }
@@ -290,7 +365,7 @@
           "devices"
         ],
         "summary": "Connect device to provider",
-        "description": "Connect device to Supplier live objects and update status in dApp",
+        "description": "Connect device to orange live objects and update status in dApp",
         "parameters": [
           {
             "name": "deviceAddress",
@@ -354,7 +429,7 @@
           "devices"
         ],
         "summary": "Disconnect device from provider",
-        "description": "Disconnect device from Supplier live objects and update status in dApp",
+        "description": "Disconnect device from orange live objects and update status in dApp",
         "parameters": [
           {
             "name": "deviceAddress",
@@ -375,8 +450,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "example": {}
+                  "$ref": "#/components/schemas/inline_response_200"
                 }
               }
             }
@@ -561,7 +635,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/utils/faucet": {
@@ -706,10 +781,64 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Key"
-                  }
+                  "type": "object",
+                  "example": [
+                    "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": true
+      },
+      "post": {
+        "tags": [
+          "keys"
+        ],
+        "summary": "Generate new keys",
+        "description": "Generate new keys. The maximum amount is set in environment variables.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/body_2"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Keys generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": [
+                    {
+                      "assetId": "7HbEUg9yWMGtJ9dNW24rvcseiPYXAAaCoe23StkcyWXS"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
                 }
               }
             }
@@ -725,29 +854,37 @@
             }
           }
         }
-      },
+      }
+    },
+    "/keys/generate_and_transfer": {
       "post": {
         "tags": [
           "keys"
         ],
-        "summary": "Generate new key",
-        "description": "Generate new key",
+        "summary": "Generate and transfer keys",
+        "description": "Generate keys for device and transfer to user. The maximum amount is set in environment variables.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body_2"
+                "$ref": "#/components/schemas/GenerateAndTransferPayload"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Key generated",
+            "description": "Keys generated",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/inline_response_201_1"
+                  "type": "object",
+                  "example": [
+                    {
+                      "assetId": "7HbEUg9yWMGtJ9dNW24rvcseiPYXAAaCoe23StkcyWXS",
+                      "txHash": "2o7Pdcr7ExYJpsGqtoSUe16y6ajdeaqJJ5Gh5dpN2LRm"
+                    }
+                  ]
                 }
               }
             }
@@ -904,6 +1041,72 @@
               }
             }
           }
+        },
+        "deprecated": true
+      },
+      "delete": {
+        "tags": [
+          "keys"
+        ],
+        "summary": "Burn key",
+        "description": "Burn key when it's on dApp account",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "description": "Key asset id",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key burned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "txHash": "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -946,7 +1149,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "example": {}
+                  "$ref": "#/components/schemas/inline_response_200"
                 }
               }
             }
@@ -1002,7 +1205,7 @@
           },
           "details": {
             "type": "object",
-            "description": "Additional data from Supplier liveobject",
+            "description": "Additional data from orange liveobject",
             "example": {}
           }
         }
@@ -1019,6 +1222,16 @@
             "type": "string",
             "description": "serverPhoneNumber from device provider",
             "example": "45623"
+          },
+          "defaultDataStreamId": {
+            "type": "string",
+            "description": "defaultDataStreamId from device provider",
+            "example": "4562334564566"
+          },
+          "iccid": {
+            "type": "string",
+            "description": "iccid number from device provider",
+            "example": "0008949031122334455666"
           }
         }
       },
@@ -1032,6 +1245,27 @@
           "txHash": {
             "type": "string",
             "example": "F62XWdbizUTrEM6g8fukKb1z31SoMg6Pcv1dbJjxGXHj"
+          }
+        }
+      },
+      "GenerateAndTransferPayload": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "string",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          },
+          "device": {
+            "type": "string",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          },
+          "amount": {
+            "type": "integer",
+            "example": 1
+          },
+          "validTo": {
+            "type": "integer",
+            "example": 1612348577959
           }
         }
       },
@@ -1169,6 +1403,16 @@
           }
         }
       },
+      "inline_response_200": {
+        "type": "object",
+        "properties": {
+          "txHash": {
+            "type": "string",
+            "description": "txHash",
+            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+          }
+        }
+      },
       "body": {
         "type": "object",
         "properties": {
@@ -1221,26 +1465,11 @@
             "type": "integer",
             "description": "Time when key expirates",
             "example": 1594861516794
-          }
-        }
-      },
-      "inline_response_201_1": {
-        "type": "object",
-        "properties": {
-          "assetId": {
+          },
+          "amount": {
             "type": "string",
-            "description": "Asset id of key",
-            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
-          }
-        }
-      },
-      "inline_response_200": {
-        "type": "object",
-        "properties": {
-          "txHash": {
-            "type": "string",
-            "description": "txHash",
-            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
+            "description": "Amount of keys to generate",
+            "example": "1"
           }
         }
       }
