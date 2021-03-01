@@ -3,7 +3,11 @@ import { WavesReadService } from '../waves/waves.read.service'
 import { WavesWriteService } from '../waves/waves.write.service'
 import { WavesCompilerService } from '../waves/waves.compiler.service'
 import config from '../config'
-import { CreateConnectionDto, EditDeviceDto } from './devices.model'
+import {
+  CreateConnectionDto,
+  CreateDeviceDto,
+  EditDeviceDto
+} from './devices.model'
 import { SupplierService } from '../supplier/supplier.service'
 
 @Injectable()
@@ -19,7 +23,7 @@ export class DevicesService {
     return `device_${address}`
   }
 
-  async create() {
+  async create(createDeviceDto: CreateDeviceDto) {
     // generate new waves account
     const { address, seed } = this.wavesReadService.generateAccount()
 
@@ -39,10 +43,7 @@ export class DevicesService {
 
       // set up device initial data
       this.wavesWriteService.insertData(
-        [
-          { key: 'dapp', value: config().waves.dappAddress },
-          { key: 'owner', value: config().waves.dappAddress }
-        ],
+        this.entriesForNewDevice(createDeviceDto),
         seed
       )
     ]
@@ -140,5 +141,19 @@ export class DevicesService {
     }
 
     return connected
+  }
+
+  private entriesForNewDevice = (payload: CreateDeviceDto) => {
+    const entries = Object.entries(payload).map(([key, value]) => ({
+      value: typeof value === 'number' ? value.toString() : value,
+      key
+    }))
+
+    const dappEntries = [
+      { key: 'dapp', value: config().waves.dappAddress },
+      { key: 'owner', value: config().waves.dappAddress }
+    ]
+
+    return [...entries, ...dappEntries]
   }
 }

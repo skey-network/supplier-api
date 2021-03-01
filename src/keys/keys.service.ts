@@ -7,7 +7,7 @@ import { WavesWriteService } from '../waves/waves.write.service'
 import { WavesReadService } from '../waves/waves.read.service'
 import { CreateAndTransferKeyDto, CreateKeyDto } from './keys.model'
 import config from '../config'
-import { SupplierService } from 'src/supplier/supplier.service'
+import { SupplierService } from '../supplier/supplier.service'
 
 @Injectable()
 export class KeysService {
