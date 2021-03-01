@@ -10,7 +10,11 @@ import {
 } from '@nestjs/common'
 import { AddressValidationPipe } from '../validators'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
-import { CreateConnectionDto, EditDeviceDto } from './devices.model'
+import {
+  CreateConnectionDto,
+  CreateDeviceDto,
+  EditDeviceDto
+} from './devices.model'
 import { DevicesService } from './devices.service'
 
 @UseGuards(JwtAuthGuard)
@@ -19,8 +23,8 @@ export class DevicesController {
   constructor(private readonly devicesService: DevicesService) {}
 
   @Post()
-  async create() {
-    return await this.devicesService.create()
+  async create(@Body() createDeviceDto: CreateDeviceDto) {
+    return await this.devicesService.create(createDeviceDto)
   }
 
   @Get()
