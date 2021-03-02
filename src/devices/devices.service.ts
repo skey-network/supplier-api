@@ -8,15 +8,13 @@ import {
   CreateDeviceDto,
   EditDeviceDto
 } from './devices.model'
-import { SupplierService } from '../supplier/supplier.service'
 
 @Injectable()
 export class DevicesService {
   constructor(
     private readonly wavesReadService: WavesReadService,
     private readonly wavesWriteService: WavesWriteService,
-    private readonly wavesCompilerService: WavesCompilerService,
-    private readonly SupplierService: SupplierService
+    private readonly wavesCompilerService: WavesCompilerService
   ) {}
 
   private deviceKey(address: string) {
@@ -101,34 +99,6 @@ export class DevicesService {
       entries
     )
     return { txHash }
-  }
-
-  async connect(address: string, data: CreateConnectionDto) {
-    await this.deviceExists(address)
-
-    const payload = { ...data, address }
-    const secret = this.wavesReadService.randomString()
-    const res = await this.SupplierService.connectDevice(payload, secret)
-
-    if (res.ok) {
-      return { status: 'device connected', details: res.data }
-    }
-  }
-
-  async disconnect(address: string) {
-    await this.deviceExists(address)
-
-    const res = await this.SupplierService.disconnectDevice(address)
-
-    if (res.ok) {
-      return { status: 'device disconnected', details: res.data }
-    }
-  }
-
-  async connection(address: string) {
-    await this.deviceExists(address)
-    const res = await this.SupplierService.connectionInfo(address)
-    return { status: 'connection details', details: res.data }
   }
 
   private async deviceExists(address: string) {

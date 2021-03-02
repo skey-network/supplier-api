@@ -19,10 +19,6 @@ export default () => ({
     nodeUrl: process.env.WAVES_NODE_URL,
     chainId: process.env.WAVES_CHAIN_ID
   },
-  supplier: {
-    apiKey: process.env.SUPPLIER_API_KEY,
-    url: process.env.SUPPLIER_URL
-  },
   faucet: {
     device: Number(process.env.FAUCET_DEVICE ?? '1000000'),
     user: Number(process.env.FAUCET_USER ?? '1000000')

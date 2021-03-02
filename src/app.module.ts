@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { WavesModule } from './waves/waves.module'
-import { SupplierModule } from './supplier/supplier.module'
 import { AuthModule } from './auth/auth.module'
 import { DevicesModule } from './devices/devices.module'
 import { UsersModule } from './users/users.module'
@@ -26,7 +25,6 @@ const logsProvider = config().logs
     ...logsModule,
     DevicesModule,
     WavesModule,
-    SupplierModule,
     AuthModule,
     UsersModule,
     KeysModule,

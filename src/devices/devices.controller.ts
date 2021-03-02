@@ -42,24 +42,6 @@ export class DevicesController {
     return await this.devicesService.destroy(address)
   }
 
-  @Get(':address/connection')
-  async connection(@Param('address', AddressValidationPipe) address: string) {
-    return await this.devicesService.connection(address)
-  }
-
-  @Post(':address/connect')
-  async connect(
-    @Param('address', AddressValidationPipe) address: string,
-    @Body() createConnectionDto: CreateConnectionDto
-  ) {
-    return await this.devicesService.connect(address, createConnectionDto)
-  }
-
-  @Delete(':address/disconnect')
-  async disconnect(@Param('address', AddressValidationPipe) address: string) {
-    return await this.devicesService.disconnect(address)
-  }
-
   // TODO not tested
   @Put(':address')
   async edit(
