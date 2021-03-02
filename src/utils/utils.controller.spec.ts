@@ -15,7 +15,7 @@ jest.setTimeout(3600000)
 // ===============================================
 
 const randomAddress = () => {
-  const { chainId } = config().waves
+  const { chainId } = config().blockchain
   return Crypto.address(Crypto.randomSeed(), chainId)
 }
 
@@ -84,7 +84,9 @@ describe('utils controller', () => {
 
       const { message } = res.body
 
-      expect(message.includes('address must be valid waves address')).toBe(true)
+      expect(message.includes('address must be valid blockchain address')).toBe(
+        true
+      )
       expect(message.includes('amount must be a positive number')).toBe(true)
       expect(message.includes('amount must be an integer number')).toBe(true)
     })

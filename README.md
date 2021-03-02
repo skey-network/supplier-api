@@ -50,13 +50,13 @@ npm test
 - **JWT_VALID_TIME** - Time for which JWT token is valid  
 **Example value** - `1h`
 
-- **WAVES_SEED** - Waves dApp backup phrase  
+- **BLOCKCHAIN_SEED** - Blockchain dApp backup phrase  
 **Example value** - `auto deposit have lake easy minute donkey solution okay account utility lady unusual actual idle`
 
-- **WAVES_NODE_URL** - Waves public node url  
-**Example value** - `https://nodes-testnet.wavesnodes.com`
+- **BLOCKCHAIN_NODE_URL** - Blockchain public node url  
+**Example value** - `https://nodes-testnet.blockchainnodes.com`
 
-- **WAVES_CHAIN_ID** - Waves chain id. For example testnet is 'T'  
+- **BLOCKCHAIN_CHAIN_ID** - Blockchain chain id. For example testnet is 'T'  
 **Example value** - `T`
 
 - **SUPPLIER_URL** - Supplier API url  

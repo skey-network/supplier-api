@@ -11,7 +11,7 @@ jest.setTimeout(3600000)
 
 describe('setup', () => {
   it('creates account with funds', async () => {
-    const genesis = 'waves private node seed with waves tokens'
+    const genesis = 'blockchain private node seed with blockchain tokens'
     const seed = Crypto.randomSeed(15)
     const address = Crypto.address(seed, 'R')
     const nodeUrl = 'http://localhost:6869'

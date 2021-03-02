@@ -1,20 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { WavesReadService } from '../waves/waves.read.service'
-import { WavesWriteService } from '../waves/waves.write.service'
-import { WavesCompilerService } from '../waves/waves.compiler.service'
+import { BlockchainReadService } from '../blockchain/blockchain.read.service'
+import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
+import { BlockchainCompilerService } from '../blockchain/blockchain.compiler.service'
 import config from '../config'
-import {
-  CreateConnectionDto,
-  CreateDeviceDto,
-  EditDeviceDto
-} from './devices.model'
+import { CreateDeviceDto, EditDeviceDto } from './devices.model'
 
 @Injectable()
 export class DevicesService {
   constructor(
-    private readonly wavesReadService: WavesReadService,
-    private readonly wavesWriteService: WavesWriteService,
-    private readonly wavesCompilerService: WavesCompilerService
+    private readonly blockchainReadService: BlockchainReadService,
+    private readonly blockchainWriteService: BlockchainWriteService,
+    private readonly blockchainCompilerService: BlockchainCompilerService
   ) {}
 
   private deviceKey(address: string) {
@@ -22,25 +18,25 @@ export class DevicesService {
   }
 
   async create(createDeviceDto: CreateDeviceDto) {
-    // generate new waves account
-    const { address, seed } = this.wavesReadService.generateAccount()
+    // generate new blockchain account
+    const { address, seed } = this.blockchainReadService.generateAccount()
 
-    // transfer waves to device account
+    // transfer blockchain to device account
     const amount = config().faucet.device
-    await this.wavesWriteService.faucet(address, amount)
+    await this.blockchainWriteService.faucet(address, amount)
 
     // set device script
-    const script = await this.wavesCompilerService.fetchScript('device')
-    await this.wavesWriteService.setScript(script, seed)
+    const script = await this.blockchainCompilerService.fetchScript('device')
+    await this.blockchainWriteService.setScript(script, seed)
 
     const promises = [
       // save device in dApp data storage
-      this.wavesWriteService.insertData([
+      this.blockchainWriteService.insertData([
         { key: this.deviceKey(address), value: false }
       ]),
 
       // set up device initial data
-      this.wavesWriteService.insertData(
+      this.blockchainWriteService.insertData(
         this.entriesForNewDevice(createDeviceDto),
         seed
       )
@@ -55,16 +51,16 @@ export class DevicesService {
 
   async index() {
     const regex = 'device_.{35}'
-    const data = await this.wavesReadService.fetchWithRegex(regex)
+    const data = await this.blockchainReadService.fetchWithRegex(regex)
     return data.map((item: any) => item.key.replace('device_', ''))
   }
 
   async show(address: string) {
-    const { dappAddress } = config().waves
+    const { dappAddress } = config().blockchain
 
     const promises = [
       this.deviceExists(address),
-      this.wavesReadService.balance(address)
+      this.blockchainReadService.balance(address)
     ]
 
     const [connected, balance] = await Promise.all(promises)
@@ -81,7 +77,7 @@ export class DevicesService {
     await this.deviceExists(address)
 
     // remove device address from dApp
-    const txHash = await this.wavesWriteService.insertData([
+    const txHash = await this.blockchainWriteService.insertData([
       { key: this.deviceKey(address), value: undefined }
     ])
 
@@ -94,7 +90,7 @@ export class DevicesService {
       key
     }))
 
-    const txHash = await this.wavesWriteService.updateDeviceData(
+    const txHash = await this.blockchainWriteService.updateDeviceData(
       address,
       entries
     )
@@ -102,7 +98,7 @@ export class DevicesService {
   }
 
   private async deviceExists(address: string) {
-    const connected = await this.wavesReadService.readData(
+    const connected = await this.blockchainReadService.readData(
       this.deviceKey(address)
     )
 
@@ -120,8 +116,8 @@ export class DevicesService {
     }))
 
     const dappEntries = [
-      { key: 'dapp', value: config().waves.dappAddress },
-      { key: 'owner', value: config().waves.dappAddress }
+      { key: 'dapp', value: config().blockchain.dappAddress },
+      { key: 'owner', value: config().blockchain.dappAddress }
     ]
 
     return [...entries, ...dappEntries]

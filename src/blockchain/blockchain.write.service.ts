@@ -3,7 +3,7 @@ import * as Transactions from '@waves/waves-transactions'
 import { IInvokeScriptCallStringArgument } from '@waves/waves-transactions/dist/transactions'
 import config from '../config'
 
-const { nodeUrl, seed, chainId } = config().waves
+const { nodeUrl, seed, chainId, dappAddress } = config().blockchain
 const feeMultiplier = 10 ** 5
 
 interface Entry {
@@ -12,7 +12,7 @@ interface Entry {
 }
 
 @Injectable()
-export class WavesWriteService {
+export class BlockchainWriteService {
   // save data in dApp data storage
   async insertData(data: Entry[], accountSeed = seed) {
     const params: Transactions.IDataParams = {
@@ -171,6 +171,25 @@ export class WavesWriteService {
     return await this.broadcast(tx)
   }
 
+  // Interact with device via key, ex open
+  async interactWithDevice(action: string, key: string, seed: string) {
+    const params: Transactions.IInvokeScriptParams = {
+      dApp: dappAddress,
+      call: {
+        function: 'deviceAction',
+        args: [
+          { type: 'string', value: key },
+          { type: 'string', value: action }
+        ]
+      },
+      chainId,
+      fee: 9 * feeMultiplier
+    }
+
+    const tx = Transactions.invokeScript(params, seed)
+    return await this.broadcast(tx)
+  }
+
   private parseEntries(entries: Entry[]): IInvokeScriptCallStringArgument[] {
     return entries.map((entry) => {
       const type = typeof entry.value === 'number' ? 'int' : 'string'
@@ -187,6 +206,7 @@ export class WavesWriteService {
       await Transactions.waitForTx(tx.id, { apiBase: nodeUrl })
       return tx.id
     } catch (err) {
+      console.log(err)
       throw new BadRequestException({
         message: 'transaction failed',
         details: err

@@ -3,20 +3,20 @@ import {
   Injectable,
   NotFoundException
 } from '@nestjs/common'
-import { WavesWriteService } from '../waves/waves.write.service'
-import { WavesReadService } from '../waves/waves.read.service'
+import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
+import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 import { CreateAndTransferKeyDto, CreateKeyDto } from './keys.model'
 import config from '../config'
 
 @Injectable()
 export class KeysService {
   constructor(
-    private readonly wavesWriteService: WavesWriteService,
-    private readonly wavesReadService: WavesReadService
+    private readonly blockchainWriteService: BlockchainWriteService,
+    private readonly blockchainReadService: BlockchainReadService
   ) {}
 
   async index(limit: number, after: string) {
-    const nfts = await this.wavesReadService.fetchNFTs(limit, after)
+    const nfts = await this.blockchainReadService.fetchNFTs(limit, after)
     const keys = nfts.map((nft: any) => {
       const { issuer, issueTimestamp, assetId, description } = nft
       const [device, validTo] = this.readDescription(description)
@@ -38,19 +38,19 @@ export class KeysService {
     this.validateTimestamp(validTo)
     this.validateKeyLimit(amount)
 
-    const keys = await this.wavesWriteService.generateNKeys(
+    const keys = await this.blockchainWriteService.generateNKeys(
       device,
       validTo,
       amount
     )
 
-    await this.wavesWriteService.addNKeysToDevice(keys, device)
+    await this.blockchainWriteService.addNKeysToDevice(keys, device)
     return keys.map((key) => ({ assetId: key }))
   }
 
   async show(assetId: string) {
-    const balance = await this.wavesReadService.assetBalance(
-      config().waves.dappAddress,
+    const balance = await this.blockchainReadService.assetBalance(
+      config().blockchain.dappAddress,
       assetId
     )
 
@@ -58,7 +58,7 @@ export class KeysService {
       throw new NotFoundException()
     }
 
-    const details = await this.wavesReadService.fetchAsset(assetId)
+    const details = await this.blockchainReadService.fetchAsset(assetId)
     const { issuer, issueTimestamp, description } = details
     const [device, validTo] = this.readDescription(description)
 
@@ -72,12 +72,12 @@ export class KeysService {
   }
 
   async transfer(assetId: string, address: string) {
-    const txHash = await this.wavesWriteService.transfer(address, assetId)
+    const txHash = await this.blockchainWriteService.transfer(address, assetId)
     return { txHash }
   }
 
   async removeFromDevice(device: string, assetId: string) {
-    const txHash = await this.wavesWriteService.removeKeyFromDevice(
+    const txHash = await this.blockchainWriteService.removeKeyFromDevice(
       assetId,
       device
     )
@@ -85,8 +85,8 @@ export class KeysService {
   }
 
   async burn(assetId: string) {
-    const { dappAddress } = config().waves
-    const balance = await this.wavesReadService.assetBalance(
+    const { dappAddress } = config().blockchain
+    const balance = await this.blockchainReadService.assetBalance(
       dappAddress,
       assetId
     )
@@ -95,7 +95,7 @@ export class KeysService {
       throw new NotFoundException()
     }
 
-    const txHash = await this.wavesWriteService.burnKey(assetId)
+    const txHash = await this.blockchainWriteService.burnKey(assetId)
     return { txHash }
   }
 
@@ -104,16 +104,16 @@ export class KeysService {
     this.validateKeyLimit(amount)
     this.validateTimestamp(validTo)
 
-    const keys = await this.wavesWriteService.generateNKeys(
+    const keys = await this.blockchainWriteService.generateNKeys(
       device,
       validTo,
       amount
     )
 
-    await this.wavesWriteService.addNKeysToDevice(keys, device)
+    await this.blockchainWriteService.addNKeysToDevice(keys, device)
 
     const promises = keys.map((key) => {
-      return this.wavesWriteService.transfer(user, key)
+      return this.blockchainWriteService.transfer(user, key)
     })
 
     const hashes = await Promise.all(promises)

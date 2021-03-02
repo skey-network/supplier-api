@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common'
-import { WavesWriteService } from '../waves/waves.write.service'
+import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { FaucetDto, SetupAction, SetupDto } from './utils.model'
 import config from '../config'
-import { WavesCompilerService } from '../waves/waves.compiler.service'
+import { BlockchainCompilerService } from '../blockchain/blockchain.compiler.service'
 
 @Injectable()
 export class UtilsService {
   constructor(
-    private readonly wavesWriteService: WavesWriteService,
-    private readonly wavesCompilerService: WavesCompilerService
+    private readonly blockchainWriteService: BlockchainWriteService,
+    private readonly blockchainCompilerService: BlockchainCompilerService
   ) {}
 
   async faucet(payload: FaucetDto) {
     const { address, amount } = payload
-    const txHash = await this.wavesWriteService.faucet(address, amount)
+    const txHash = await this.blockchainWriteService.faucet(address, amount)
     return { txHash }
   }
 
@@ -21,14 +21,14 @@ export class UtilsService {
     const steps: SetupAction[] = []
 
     if (setupDto.setScript) {
-      const script = await this.wavesCompilerService.fetchScript('dapp')
-      const { seed } = config().waves
-      const txHash = await this.wavesWriteService.setScript(script, seed)
+      const script = await this.blockchainCompilerService.fetchScript('dapp')
+      const { seed } = config().blockchain
+      const txHash = await this.blockchainWriteService.setScript(script, seed)
       steps.push({ action: 'setScript', txHash })
     }
 
     if (setupDto.name) {
-      const txHash = await this.wavesWriteService.insertData([
+      const txHash = await this.blockchainWriteService.insertData([
         {
           key: 'name',
           value: setupDto.name
@@ -38,7 +38,7 @@ export class UtilsService {
     }
 
     if (setupDto.description) {
-      const txHash = await this.wavesWriteService.insertData([
+      const txHash = await this.blockchainWriteService.insertData([
         {
           key: 'description',
           value: setupDto.description

@@ -10,14 +10,23 @@ export default () => ({
     secret: process.env.JWT_SECRET,
     validTime: process.env.JWT_VALID_TIME ?? '24h'
   },
-  waves: {
-    seed: process.env.WAVES_SEED,
+  blockchain: {
+    seed: process.env.BLOCKCHAIN_SEED,
     dappAddress: Crypto.address(
-      process.env.WAVES_SEED,
-      process.env.WAVES_CHAIN_ID
+      process.env.BLOCKCHAIN_SEED,
+      process.env.BLOCKCHAIN_CHAIN_ID
     ),
-    nodeUrl: process.env.WAVES_NODE_URL,
-    chainId: process.env.WAVES_CHAIN_ID
+    nodeUrl: process.env.BLOCKCHAIN_NODE_URL,
+    chainId: process.env.BLOCKCHAIN_CHAIN_ID
+  },
+  apps: {
+    rbb: {
+      address: Crypto.address(
+        process.env.APPS_RBB_SEED,
+        process.env.BLOCKCHAIN_CHAIN_ID
+      ),
+      seed: process.env.APPS_RBB_SEED
+    }
   },
   faucet: {
     device: Number(process.env.FAUCET_DEVICE ?? '1000000'),

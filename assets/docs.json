@@ -1185,12 +1185,12 @@
         "properties": {
           "address": {
             "type": "string",
-            "description": "Waves address",
+            "description": "Blockchain address",
             "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
           },
           "seed": {
             "type": "string",
-            "description": "Waves backup phrase",
+            "description": "Blockchain backup phrase",
             "example": "hurry elder trip wealth ring else session alarm relax grow alley polar manual hen vocal"
           }
         }

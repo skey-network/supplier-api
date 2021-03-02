@@ -2,23 +2,23 @@ import { config as configure } from 'dotenv'
 configure()
 
 import { Test, TestingModule } from '@nestjs/testing'
-import { WavesReadService } from './waves.read.service'
+import { BlockchainReadService } from './blockchain.read.service'
 import config from '../config'
-import { WavesWriteService } from './waves.write.service'
+import { BlockchainWriteService } from './blockchain.write.service'
 
 jest.setTimeout(3600000)
 
-describe('WavesReadService', () => {
-  let service: WavesReadService
-  let writeService: WavesWriteService
+describe('BlockchainReadService', () => {
+  let service: BlockchainReadService
+  let writeService: BlockchainWriteService
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [WavesReadService, WavesWriteService]
+      providers: [BlockchainReadService, BlockchainWriteService]
     }).compile()
 
-    service = module.get<WavesReadService>(WavesReadService)
-    writeService = module.get<WavesWriteService>(WavesWriteService)
+    service = module.get<BlockchainReadService>(BlockchainReadService)
+    writeService = module.get<BlockchainWriteService>(BlockchainWriteService)
   })
 
   it('should be defined', () => {
@@ -49,13 +49,13 @@ describe('WavesReadService', () => {
   })
 
   it('balance', async () => {
-    const { dappAddress } = config().waves
+    const { dappAddress } = config().blockchain
     const balance = await service.balance(dappAddress)
     expect(balance).toBeGreaterThanOrEqual(0)
   })
 
   it('assetBalance', async () => {
-    const { dappAddress } = config().waves
+    const { dappAddress } = config().blockchain
     const assetId = await writeService.generateKey('aaa', 1)
     const balance = await service.assetBalance(dappAddress, assetId)
     expect(balance).toBe(1)

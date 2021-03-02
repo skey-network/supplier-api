@@ -1,27 +1,27 @@
 import { Injectable } from '@nestjs/common'
-import { WavesReadService } from '../waves/waves.read.service'
-import { WavesWriteService } from '../waves/waves.write.service'
+import { BlockchainReadService } from '../blockchain/blockchain.read.service'
+import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import config from '../config'
 import { CreateUserDto } from './users.model'
 
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly wavesReadService: WavesReadService,
-    private readonly wavesWriteService: WavesWriteService
+    private readonly blockchainReadService: BlockchainReadService,
+    private readonly blockchainWriteService: BlockchainWriteService
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    // create waves account
-    const { address, seed } = this.wavesReadService.generateAccount()
+    // create blockchain account
+    const { address, seed } = this.blockchainReadService.generateAccount()
 
     // transfer funds from dApp to user
     const amount = config().faucet.user
-    await this.wavesWriteService.faucet(address, amount)
+    await this.blockchainWriteService.faucet(address, amount)
 
     // save name and description if given
     const data = this.makeEntries(createUserDto)
-    data && (await this.wavesWriteService.insertData(data, seed))
+    data && (await this.blockchainWriteService.insertData(data, seed))
 
     // return account info
     return { address, seed }
@@ -29,9 +29,9 @@ export class UsersService {
 
   async show(address: string) {
     const promises = [
-      this.wavesReadService.balance(address),
-      this.wavesReadService.readData('name', address),
-      this.wavesReadService.readData('description', address)
+      this.blockchainReadService.balance(address),
+      this.blockchainReadService.readData('name', address),
+      this.blockchainReadService.readData('description', address)
     ]
 
     const [balance, name, description] = await Promise.all(promises)

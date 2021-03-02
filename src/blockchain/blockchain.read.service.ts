@@ -3,10 +3,10 @@ import * as Crypto from '@waves/ts-lib-crypto'
 import config from '../config'
 import fetch from 'node-fetch'
 
-const { nodeUrl, seed, chainId, dappAddress } = config().waves
+const { nodeUrl, seed, chainId, dappAddress } = config().blockchain
 
 @Injectable()
-export class WavesReadService {
+export class BlockchainReadService {
   randomString() {
     return Crypto.privateKey(Crypto.randomSeed(15))
   }
@@ -54,6 +54,7 @@ export class WavesReadService {
       const res = await fetch(`${nodeUrl}${path}`)
       return await res.json()
     } catch (err) {
+      console.log(err)
       throw new BadRequestException({
         message: 'failed to fetch data from blockchain',
         details: err

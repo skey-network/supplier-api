@@ -2,7 +2,7 @@ import { config as configure } from 'dotenv'
 configure()
 
 import { Test, TestingModule } from '@nestjs/testing'
-import { WavesWriteService } from './waves.write.service'
+import { BlockchainWriteService } from './blockchain.write.service'
 import * as Crypto from '@waves/ts-lib-crypto'
 import config from '../config'
 import { readFileSync } from 'fs'
@@ -10,13 +10,13 @@ import { readFileSync } from 'fs'
 jest.setTimeout(3600000)
 
 const generateAccount = () => {
-  const chainId = config().waves.chainId
+  const chainId = config().blockchain.chainId
   const seed = Crypto.randomSeed()
   return { seed, address: Crypto.address(seed, chainId) }
 }
 
-describe('WavesWriteService', () => {
-  let service: WavesWriteService
+describe('blockchainWriteService', () => {
+  let service: BlockchainWriteService
 
   const ctx = {
     device: {
@@ -29,10 +29,10 @@ describe('WavesWriteService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [WavesWriteService]
+      providers: [BlockchainWriteService]
     }).compile()
 
-    service = module.get<WavesWriteService>(WavesWriteService)
+    service = module.get<BlockchainWriteService>(BlockchainWriteService)
   })
 
   it('should be defined', () => {
@@ -86,7 +86,7 @@ describe('WavesWriteService', () => {
 
   it('setScript', async () => {
     const script = readFileSync('./assets/dapp.base64').toString()
-    const { seed } = config().waves
+    const { seed } = config().blockchain
 
     const txHash = await service.setScript(script, seed)
 
@@ -103,11 +103,11 @@ describe('WavesWriteService', () => {
   })
 
   it('prepare for next tests', async () => {
-    const { dappAddress } = config().waves
+    const { dappAddress } = config().blockchain
     const script = readFileSync('./assets/device.base64').toString()
     ctx.device = generateAccount()
-    ctx.assetId1 = await service.generateKey('aaa', 1)
-    ctx.assetId2 = await service.generateKey('bbb', 2)
+    ctx.assetId1 = await service.generateKey(ctx.device.address, 9999999999999)
+    ctx.assetId2 = await service.generateKey(ctx.device.address, 9999999999999)
     await service.faucet(ctx.device.address, 10000000)
     await service.setScript(script, ctx.device.seed)
     await service.insertData(
@@ -139,6 +139,16 @@ describe('WavesWriteService', () => {
       [ctx.assetId1, ctx.assetId2],
       ctx.device.address
     )
+    expect(typeof txHash).toBe('string')
+  })
+
+  it('interactWithDevice', async () => {
+    const txHash = await service.interactWithDevice(
+      'open',
+      ctx.assetId1,
+      config().blockchain.seed
+    )
+
     expect(typeof txHash).toBe('string')
   })
 })

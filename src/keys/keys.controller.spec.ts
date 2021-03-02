@@ -6,7 +6,6 @@ import { INestApplication, ValidationPipe } from '@nestjs/common'
 import * as request from 'supertest'
 import { AppModule } from '../app.module'
 import config from '../config'
-import { userInfo } from 'os'
 
 jest.setTimeout(3600000)
 
@@ -88,7 +87,9 @@ describe('keys controller', () => {
 
       const { message } = res.body
 
-      expect(message.includes('device must be valid waves address')).toBe(true)
+      expect(message.includes('device must be valid blockchain address')).toBe(
+        true
+      )
       expect(message.includes('amount must be a positive number')).toBe(true)
     })
 
@@ -152,7 +153,7 @@ describe('keys controller', () => {
 
       expect(res.body).toBeInstanceOf(Object)
       expect(res.body.assetId).toBe(assetId)
-      expect(res.body.issuer).toBe(config().waves.dappAddress)
+      expect(res.body.issuer).toBe(config().blockchain.dappAddress)
       expect(res.body.issueTimestamp).toBeGreaterThanOrEqual(0)
       expect(res.body.device).toBe(ctx.device)
       expect(res.body.validTo).toBeGreaterThanOrEqual(res.body.issueTimestamp)
@@ -297,8 +298,12 @@ describe('keys controller', () => {
 
       const { message } = res.body
 
-      expect(message.includes('device must be valid waves address')).toBe(true)
-      expect(message.includes('user must be valid waves address')).toBe(true)
+      expect(message.includes('device must be valid blockchain address')).toBe(
+        true
+      )
+      expect(message.includes('user must be valid blockchain address')).toBe(
+        true
+      )
       expect(message.includes('user must be a string')).toBe(true)
       expect(message.includes('user should not be empty')).toBe(true)
       expect(message.includes('amount must be a positive number')).toBe(true)

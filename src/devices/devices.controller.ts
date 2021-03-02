@@ -10,11 +10,7 @@ import {
 } from '@nestjs/common'
 import { AddressValidationPipe } from '../validators'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
-import {
-  CreateConnectionDto,
-  CreateDeviceDto,
-  EditDeviceDto
-} from './devices.model'
+import { CreateDeviceDto, EditDeviceDto } from './devices.model'
 import { DevicesService } from './devices.service'
 
 @UseGuards(JwtAuthGuard)

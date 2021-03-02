@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import { WavesModule } from './waves/waves.module'
+import { BlockchainModule } from './blockchain/blockchain.module'
 import { AuthModule } from './auth/auth.module'
 import { DevicesModule } from './devices/devices.module'
 import { UsersModule } from './users/users.module'
@@ -9,6 +9,9 @@ import { MorganInterceptor, MorganModule } from 'nest-morgan'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import config from './config'
 import { LoggerMiddleware } from './Logger'
+import { AppsController } from './apps/apps.controller';
+import { AppsService } from './apps/apps.service';
+import { AppsModule } from './apps/apps.module';
 
 const logsModule = config().logs ? [MorganModule.forRoot()] : []
 const logsProvider = config().logs
@@ -24,13 +27,15 @@ const logsProvider = config().logs
   imports: [
     ...logsModule,
     DevicesModule,
-    WavesModule,
+    BlockchainModule,
     AuthModule,
     UsersModule,
     KeysModule,
-    UtilsModule
+    UtilsModule,
+    AppsModule
   ],
-  providers: [...logsProvider]
+  providers: [...logsProvider, AppsService],
+  controllers: [AppsController]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

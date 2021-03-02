@@ -15,11 +15,11 @@ class ValidationError extends BadRequestException {
 }
 
 export const IsAddress = Matches(addressRegex, {
-  message: (args) => `${args.property} must be valid waves address`
+  message: (args) => `${args.property} must be valid blockchain address`
 })
 
 export const IsAssetId = Matches(assetIdRegex, {
-  message: (args) => `${args.property} must be valid waves assetId`
+  message: (args) => `${args.property} must be valid blockchain assetId`
 })
 
 export class AddressValidationPipe extends ValidationPipe {
