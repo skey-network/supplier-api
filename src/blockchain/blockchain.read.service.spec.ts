@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { BlockchainReadService } from './blockchain.read.service'
 import config from '../config'
 import { BlockchainWriteService } from './blockchain.write.service'
+import * as Transactions from '@waves/waves-transactions'
 
 jest.setTimeout(3600000)
 
@@ -71,5 +72,24 @@ describe('BlockchainReadService', () => {
     await writeService.generateKey('aaa', 1)
     const data = await service.fetchNFTs(1)
     expect(data[0].assetId).toBeDefined()
+  })
+
+  it('fetchAllNFTs', async () => {
+    const account = service.generateAccount()
+    await writeService.faucet(account.address, 1000)
+
+    const keys = await writeService.generateNKeys('aaa', 1, 5)
+
+    await Promise.all(
+      keys.map((key) => {
+        return writeService.transfer(account.address, key)
+      })
+    )
+
+    await Transactions.nodeInteraction.waitNBlocks(2)
+
+    const result = await service.fetchAllNFTs(account.address, 2)
+
+    expect(result.map((item) => item.assetId).sort()).toEqual(keys.sort())
   })
 })

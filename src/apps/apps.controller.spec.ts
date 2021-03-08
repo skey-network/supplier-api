@@ -39,12 +39,54 @@ describe('apps controller', () => {
 
   describe('POST /rbb_address/open/device', () => {
     it('valid request', async () => {
+      const deviceRes = await req()
+        .post('/devices')
+        .set('Authorization', `Bearer ${token}`)
+
+      await req()
+        .post('/keys/generate_and_transfer')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          amount: 1,
+          user: config().apps.rbb.address,
+          device: deviceRes.body.address,
+          validTo: 9999999999999999
+        })
+
       const res = await req()
-        .post(`/apps/${config().apps.rbb.address}/open/${'aaa'}`)
+        .post(
+          `/apps/${config().apps.rbb.address}/open/${deviceRes.body.address}`
+        )
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
 
       expect(typeof res.body.txHash).toBe('string')
+    })
+
+    it('no key found', async () => {
+      const deviceRes = await req()
+        .post('/devices')
+        .set('Authorization', `Bearer ${token}`)
+
+      const res = await req()
+        .post(
+          `/apps/${config().apps.rbb.address}/open/${deviceRes.body.address}`
+        )
+        .set('Authorization', `Bearer ${token}`)
+        .expect(400)
+
+      expect(
+        res.body.message.includes('no valid keys found for this device')
+      ).toBe(true)
+    })
+
+    it('invalid address', async () => {
+      const res = await req()
+        .post(`/apps/${config().apps.rbb.address}/open/${'aaa'}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(400)
+
+      expect(res.body.message.includes('address is not valid')).toBe(true)
     })
 
     it('unauthorized', async () => {
