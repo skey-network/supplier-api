@@ -478,6 +478,138 @@
         }
       }
     },
+    "/devices/{deviceAddress}/keys/{keyAssetId}": {
+      "post": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Add key to device whitelist",
+        "description": "Add key to device whitelist",
+        "parameters": [
+          {
+            "name": "deviceAddress",
+            "in": "path",
+            "description": "Device address",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k"
+          },
+          {
+            "name": "keyAssetId",
+            "in": "path",
+            "description": "Key asset id",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key added successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Remove key from device whitelist",
+        "description": "Remove key from device whitelist",
+        "parameters": [
+          {
+            "name": "deviceAddress",
+            "in": "path",
+            "description": "Device address",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k"
+          },
+          {
+            "name": "keyAssetId",
+            "in": "path",
+            "description": "Key asset id",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/devices/{deviceAddress}/connection": {
       "get": {
         "tags": [
@@ -1109,73 +1241,6 @@
           }
         }
       }
-    },
-    "/keys/{assetId}/device/{address}": {
-      "delete": {
-        "tags": [
-          "keys"
-        ],
-        "summary": "Remove key from device",
-        "description": "Remove key from device data storage",
-        "parameters": [
-          {
-            "name": "assetId",
-            "in": "path",
-            "description": "Key asset id",
-            "required": true,
-            "style": "simple",
-            "explode": false,
-            "schema": {
-              "type": "string"
-            },
-            "example": "9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf"
-          },
-          {
-            "name": "address",
-            "in": "path",
-            "description": "Device address",
-            "required": true,
-            "style": "simple",
-            "explode": false,
-            "schema": {
-              "type": "string"
-            },
-            "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Key removed successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/inline_response_200"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "User not authorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/inline_response_401"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Item not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/inline_response_404"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -1185,12 +1250,12 @@
         "properties": {
           "address": {
             "type": "string",
-            "description": "Blockchain address",
+            "description": "Waves address",
             "example": "3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud"
           },
           "seed": {
             "type": "string",
-            "description": "Blockchain backup phrase",
+            "description": "Waves backup phrase",
             "example": "hurry elder trip wealth ring else session alarm relax grow alley polar manual hen vocal"
           }
         }
