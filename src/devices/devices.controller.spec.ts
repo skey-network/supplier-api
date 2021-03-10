@@ -201,4 +201,92 @@ describe('devices controller', () => {
         .expect(404)
     })
   })
+
+  describe('DELETE /devices/:address/keys/:assetId', () => {
+    let assetId = ''
+    let device = ''
+
+    it('prepare', async () => {
+      req = () => request(app.getHttpServer())
+      const validTo = Date.now() + config().key.minDuration + 3_600_000
+
+      const deviceRes = await req()
+        .post('/devices')
+        .set('Authorization', `Bearer ${token}`)
+      device = deviceRes.body.address
+
+      const res = await req()
+        .post('/keys')
+        .send({ device: device, validTo, amount: 1 })
+        .set('Authorization', `Bearer ${token}`)
+      assetId = res.body[0].assetId
+    })
+
+    it('valid request', async () => {
+      req = () => request(app.getHttpServer())
+      const res = await req()
+        .delete(`/devices/${device}/keys/${assetId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
+
+      expect(typeof res.body.txHash).toBe('string')
+    })
+
+    it('unauthorized', async () => {
+      await req().delete(`/devices/${device}/keys/${assetId}`).expect(401)
+    })
+
+    it('invalid token', async () => {
+      await req()
+        .delete(`/devices/${device}/keys/${assetId}`)
+        .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
+        .expect(401)
+    })
+  })
+
+  describe('POST /devices/:address/keys/:assetId', () => {
+    let assetId = ''
+    let device = ''
+    let fakeDevice = ''
+
+    beforeAll(async () => {
+      const validTo = Date.now() + config().key.minDuration + 3_600_000
+
+      const deviceRes = await req()
+        .post('/devices')
+        .set('Authorization', `Bearer ${token}`)
+      device = deviceRes.body.address
+
+      const fakeDeviceRes = await req()
+        .post('/devices')
+        .set('Authorization', `Bearer ${token}`)
+      fakeDevice = fakeDeviceRes.body.address
+
+      const res = await req()
+        .post('/keys')
+        .send({ device: fakeDevice, validTo, amount: 1 })
+        .set('Authorization', `Bearer ${token}`)
+      assetId = res.body[0].assetId
+    })
+
+    it('valid request', async () => {
+      const res = await req()
+        .post(`/devices/${device}/keys/${assetId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201)
+
+      expect(typeof res.body.txHash).toBe('string')
+    })
+
+    it('unauthorized', async () => {
+      await req().post(`/devices/${device}/keys/${assetId}`).expect(401)
+    })
+
+    it('invalid token', async () => {
+      await req()
+        .post(`/devices/${device}/keys/${assetId}`)
+        .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
+        .expect(401)
+    })
+  })
 })
