@@ -76,14 +76,6 @@ export class KeysService {
     return { txHash }
   }
 
-  async removeFromDevice(device: string, assetId: string) {
-    const txHash = await this.blockchainWriteService.removeKeyFromDevice(
-      assetId,
-      device
-    )
-    return { txHash }
-  }
-
   async burn(assetId: string) {
     const { dappAddress } = config().blockchain
     const balance = await this.blockchainReadService.assetBalance(

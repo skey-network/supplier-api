@@ -73,6 +73,24 @@ export class DevicesService {
     }
   }
 
+  async addKey(address: string, assetId: string) {
+    const txHash = await this.blockchainWriteService.addKeyToDevice(
+      assetId,
+      address
+    )
+
+    return { txHash }
+  }
+
+  async removeKey(address: string, assetId: string) {
+    const txHash = await this.blockchainWriteService.removeKeyFromDevice(
+      assetId,
+      address
+    )
+
+    return { txHash }
+  }
+
   async destroy(address: string) {
     await this.deviceExists(address)
 

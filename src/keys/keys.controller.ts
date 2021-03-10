@@ -50,14 +50,6 @@ export class KeysController {
     return await this.keysService.transfer(assetId, address)
   }
 
-  @Delete(':assetId/device/:address')
-  async removeFromDevice(
-    @Param('assetId', AssetIdValidationPipe) assetId: string,
-    @Param('address', AddressValidationPipe) address: string
-  ) {
-    return await this.keysService.removeFromDevice(address, assetId)
-  }
-
   @Delete(':assetId')
   async burn(@Param('assetId', AssetIdValidationPipe) assetId: string) {
     return await this.keysService.burn(assetId)

@@ -387,39 +387,4 @@ describe('keys controller', () => {
         .expect(401)
     })
   })
-
-  describe('DELETE /keys/:assetId/device/:address', () => {
-    let assetId = ''
-
-    beforeAll(async () => {
-      const validTo = Date.now() + config().key.minDuration + 3_600_000
-
-      const res = await req()
-        .post('/keys/generate_and_transfer')
-        .send({ device: ctx.device, validTo, amount: 1, user: ctx.user })
-        .set('Authorization', `Bearer ${token}`)
-
-      assetId = res.body[0].assetId
-    })
-
-    it('valid request', async () => {
-      const res = await req()
-        .delete(`/keys/${assetId}/device/${ctx.device}`)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200)
-
-      expect(typeof res.body.txHash).toBe('string')
-    })
-
-    it('unauthorized', async () => {
-      await req().delete(`/keys/${assetId}/device/${ctx.device}`).expect(401)
-    })
-
-    it('invalid token', async () => {
-      await req()
-        .delete(`/keys/${assetId}/device/${ctx.device}`)
-        .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
-        .expect(401)
-    })
-  })
 })
