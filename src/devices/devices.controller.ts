@@ -8,7 +8,7 @@ import {
   Body,
   Put
 } from '@nestjs/common'
-import { AddressValidationPipe } from '../validators'
+import { AddressValidationPipe, AssetIdValidationPipe } from '../validators'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { CreateDeviceDto, EditDeviceDto } from './devices.model'
 import { DevicesService } from './devices.service'
@@ -36,6 +36,22 @@ export class DevicesController {
   @Delete(':address')
   async destroy(@Param('address', AddressValidationPipe) address: string) {
     return await this.devicesService.destroy(address)
+  }
+
+  @Post(':address/keys/:assetId')
+  async addKey(
+    @Param('address', AddressValidationPipe) address: string,
+    @Param('assetId', AssetIdValidationPipe) assetId: string
+  ) {
+    return await this.devicesService.addKey(address, assetId)
+  }
+
+  @Delete(':address/keys/:assetId')
+  async removeKey(
+    @Param('address', AddressValidationPipe) address: string,
+    @Param('assetId', AssetIdValidationPipe) assetId: string
+  ) {
+    return await this.devicesService.removeKey(address, assetId)
   }
 
   // TODO not tested

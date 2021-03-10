@@ -35,73 +35,6 @@ describe('blockchainWriteService', () => {
     service = module.get<BlockchainWriteService>(BlockchainWriteService)
   })
 
-  it('should be defined', () => {
-    expect(service).toBeDefined()
-  })
-
-  it('insertData', async () => {
-    const txHash = await service.insertData([
-      { key: 'test_key', value: 'test_value' }
-    ])
-    expect(typeof txHash).toBe('string')
-  })
-
-  it('generateKey', async () => {
-    const { address } = generateAccount()
-    const validTo = Date.now()
-
-    const txHash = await service.generateKey(address, validTo)
-
-    expect(typeof txHash).toBe('string')
-  })
-
-  it('generateNKeys', async () => {
-    const { address } = generateAccount()
-    const validTo = Date.now()
-    const amount = config().key.maxAmount < 4 ? 1 : 4
-
-    const hashes = await service.generateNKeys(address, validTo, amount)
-
-    expect(hashes).toBeInstanceOf(Array)
-    expect(typeof hashes[0]).toBe('string')
-  })
-
-  it('transfer', async () => {
-    // depends on generateKey
-
-    const { address } = generateAccount()
-    const assetId = await service.generateKey('aaa', 1)
-    const txHash = await service.transfer(address, assetId)
-
-    expect(typeof txHash).toBe('string')
-  })
-
-  it('faucet', async () => {
-    const { address } = generateAccount()
-
-    const txHash = await service.faucet(address, 10000000)
-
-    expect(typeof txHash).toBe('string')
-  })
-
-  it('setScript', async () => {
-    const script = readFileSync('./assets/dapp.base64').toString()
-    const { seed } = config().blockchain
-
-    const txHash = await service.setScript(script, seed)
-
-    expect(typeof txHash).toBe('string')
-  })
-
-  it('burnKey', async () => {
-    // depends on generateKey
-
-    const assetId = await service.generateKey('aaa', 12)
-    const txHash = await service.burnKey(assetId)
-
-    expect(typeof txHash).toBe('string')
-  })
-
   it('prepare for next tests', async () => {
     const { dappAddress } = config().blockchain
     const script = readFileSync('./assets/device.base64').toString()
@@ -149,6 +82,14 @@ describe('blockchainWriteService', () => {
       config().blockchain.seed
     )
 
+    expect(typeof txHash).toBe('string')
+  })
+
+  it('removeKeyFromDevice', async () => {
+    const txHash = await service.removeKeyFromDevice(
+      ctx.assetId2,
+      ctx.device.address
+    )
     expect(typeof txHash).toBe('string')
   })
 })
