@@ -19,15 +19,6 @@ export default () => ({
     nodeUrl: process.env.BLOCKCHAIN_NODE_URL,
     chainId: process.env.BLOCKCHAIN_CHAIN_ID
   },
-  apps: {
-    rbb: {
-      address: Crypto.address(
-        process.env.APPS_RBB_SEED,
-        process.env.BLOCKCHAIN_CHAIN_ID
-      ),
-      seed: process.env.APPS_RBB_SEED
-    }
-  },
   faucet: {
     device: Number(process.env.FAUCET_DEVICE ?? '1000000'),
     user: Number(process.env.FAUCET_USER ?? '1000000')
