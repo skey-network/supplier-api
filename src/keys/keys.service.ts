@@ -7,12 +7,14 @@ import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 import { CreateAndTransferKeyDto, CreateKeyDto } from './keys.model'
 import config from '../config'
+import { SupplierService } from '../supplier/supplier.service'
 
 @Injectable()
 export class KeysService {
   constructor(
     private readonly blockchainWriteService: BlockchainWriteService,
-    private readonly blockchainReadService: BlockchainReadService
+    private readonly blockchainReadService: BlockchainReadService,
+    private readonly supplierService: SupplierService
   ) {}
 
   async index(limit: number, after: string) {
@@ -95,6 +97,8 @@ export class KeysService {
     const { amount, device, validTo, user } = createAndTransferKeyDto
     this.validateKeyLimit(amount)
     this.validateTimestamp(validTo)
+
+    await this.supplierService.updateTransferStatus(device, true)
 
     const keys = await this.blockchainWriteService.generateNKeys(
       device,
