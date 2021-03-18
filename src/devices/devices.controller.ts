@@ -10,8 +10,6 @@ import {
 } from '@nestjs/common'
 import { AddressValidationPipe, AssetIdValidationPipe } from '../validators'
 import { JwtAuthGuard } from '../auth/jwt.guard'
-import { CreateDeviceDto, EditDeviceDto } from './devices.model'
-import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import {
   CreateDeviceDto,
   EditDeviceDto,
