@@ -17,7 +17,7 @@ describe('auth controller', () => {
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
@@ -47,7 +47,7 @@ describe('auth controller', () => {
 
     it('invalid credentials', async () => {
       const credentials = {
-        username: '363456435636',
+        email: '363456435636',
         password: '546364536345'
       }
       await req().post('/auth/login').send(credentials).expect(401)

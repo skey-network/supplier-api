@@ -24,7 +24,7 @@ describe('app e2e', () => {
     key: ''
   }
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
@@ -41,7 +41,7 @@ describe('app e2e', () => {
     const res = await req()
       .post('/auth/login')
       .send({
-        username: process.env.ADMIN_USERNAME,
+        email: process.env.ADMIN_EMAIL,
         password: process.env.ADMIN_PASSWORD
       })
       .expect(201)
@@ -134,13 +134,6 @@ describe('app e2e', () => {
   it('DELETE /devices/:address', async () => {
     await req()
       .delete(`/devices/${ctx.device}`)
-      .set('Authorization', `Bearer ${ctx.token}`)
-      .expect(200)
-  })
-
-  it('DELETE /keys/:assetId/device/:address', async () => {
-    await req()
-      .delete(`/keys/${ctx.key}/device/${ctx.device}`)
       .set('Authorization', `Bearer ${ctx.token}`)
       .expect(200)
   })

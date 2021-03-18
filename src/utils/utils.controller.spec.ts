@@ -24,7 +24,7 @@ describe('utils controller', () => {
   let req: () => request.SuperTest<request.Test>
   let token = ''
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
@@ -37,7 +37,7 @@ describe('utils controller', () => {
     req = () => request(app.getHttpServer())
 
     const tokenRequest = await req().post('/auth/login').send({
-      username: process.env.ADMIN_USERNAME,
+      email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD
     })
     token = tokenRequest.body.access_token
