@@ -1,5 +1,5 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common'
-import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { JwtAuthGuard } from '../auth/jwt.guard'
 import { FaucetDto, SetupDto } from './utils.model'
 import { UtilsService } from './utils.service'
 

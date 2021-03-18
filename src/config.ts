@@ -3,7 +3,7 @@ import * as Crypto from '@waves/ts-lib-crypto'
 export default () => ({
   logs: process.env.ENABLE_LOGS === 'true',
   admin: {
-    username: process.env.ADMIN_USERNAME,
+    email: process.env.ADMIN_EMAIL,
     password: process.env.ADMIN_PASSWORD
   },
   jwt: {
@@ -30,5 +30,9 @@ export default () => ({
   key: {
     minDuration: Number(process.env.KEY_MIN_DURATION ?? '3600000'),
     maxAmount: Number(process.env.KEY_MAX_AMOUNT ?? '50')
+  },
+  db: {
+    key: process.env.DB_KEY,
+    path: process.env.DB_PATH
   }
 })
