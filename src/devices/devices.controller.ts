@@ -10,7 +10,11 @@ import {
 } from '@nestjs/common'
 import { AddressValidationPipe, AssetIdValidationPipe } from '../validators'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
-import { CreateDeviceDto, EditDeviceDto } from './devices.model'
+import {
+  CreateDeviceDto,
+  EditDeviceDto,
+  CreateConnectionDto
+} from './devices.model'
 import { DevicesService } from './devices.service'
 
 @UseGuards(JwtAuthGuard)
@@ -61,5 +65,23 @@ export class DevicesController {
     @Body() editDeviceDto: EditDeviceDto
   ) {
     return await this.devicesService.edit(address, editDeviceDto)
+  }
+
+  @Get(':address/connection')
+  async connection(@Param('address', AddressValidationPipe) address: string) {
+    return await this.devicesService.connection(address)
+  }
+
+  @Post(':address/connect')
+  async connect(
+    @Param('address', AddressValidationPipe) address: string,
+    @Body() createConnectionDto: CreateConnectionDto
+  ) {
+    return await this.devicesService.connect(address, createConnectionDto)
+  }
+
+  @Delete(':address/disconnect')
+  async disconnect(@Param('address', AddressValidationPipe) address: string) {
+    return await this.devicesService.disconnect(address)
   }
 }

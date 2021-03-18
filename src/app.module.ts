@@ -9,6 +9,7 @@ import { MorganInterceptor, MorganModule } from 'nest-morgan'
 import { APP_INTERCEPTOR } from '@nestjs/core'
 import config from './config'
 import { LoggerMiddleware } from './Logger'
+import { SupplierModule } from './supplier/supplier.module'
 
 const logsModule = config().logs ? [MorganModule.forRoot()] : []
 const logsProvider = config().logs
@@ -28,7 +29,8 @@ const logsProvider = config().logs
     AuthModule,
     UsersModule,
     KeysModule,
-    UtilsModule
+    UtilsModule,
+    SupplierModule
   ],
   providers: [...logsProvider],
   controllers: []

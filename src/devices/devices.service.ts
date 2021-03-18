@@ -3,14 +3,20 @@ import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainCompilerService } from '../blockchain/blockchain.compiler.service'
 import config from '../config'
-import { CreateDeviceDto, EditDeviceDto } from './devices.model'
+import {
+  CreateDeviceDto,
+  EditDeviceDto,
+  CreateConnectionDto
+} from './devices.model'
+import { SupplierService } from '../supplier/supplier.service'
 
 @Injectable()
 export class DevicesService {
   constructor(
     private readonly blockchainReadService: BlockchainReadService,
     private readonly blockchainWriteService: BlockchainWriteService,
-    private readonly blockchainCompilerService: BlockchainCompilerService
+    private readonly blockchainCompilerService: BlockchainCompilerService,
+    private readonly supplierService: SupplierService
   ) {}
 
   private deviceKey(address: string) {
@@ -113,6 +119,34 @@ export class DevicesService {
       entries
     )
     return { txHash }
+  }
+
+  async connect(address: string, data: CreateConnectionDto) {
+    await this.deviceExists(address)
+
+    const payload = { ...data, address }
+    const secret = this.blockchainReadService.randomString()
+    const res = await this.supplierService.connectDevice(payload, secret)
+
+    if (res.ok) {
+      return { status: 'device connected', details: res.data }
+    }
+  }
+
+  async disconnect(address: string) {
+    await this.deviceExists(address)
+
+    const res = await this.supplierService.disconnectDevice(address)
+
+    if (res.ok) {
+      return { status: 'device disconnected', details: res.data }
+    }
+  }
+
+  async connection(address: string) {
+    await this.deviceExists(address)
+    const res = await this.supplierService.connectionInfo(address)
+    return { status: 'connection details', details: res.data }
   }
 
   private async deviceExists(address: string) {
