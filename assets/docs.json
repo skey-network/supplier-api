@@ -55,6 +55,9 @@
     },
     {
       "name": "keys"
+    },
+    {
+      "name": "admins"
     }
   ],
   "paths": {
@@ -1241,6 +1244,301 @@
           }
         }
       }
+    },
+    "/admins": {
+      "get": {
+        "tags": [
+          "admins"
+        ],
+        "summary": "Get all admins",
+        "description": "Get all admins",
+        "responses": {
+          "200": {
+            "description": "Admin data fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Admin"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User role must be admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_403"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admins"
+        ],
+        "summary": "Create new admin",
+        "description": "Create new admin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdmin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Admin created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admin"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User role must be admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_403"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admins/{id}": {
+      "get": {
+        "tags": [
+          "admins"
+        ],
+        "summary": "Get admin by id",
+        "description": "Get admin by id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "admin id",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "integer"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admin"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User role must be admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_403"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "admins"
+        ],
+        "summary": "Update admin",
+        "description": "Update admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "admin id",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "integer"
+            },
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdmin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Admin created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Admin"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User role must be admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_403"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admins"
+        ],
+        "summary": "Delete admin",
+        "description": "Delete admin",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "admin id",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "integer"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin deleted"
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User role must be admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_403"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_404"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1272,6 +1570,46 @@
             "type": "object",
             "description": "Additional data from orange liveobject",
             "example": {}
+          }
+        }
+      },
+      "Admin": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "id",
+            "example": 1
+          },
+          "email": {
+            "type": "string",
+            "description": "Email",
+            "example": "admin@test.pl"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role",
+            "example": "admin"
+          }
+        }
+      },
+      "CreateAdmin": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email",
+            "example": "admin@test.pl"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password",
+            "example": "ldkfjghdkjgh"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role",
+            "example": "admin"
           }
         }
       },
@@ -1537,6 +1875,17 @@
             "example": "1"
           }
         }
+      },
+      "inline_response_403": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "example": 403
+          },
+          "message": {
+            "example": "Forbitten"
+          }
+        }
       }
     },
     "responses": {
@@ -1566,6 +1915,16 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/inline_response_404"
+            }
+          }
+        }
+      },
+      "forbitten": {
+        "description": "User role must be admin",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/inline_response_403"
             }
           }
         }

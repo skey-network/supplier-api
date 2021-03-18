@@ -7,6 +7,7 @@ const enableLogging = config().logs
 
 export class LoggerMiddleware implements NestMiddleware {
   use(req: Request, _: Response, next: NextFunction) {
+    Logger.log(req.path)
     Logger.log(JSON.stringify(req.body, null, 2))
     next()
   }
