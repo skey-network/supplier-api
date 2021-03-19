@@ -668,6 +668,47 @@
         }
       }
     },
+    "/devices/device_message": {
+      "post": {
+        "tags": [
+          "devices"
+        ],
+        "summary": "Endpoint for IoT",
+        "description": "Endpoint for IoT",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "successfull",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/users": {
       "post": {
         "tags": [
@@ -679,7 +720,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body"
+                "$ref": "#/components/schemas/body_1"
               }
             }
           }
@@ -785,7 +826,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body_1"
+                "$ref": "#/components/schemas/body_2"
               }
             }
           }
@@ -947,7 +988,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/body_2"
+                "$ref": "#/components/schemas/body_3"
               }
             }
           }
@@ -1819,6 +1860,26 @@
       "body": {
         "type": "object",
         "properties": {
+          "timestamp": {
+            "type": "string",
+            "description": "timestamp",
+            "example": "2021-03-19T10:06:34Z"
+          },
+          "source": {
+            "type": "string",
+            "description": "device id",
+            "example": "urn:lo:nsid:sms:3P2pTpQhGbZrJXATKr75A1uZjeTrb4PHMYf"
+          },
+          "payload": {
+            "type": "string",
+            "description": "message data",
+            "example": "Lon:20.518440 Lat:53.786247 External Voltage"
+          }
+        }
+      },
+      "body_1": {
+        "type": "object",
+        "properties": {
           "name": {
             "type": "string",
             "description": "Public user name",
@@ -1831,7 +1892,7 @@
           }
         }
       },
-      "body_1": {
+      "body_2": {
         "type": "object",
         "properties": {
           "address": {
@@ -1856,7 +1917,7 @@
           }
         }
       },
-      "body_2": {
+      "body_3": {
         "type": "object",
         "properties": {
           "device": {
