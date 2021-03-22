@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException
+} from '@nestjs/common'
 import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainCompilerService } from '../blockchain/blockchain.compiler.service'
@@ -20,6 +25,8 @@ export class DevicesService {
     private readonly blockchainCompilerService: BlockchainCompilerService,
     private readonly supplierService: SupplierService
   ) {}
+
+  private logger = new Logger(DevicesService.name)
 
   private deviceKey(address: string) {
     return `device_${address}`
@@ -143,15 +150,21 @@ export class DevicesService {
   }
 
   async deviceMessage(message: DeviceMessageDto) {
+    this.logger.log('Received new message')
+    this.logger.log(message)
+
     const SOURCE_PREFIX = 'urn:lo:nsid:sms:'
 
     const address = message.source.replace(SOURCE_PREFIX, '')
+    this.logger.log(`Address is ${address}`)
 
     if (!addressRegex.test(address)) {
+      this.logger.error('Address is invalid')
       throw new BadRequestException('address is invalid')
     }
 
     const { lat, lng } = this.parseLocation(message.payload)
+    this.logger.log(`${lat}, ${lng}`)
 
     if (!lat && !lng) return {}
 
@@ -159,6 +172,8 @@ export class DevicesService {
       { key: 'lat', value: lat },
       { key: 'lng', value: lng }
     ])
+
+    this.logger.log(txHash)
 
     return { txHash }
   }
