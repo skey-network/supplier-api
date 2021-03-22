@@ -13,7 +13,8 @@ import { JwtAuthGuard } from '../auth/jwt.guard'
 import {
   CreateDeviceDto,
   EditDeviceDto,
-  CreateConnectionDto
+  CreateConnectionDto,
+  DeviceMessageDto
 } from './devices.model'
 import { DevicesService } from './devices.service'
 
@@ -83,5 +84,10 @@ export class DevicesController {
   @Delete(':address/disconnect')
   async disconnect(@Param('address', AddressValidationPipe) address: string) {
     return await this.devicesService.disconnect(address)
+  }
+
+  @Post('device_message')
+  async deviceMessage(@Body() deviceMessageDto: DeviceMessageDto) {
+    return await this.devicesService.deviceMessage(deviceMessageDto)
   }
 }

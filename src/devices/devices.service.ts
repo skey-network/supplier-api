@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainCompilerService } from '../blockchain/blockchain.compiler.service'
@@ -6,9 +6,11 @@ import config from '../config'
 import {
   CreateDeviceDto,
   EditDeviceDto,
-  CreateConnectionDto
+  CreateConnectionDto,
+  DeviceMessageDto
 } from './devices.model'
 import { SupplierService } from '../supplier/supplier.service'
+import { addressRegex } from '../validators'
 
 @Injectable()
 export class DevicesService {
@@ -80,19 +82,13 @@ export class DevicesService {
   }
 
   async addKey(address: string, assetId: string) {
-    const txHash = await this.blockchainWriteService.addKeyToDevice(
-      assetId,
-      address
-    )
+    const txHash = await this.blockchainWriteService.addKeyToDevice(assetId, address)
 
     return { txHash }
   }
 
   async removeKey(address: string, assetId: string) {
-    const txHash = await this.blockchainWriteService.removeKeyFromDevice(
-      assetId,
-      address
-    )
+    const txHash = await this.blockchainWriteService.removeKeyFromDevice(assetId, address)
 
     return { txHash }
   }
@@ -114,10 +110,7 @@ export class DevicesService {
       key
     }))
 
-    const txHash = await this.blockchainWriteService.updateDeviceData(
-      address,
-      entries
-    )
+    const txHash = await this.blockchainWriteService.updateDeviceData(address, entries)
     return { txHash }
   }
 
@@ -149,10 +142,46 @@ export class DevicesService {
     return { status: 'connection details', details: res.data }
   }
 
+  async deviceMessage(message: DeviceMessageDto) {
+    const SOURCE_PREFIX = 'urn:lo:nsid:sms:'
+
+    const address = message.source.replace(SOURCE_PREFIX, '')
+
+    if (!addressRegex.test(address)) {
+      throw new BadRequestException('address is invalid')
+    }
+
+    const { lat, lng } = this.parseLocation(message.payload)
+
+    if (!lat && !lng) return {}
+
+    const txHash = await this.blockchainWriteService.updateDeviceData(address, [
+      { key: 'lat', value: lat },
+      { key: 'lng', value: lng }
+    ])
+
+    return { txHash }
+  }
+
+  parseLocation(payload: string) {
+    const LAT_PREFIX = 'Lat:'
+    const LNG_PREFIX = 'Lon:'
+
+    if (!payload) return {}
+
+    const parts = payload.split(' ')
+
+    const latString = parts.find((x) => x.substring(0, LAT_PREFIX.length) === LAT_PREFIX)
+    const lngString = parts.find((x) => x.substring(0, LNG_PREFIX.length) === LNG_PREFIX)
+
+    const lat = latString?.replace(LAT_PREFIX, '')
+    const lng = lngString?.replace(LNG_PREFIX, '')
+
+    return { lat, lng }
+  }
+
   private async deviceExists(address: string) {
-    const connected = await this.blockchainReadService.readData(
-      this.deviceKey(address)
-    )
+    const connected = await this.blockchainReadService.readData(this.deviceKey(address))
 
     if (connected === undefined) {
       throw new NotFoundException()

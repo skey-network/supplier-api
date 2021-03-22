@@ -62,3 +62,14 @@ export class CreateDeviceDto {
 export interface EditDeviceDto {
   [key: string]: string | number | boolean | null
 }
+
+export class DeviceMessageDto {
+  @IsString()
+  timestamp: string
+
+  @IsString()
+  payload: string
+
+  @IsString()
+  source: string
+}

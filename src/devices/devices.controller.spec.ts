@@ -38,6 +38,35 @@ describe('devices controller', () => {
     token = tokenRequest.body.access_token
   })
 
+  describe('POST /devices/device_message', () => {
+    let device = ''
+
+    beforeAll(async () => {
+      const res = await req()
+        .post('/devices')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201)
+
+      device = res.body.address
+    })
+
+    it('valid request', async () => {
+      const payload = {
+        timestamp: '',
+        source: `urn:lo:nsid:sms:${device}`,
+        payload: 'Lat:25.11 Lon:65.678'
+      }
+
+      const res = await req()
+        .post('/devices/device_message')
+        .set('Authorization', `Bearer ${token}`)
+        .send(payload)
+        .expect(201)
+
+      expect(res.body.txHash).toBeDefined()
+    })
+  })
+
   describe('POST /devices', () => {
     it('valid request', async () => {
       const res = await req()
@@ -95,9 +124,7 @@ describe('devices controller', () => {
     let device = ''
 
     beforeAll(async () => {
-      const res = await req()
-        .post('/devices')
-        .set('Authorization', `Bearer ${token}`)
+      const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
       device = res.body.address
     })
 
@@ -149,9 +176,7 @@ describe('devices controller', () => {
     let device = ''
 
     beforeAll(async () => {
-      const res = await req()
-        .post('/devices')
-        .set('Authorization', `Bearer ${token}`)
+      const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
       device = res.body.address
     })
 
