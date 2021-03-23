@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException
-} from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainCompilerService } from '../blockchain/blockchain.compiler.service'
@@ -16,6 +11,7 @@ import {
 } from './devices.model'
 import { SupplierService } from '../supplier/supplier.service'
 import { addressRegex } from '../validators'
+import { Logger } from '../logger/Logger.service'
 
 @Injectable()
 export class DevicesService {
