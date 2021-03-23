@@ -48,10 +48,7 @@ export class AdminsController implements OnApplicationBootstrap {
   }
 
   @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateAdminDto: UpdateAdminDto
-  ) {
+  async update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
     return await this.adminsService.update(id, updateAdminDto)
   }
 
@@ -69,7 +66,7 @@ export class AdminsController implements OnApplicationBootstrap {
     })
 
     if (result) {
-      const message = `Created admin user with credentials: ${email} ${password}`
+      const message = `Created admin user with credentials: ${email}`
       this.logger.log(Array(message.length).fill('=').join(''))
       this.logger.log(message)
       this.logger.log(Array(message.length).fill('=').join(''))
