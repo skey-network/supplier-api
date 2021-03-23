@@ -149,16 +149,8 @@ export class DevicesService {
     return { status: 'connection details', details: res.data }
   }
 
-  async deviceMessage(message: any) {
+  async deviceMessage(message: DeviceMessageDto) {
     this.logger.log('Received new message')
-    this.logger.log('body')
-    this.logger.log(message)
-    this.logger.log('typeof body')
-    this.logger.log(typeof message)
-    this.logger.log('body.payload')
-    this.logger.log(message.payload)
-    this.logger.log('typeof body.payload')
-    this.logger.log(typeof message.payload)
 
     const SOURCE_PREFIX = 'urn:lo:nsid:sms:'
 

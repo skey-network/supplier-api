@@ -96,7 +96,7 @@ export class DevicesController {
   }
 
   @Post('device_message')
-  async deviceMessage(@Body() deviceMessageDto: any) {
+  async deviceMessage(@Body() deviceMessageDto: DeviceMessageDto) {
     return await this.devicesService.deviceMessage(deviceMessageDto)
   }
 }
