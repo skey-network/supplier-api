@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  Logger,
   OnApplicationBootstrap,
   Param,
   Post,
@@ -17,6 +16,7 @@ import { EntityNotFoundError, QueryFailedError } from 'typeorm'
 import { CreateAdminDto, UpdateAdminDto } from './admins.model'
 import { AdminsService } from './admins.service'
 import config from '../config'
+import { Logger } from '../logger/Logger.service'
 
 @Controller('admins')
 @UseGuards(AdminGuard)
@@ -48,10 +48,7 @@ export class AdminsController implements OnApplicationBootstrap {
   }
 
   @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateAdminDto: UpdateAdminDto
-  ) {
+  async update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
     return await this.adminsService.update(id, updateAdminDto)
   }
 

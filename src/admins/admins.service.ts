@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException
-} from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Admin } from './admins.entity'
@@ -11,9 +7,7 @@ import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class AdminsService {
-  constructor(
-    @InjectRepository(Admin) private adminsRepository: Repository<Admin>
-  ) {}
+  constructor(@InjectRepository(Admin) private adminsRepository: Repository<Admin>) {}
 
   async findAll() {
     return (await this.adminsRepository.find()).map((admin) => ({

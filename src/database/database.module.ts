@@ -11,7 +11,8 @@ import config from '../config'
       key: config().db.key,
       busyErrorRetry: 100,
       autoLoadEntities: true,
-      synchronize: true
+      synchronize: true,
+      logging: config().logLevel === 'debug'
     })
   ]
 })

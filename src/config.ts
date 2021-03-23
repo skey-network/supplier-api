@@ -1,7 +1,8 @@
 import * as Crypto from '@waves/ts-lib-crypto'
 
 export default () => ({
-  logs: process.env.ENABLE_LOGS === 'true',
+  logLevel: (process.env.LOG_LEVEL ?? 'standard') as 'none' | 'standard' | 'debug',
+  port: Number(process.env.PORT ?? '3000'),
   admin: {
     email: process.env.ADMIN_EMAIL,
     password: process.env.ADMIN_PASSWORD
