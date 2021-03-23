@@ -38,8 +38,11 @@ npm test
 - **PORT** - Port to run the app  
 **Example value** - `3000`
 
--  **ADMIN_USERNAME** - Admin username  
-**Example value** - `admin`
+- **LOG_LEVEL** - Set log level. Available modes are ( none, standard, debug ). Logs are also saved in logs.txt file.
+**Example value** - `standard`
+
+-  **ADMIN_EMAIL** - Admin email  
+**Example value** - `admin@admin.com`
 
 -  **ADMIN_PASSWORD** - Admin password  
 **Example value** - `password`
