@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  Logger,
   OnApplicationBootstrap,
   Param,
   Post,
@@ -17,6 +16,7 @@ import { EntityNotFoundError, QueryFailedError } from 'typeorm'
 import { CreateAdminDto, UpdateAdminDto } from './admins.model'
 import { AdminsService } from './admins.service'
 import config from '../config'
+import { Logger } from '../logger/Logger.service'
 
 @Controller('admins')
 @UseGuards(AdminGuard)

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import * as Transactions from '@waves/waves-transactions'
 import { IInvokeScriptCallStringArgument } from '@waves/waves-transactions/dist/transactions'
+import { Logger } from '../logger/Logger.service'
 import config from '../config'
 
 const { nodeUrl, seed, chainId, dappAddress } = config().blockchain
@@ -13,6 +14,8 @@ interface Entry {
 
 @Injectable()
 export class BlockchainWriteService {
+  private logger = new Logger(BlockchainWriteService.name)
+
   // save data in dApp data storage
   async insertData(data: Entry[], accountSeed = seed) {
     const params: Transactions.IDataParams = {
@@ -204,9 +207,9 @@ export class BlockchainWriteService {
     try {
       const tx = await Transactions.broadcast(payload, nodeUrl)
       await Transactions.waitForTx(tx.id, { apiBase: nodeUrl })
+      this.logger.debug(`Tx ${tx.id} sent, type ${tx.type}`)
       return tx.id
     } catch (err) {
-      console.log(err)
       throw new BadRequestException({
         message: 'transaction failed',
         details: err
