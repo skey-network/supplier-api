@@ -7,11 +7,14 @@ import {
   CreateDeviceDto,
   EditDeviceDto,
   CreateConnectionDto,
-  DeviceMessageDto
+  DeviceMessageDto,
+  DeviceCommandDto,
+  DeviceCommandResponse
 } from './devices.model'
 import { SupplierService } from '../supplier/supplier.service'
 import { addressRegex } from '../validators'
 import { Logger } from '../logger/Logger.service'
+import { getInstance } from 'skey-lib'
 
 @Injectable()
 export class DevicesService {
@@ -171,6 +174,44 @@ export class DevicesService {
     this.logger.log(txHash)
 
     return { txHash }
+  }
+
+  async deviceCommand(
+    deviceAddress: string,
+    deviceCommandDto: DeviceCommandDto
+  ): Promise<DeviceCommandResponse> {
+    const { nodeUrl, chainId, dappAddress, seed } = config().blockchain
+    const lib = getInstance({ nodeUrl, chainId })
+
+    const key = await lib.fetchKey(deviceCommandDto.keyAssetId)
+
+    if (key.issuer !== dappAddress) {
+      const txHash = await lib.interactWithDeviceAs(
+        deviceCommandDto.keyAssetId,
+        key.issuer,
+        deviceCommandDto.action,
+        seed,
+        deviceCommandDto.senderAddress
+      )
+
+      return { type: 'invoke_script', txHash }
+    }
+
+    const height = await lib.fetchHeight()
+    const owner = await lib.fetchKeyOwner(deviceCommandDto.keyAssetId, height - 1)
+
+    const addressHasKey = owner === deviceCommandDto.senderAddress
+
+    const whitelist = (await lib.fetchKeyWhitelist(deviceAddress))
+      .filter((item) => item.status === 'active')
+      .map((item) => item.assetId)
+
+    const keyIsWhitelisted = whitelist.includes(deviceCommandDto.keyAssetId)
+
+    return {
+      type: 'direct',
+      canInteract: addressHasKey && keyIsWhitelisted
+    }
   }
 
   parseLocation(payload: string) {

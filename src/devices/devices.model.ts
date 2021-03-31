@@ -73,3 +73,20 @@ export class DeviceMessageDto {
   @IsString()
   source: string
 }
+
+export class DeviceCommandDto {
+  @IsString()
+  action: string
+
+  @IsString()
+  senderAddress: string
+
+  @IsString()
+  keyAssetId: string
+}
+
+export interface DeviceCommandResponse {
+  type: 'direct' | 'invoke_script'
+  canInteract?: boolean
+  txHash?: string
+}

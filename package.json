@@ -21,7 +21,7 @@
     "test:watch": "jest --watch --verbose",
     "test:cov": "jest --coverage --verbose",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json --verbose",
+    "test:e2e": "jest --config ./test/jest-e2e.json --verbose --runInBand",
     "test:setup": "jest --config ./test/jest-setup.json --verbose"
   },
   "dependencies": {
@@ -50,6 +50,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.3",
+    "skey-lib": "git+ssh://git@gitlab.com/smartkey/smart-key-platform/orange/smartkey-libs.git",
     "sqlite3": "^5.0.2",
     "swagger-ui-express": "^4.1.6",
     "typeorm": "^0.2.31"

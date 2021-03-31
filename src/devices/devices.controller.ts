@@ -14,7 +14,8 @@ import {
   CreateDeviceDto,
   EditDeviceDto,
   CreateConnectionDto,
-  DeviceMessageDto
+  DeviceMessageDto,
+  DeviceCommandDto
 } from './devices.model'
 import { DevicesService } from './devices.service'
 
@@ -98,5 +99,14 @@ export class DevicesController {
   @Post('device_message')
   async deviceMessage(@Body() deviceMessageDto: DeviceMessageDto) {
     return await this.devicesService.deviceMessage(deviceMessageDto)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':address/command')
+  async command(
+    @Param('address') deviceAddress: string,
+    @Body() deviceCommandDto: DeviceCommandDto
+  ) {
+    return await this.devicesService.deviceCommand(deviceAddress, deviceCommandDto)
   }
 }
