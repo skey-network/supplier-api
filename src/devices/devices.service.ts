@@ -176,44 +176,6 @@ export class DevicesService {
     return { txHash }
   }
 
-  async deviceCommand(
-    deviceAddress: string,
-    deviceCommandDto: DeviceCommandDto
-  ): Promise<DeviceCommandResponse> {
-    const { nodeUrl, chainId, dappAddress, seed } = config().blockchain
-    const lib = getInstance({ nodeUrl, chainId })
-
-    const key = await lib.fetchKey(deviceCommandDto.keyAssetId)
-
-    if (key.issuer !== dappAddress) {
-      const txHash = await lib.interactWithDeviceAs(
-        deviceCommandDto.keyAssetId,
-        key.issuer,
-        deviceCommandDto.action,
-        seed,
-        deviceCommandDto.senderAddress
-      )
-
-      return { type: 'invoke_script', txHash }
-    }
-
-    const height = await lib.fetchHeight()
-    const owner = await lib.fetchKeyOwner(deviceCommandDto.keyAssetId, height - 1)
-
-    const addressHasKey = owner === deviceCommandDto.senderAddress
-
-    const whitelist = (await lib.fetchKeyWhitelist(deviceAddress))
-      .filter((item) => item.status === 'active')
-      .map((item) => item.assetId)
-
-    const keyIsWhitelisted = whitelist.includes(deviceCommandDto.keyAssetId)
-
-    return {
-      type: 'direct',
-      canInteract: addressHasKey && keyIsWhitelisted
-    }
-  }
-
   parseLocation(payload: string) {
     const LAT_PREFIX = 'Lat:'
     const LNG_PREFIX = 'Lon:'

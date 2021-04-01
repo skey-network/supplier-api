@@ -7,6 +7,7 @@ import * as request from 'supertest'
 import { AppModule } from '../src/app.module'
 import { getInstance } from 'skey-lib'
 import config from '../src/config'
+import { readFileSync } from 'fs'
 
 jest.setTimeout(3600000)
 
@@ -23,7 +24,19 @@ describe('device-command e2e', () => {
     chainId: config().blockchain.chainId
   })
 
-  let token = ''
+  const ctx = {
+    token: '',
+    device: lib.createAccount(),
+    org: lib.createAccount(),
+    dapp: {
+      seed: config().blockchain.seed,
+      address: config().blockchain.dappAddress
+    },
+    dapp2: lib.createAccount(),
+    key: {
+      assetId: ''
+    }
+  }
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -48,14 +61,14 @@ describe('device-command e2e', () => {
         })
         .expect(201)
 
-      token = res.body.access_token
+      ctx.token = res.body.access_token
 
       await req()
         .post('/utils/setup')
         .send({
           setScript: true
         })
-        .set('Authorization', `Bearer ${token}`)
+        .set('Authorization', `Bearer ${ctx.token}`)
         .expect(201)
     })
 
@@ -71,59 +84,131 @@ describe('device-command e2e', () => {
     })
 
     describe('issuer is not dapp', () => {
-      const ctx = {
-        device: {
-          address: '',
-          seed: ''
-        },
-        user: {
-          address: '',
-          seed: ''
-        },
-        assetId: ''
-      }
+      it('prepare', async () => {
+        ctx.device = lib.createAccount()
+        ctx.org = lib.createAccount()
 
-      // TODO
+        await Promise.all([
+          lib.transfer(ctx.device.address, 2, ctx.dapp.seed),
+          lib.transfer(ctx.org.address, 2, ctx.dapp.seed),
+          lib.transfer(ctx.dapp2.address, 2, ctx.dapp.seed)
+        ])
 
-      // it('create scenario', async () => {
-      //   const deviceRes = await req()
-      //     .post('/devices')
-      //     .set('Authorization', `Bearer ${token}`)
-      //     .expect(201)
+        ctx.key.assetId = await lib.generateKey(
+          ctx.device.address,
+          99999999999999,
+          ctx.dapp2.seed
+        )
 
-      //   ctx.device = deviceRes.body
+        const script = readFileSync('./assets/dapp.base64').toString()
 
-      //   const userRes = await req()
-      //     .post('/users')
-      //     .set('Authorization', `Bearer ${token}`)
-      //     .expect(201)
+        await Promise.all([
+          lib.insertData(
+            [
+              { key: `device_${ctx.device.address}`, value: 'active' },
+              {
+                key: `org_${ctx.org.address}`,
+                value: 'active'
+              }
+            ],
+            ctx.dapp2.seed
+          ),
+          lib.insertData(
+            [
+              { key: `key_${ctx.key.assetId}`, value: 'active' },
+              { key: 'dapp', value: ctx.dapp2.address },
+              { key: 'owner', value: ctx.dapp2.address }
+            ],
+            ctx.device.seed
+          ),
+          lib.insertData(
+            [{ key: `user_${ctx.dapp.address}`, value: 'active' }],
+            ctx.org.seed
+          ),
+          lib.transferKey(ctx.org.address, ctx.key.assetId, ctx.dapp2.seed),
+          lib.setScript(script, ctx.dapp2.seed)
+        ])
 
-      //   ctx.user = userRes.body
-
-      //   ctx.assetId = await lib.generateKey(
-      //     ctx.device.address,
-      //     99999999999,
-      //     ctx.user.seed
-      //   )
-
-      //   await lib.insertData(
-      //     [{ key: `key_${ctx.assetId}`, value: 'active', type: 'string' }],
-      //     config().blockchain.seed
-      //   )
-      // })
+        await lib.waitForNBlocks(1)
+      })
 
       it('invokes script', async () => {
         const res = await req()
           .post(`/devices/${ctx.device.address}/command`)
-          .set('Authorization', `Bearer ${token}`)
+          .set('Authorization', `Bearer ${ctx.token}`)
           .send({
             action: 'open',
-            senderAddress: ctx.user.address,
-            keyAssetId: ctx.assetId
+            senderAddress: ctx.org.address,
+            keyAssetId: ctx.key.assetId
           })
           .expect(201)
 
-        console.log(res.body)
+        expect(res.body.type).toBe('invoke_script')
+        expect(res.body.txHash).toBeDefined()
+      })
+    })
+
+    describe('issuer is dapp and can interact', () => {
+      it('prepare', async () => {
+        ctx.device = lib.createAccount()
+
+        await Promise.all([
+          lib.transfer(ctx.device.address, 2, ctx.dapp.seed),
+          lib.transfer(ctx.org.address, 2, ctx.dapp.seed),
+          lib.transfer(ctx.dapp2.address, 2, ctx.dapp.seed)
+        ])
+
+        ctx.key.assetId = await lib.generateKey(
+          ctx.device.address,
+          99999999999999,
+          ctx.dapp2.seed
+        )
+
+        const script = readFileSync('./assets/dapp.base64').toString()
+
+        await Promise.all([
+          lib.insertData(
+            [
+              { key: `device_${ctx.device.address}`, value: 'active' },
+              {
+                key: `org_${ctx.org.address}`,
+                value: 'active'
+              }
+            ],
+            ctx.dapp2.seed
+          ),
+          lib.insertData(
+            [
+              { key: `key_${ctx.key.assetId}`, value: 'active' },
+              { key: 'dapp', value: ctx.dapp2.address },
+              { key: 'owner', value: ctx.dapp2.address }
+            ],
+            ctx.device.seed
+          ),
+          lib.insertData(
+            [{ key: `user_${ctx.dapp.address}`, value: 'active' }],
+            ctx.org.seed
+          ),
+          lib.transferKey(ctx.org.address, ctx.key.assetId, ctx.dapp2.seed),
+          lib.setScript(script, ctx.dapp2.seed)
+        ])
+
+        await lib.waitForNBlocks(1)
+      })
+
+      it('invokes script', async () => {
+        const res = await req()
+          .post(`/devices/${ctx.device.address}/command`)
+          .set('Authorization', `Bearer ${ctx.token}`)
+          .send({
+            action: 'open',
+            senderAddress: ctx.org.address,
+            keyAssetId: ctx.key.assetId
+          })
+          .expect(201)
+
+        expect(res.body.type).toBe('invoke_script')
+        expect(res.body.txHash).toBeDefined()
       })
     })
   })

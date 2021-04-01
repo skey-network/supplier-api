@@ -6,7 +6,8 @@ import {
   Param,
   Delete,
   Body,
-  Put
+  Put,
+  Query
 } from '@nestjs/common'
 import { AddressValidationPipe, AssetIdValidationPipe } from '../validators'
 import { JwtAuthGuard } from '../auth/jwt.guard'
@@ -18,10 +19,14 @@ import {
   DeviceCommandDto
 } from './devices.model'
 import { DevicesService } from './devices.service'
+import { DevicesCommandService } from './command.service'
 
 @Controller('devices')
 export class DevicesController {
-  constructor(private readonly devicesService: DevicesService) {}
+  constructor(
+    private readonly devicesService: DevicesService,
+    private readonly devicesCommandService: DevicesCommandService
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -102,11 +107,18 @@ export class DevicesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post(':address/command')
+  @Post(':address/commands/:command')
   async command(
     @Param('address') deviceAddress: string,
-    @Body() deviceCommandDto: DeviceCommandDto
+    @Param('command') command: string,
+    @Body() deviceCommandDto: DeviceCommandDto,
+    @Query('waitForTx') waitForTx: string
   ) {
-    return await this.devicesService.deviceCommand(deviceAddress, deviceCommandDto)
+    return await this.devicesCommandService.deviceCommand({
+      deviceAddress,
+      command,
+      waitForTx,
+      ...deviceCommandDto
+    })
   }
 }
