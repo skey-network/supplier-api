@@ -85,7 +85,7 @@ export class DeviceCommandDto {
 export interface DeviceCommandPayload {
   deviceAddress: string
   command: string
-  waitForTx: string
+  waitForTx: boolean
   keyOwnerAddress: string
   keyAssetId: string
 }
@@ -93,4 +93,5 @@ export interface DeviceCommandPayload {
 export interface DeviceCommandResponse {
   txHash: string
   script: string
+  waitForTx: boolean
 }

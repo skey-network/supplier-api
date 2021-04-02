@@ -73,7 +73,7 @@ describe('DevicesCommandService', () => {
       const result = await service.deviceCommand({
         deviceAddress: ctx.device.address,
         command: 'open',
-        waitForTx: 'false',
+        waitForTx: true,
         keyAssetId: ctx.key.assetId,
         keyOwnerAddress: ctx.dapp.address
       })
@@ -132,7 +132,7 @@ describe('DevicesCommandService', () => {
       const result = await service.deviceCommand({
         deviceAddress: ctx.device.address,
         command: 'open',
-        waitForTx: 'false',
+        waitForTx: true,
         keyAssetId: ctx.key.assetId,
         keyOwnerAddress: ctx.org.address
       })

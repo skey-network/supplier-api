@@ -7183,7 +7183,7 @@ sisteransi@^1.0.5:
 
 "skey-lib@git+ssh://git@gitlab.com/smartkey/smart-key-platform/orange/smartkey-libs.git":
   version "1.0.0"
-  resolved "git+ssh://git@gitlab.com/smartkey/smart-key-platform/orange/smartkey-libs.git#4d488ec17bbee5de418592e2b3a6190d129f3d2e"
+  resolved "git+ssh://git@gitlab.com/smartkey/smart-key-platform/orange/smartkey-libs.git#9c296cd2d40a12a573f2c0dd7f9d2ca3fe78fe7c"
   dependencies:
     "@waves/ts-lib-crypto" "^1.4.3"
     "@waves/waves-transactions" "^4.1.8"

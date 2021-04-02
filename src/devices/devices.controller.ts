@@ -114,10 +114,22 @@ export class DevicesController {
     @Body() deviceCommandDto: DeviceCommandDto,
     @Query('waitForTx') waitForTx: string
   ) {
+    let wait: boolean
+
+    if (waitForTx !== 'true' && waitForTx !== 'false') {
+      wait = true
+    }
+    if (waitForTx === 'false') {
+      wait = false
+    }
+    if (waitForTx === 'true') {
+      wait = true
+    }
+
     return await this.devicesCommandService.deviceCommand({
       deviceAddress,
       command,
-      waitForTx,
+      waitForTx: wait,
       ...deviceCommandDto
     })
   }

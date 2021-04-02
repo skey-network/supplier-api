@@ -11,7 +11,6 @@ export class DevicesCommandService {
 
   async deviceCommand(payload: DeviceCommandPayload): Promise<DeviceCommandResponse> {
     const key = await this.lib.fetchKey(payload.keyAssetId)
-
     return await this.interactWithDevice(payload, key.issuer)
   }
 
@@ -19,14 +18,14 @@ export class DevicesCommandService {
     payload: DeviceCommandPayload,
     issuer: string
   ): Promise<DeviceCommandResponse> {
-    if (issuer !== dappAddress && payload.keyOwnerAddress !== dappAddress) {
+    if (payload.keyOwnerAddress !== dappAddress) {
       const txHash = await this.interactWithDeviceAsAddress(payload, issuer)
-      return { script: 'deviceActionAs', txHash }
+      return { script: 'deviceActionAs', txHash, waitForTx: payload.waitForTx }
     }
 
-    if (issuer !== dappAddress && payload.keyOwnerAddress === dappAddress) {
+    if (payload.keyOwnerAddress === dappAddress) {
       const txHash = await this.interactWithDeviceAsDapp(payload, issuer)
-      return { script: 'deviceAction', txHash }
+      return { script: 'deviceAction', txHash, waitForTx: payload.waitForTx }
     }
   }
 
@@ -36,7 +35,8 @@ export class DevicesCommandService {
       dapp,
       payload.command,
       dappSeed,
-      payload.keyOwnerAddress
+      payload.keyOwnerAddress,
+      { waitForTx: payload.waitForTx }
     )
   }
 
@@ -45,7 +45,8 @@ export class DevicesCommandService {
       payload.keyAssetId,
       dapp,
       payload.command,
-      dappSeed
+      dappSeed,
+      { waitForTx: payload.waitForTx }
     )
   }
 
