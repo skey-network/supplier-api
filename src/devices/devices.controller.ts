@@ -6,7 +6,8 @@ import {
   Param,
   Delete,
   Body,
-  Put
+  Put,
+  Query
 } from '@nestjs/common'
 import { AddressValidationPipe, AssetIdValidationPipe } from '../validators'
 import { JwtAuthGuard } from '../auth/jwt.guard'
@@ -14,13 +15,18 @@ import {
   CreateDeviceDto,
   EditDeviceDto,
   CreateConnectionDto,
-  DeviceMessageDto
+  DeviceMessageDto,
+  DeviceCommandDto
 } from './devices.model'
 import { DevicesService } from './devices.service'
+import { DevicesCommandService } from './command.service'
 
 @Controller('devices')
 export class DevicesController {
-  constructor(private readonly devicesService: DevicesService) {}
+  constructor(
+    private readonly devicesService: DevicesService,
+    private readonly devicesCommandService: DevicesCommandService
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -98,5 +104,33 @@ export class DevicesController {
   @Post('device_message')
   async deviceMessage(@Body() deviceMessageDto: DeviceMessageDto) {
     return await this.devicesService.deviceMessage(deviceMessageDto)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':address/commands/:command')
+  async command(
+    @Param('address') deviceAddress: string,
+    @Param('command') command: string,
+    @Body() deviceCommandDto: DeviceCommandDto,
+    @Query('waitForTx') waitForTx: string
+  ) {
+    let wait: boolean
+
+    if (waitForTx !== 'true' && waitForTx !== 'false') {
+      wait = true
+    }
+    if (waitForTx === 'false') {
+      wait = false
+    }
+    if (waitForTx === 'true') {
+      wait = true
+    }
+
+    return await this.devicesCommandService.deviceCommand({
+      deviceAddress,
+      command,
+      waitForTx: wait,
+      ...deviceCommandDto
+    })
   }
 }

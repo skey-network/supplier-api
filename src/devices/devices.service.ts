@@ -7,11 +7,14 @@ import {
   CreateDeviceDto,
   EditDeviceDto,
   CreateConnectionDto,
-  DeviceMessageDto
+  DeviceMessageDto,
+  DeviceCommandDto,
+  DeviceCommandResponse
 } from './devices.model'
 import { SupplierService } from '../supplier/supplier.service'
 import { addressRegex } from '../validators'
 import { Logger } from '../logger/Logger.service'
+import { getInstance } from 'skey-lib'
 
 @Injectable()
 export class DevicesService {

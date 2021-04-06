@@ -73,3 +73,25 @@ export class DeviceMessageDto {
   @IsString()
   source: string
 }
+
+export class DeviceCommandDto {
+  @IsString()
+  keyOwnerAddress: string
+
+  @IsString()
+  keyAssetId: string
+}
+
+export interface DeviceCommandPayload {
+  deviceAddress: string
+  command: string
+  waitForTx: boolean
+  keyOwnerAddress: string
+  keyAssetId: string
+}
+
+export interface DeviceCommandResponse {
+  txHash: string
+  script: string
+  waitForTx: boolean
+}
