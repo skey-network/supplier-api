@@ -58,9 +58,7 @@ describe('users controller', () => {
         .expect(400)
 
       expect(res.body.message.includes('name must be a string')).toBe(true)
-      expect(res.body.message.includes('description must be a string')).toBe(
-        true
-      )
+      expect(res.body.message.includes('description must be a string')).toBe(true)
     })
 
     it('unauthorized', async () => {
@@ -79,9 +77,7 @@ describe('users controller', () => {
     let user = ''
 
     beforeAll(async () => {
-      const res = await req()
-        .post('/users')
-        .set('Authorization', `Bearer ${token}`)
+      const res = await req().post('/users').set('Authorization', `Bearer ${token}`)
 
       user = res.body.address
     })

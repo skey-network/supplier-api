@@ -44,17 +44,13 @@ describe('keys controller', () => {
 
   describe('prepare', () => {
     it('create device', async () => {
-      const res = await req()
-        .post('/devices')
-        .set('Authorization', `Bearer ${token}`)
+      const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
 
       ctx.device = res.body.address
     })
 
     it('create user', async () => {
-      const res = await req()
-        .post('/users')
-        .set('Authorization', `Bearer ${token}`)
+      const res = await req().post('/users').set('Authorization', `Bearer ${token}`)
 
       ctx.user = res.body.address
     })
@@ -87,9 +83,7 @@ describe('keys controller', () => {
 
       const { message } = res.body
 
-      expect(message.includes('device must be valid blockchain address')).toBe(
-        true
-      )
+      expect(message.includes('device must be valid blockchain address')).toBe(true)
       expect(message.includes('amount must be a positive number')).toBe(true)
     })
 
@@ -300,12 +294,8 @@ describe('keys controller', () => {
 
       const { message } = res.body
 
-      expect(message.includes('device must be valid blockchain address')).toBe(
-        true
-      )
-      expect(message.includes('user must be valid blockchain address')).toBe(
-        true
-      )
+      expect(message.includes('device must be valid blockchain address')).toBe(true)
+      expect(message.includes('user must be valid blockchain address')).toBe(true)
       expect(message.includes('user must be a string')).toBe(true)
       expect(message.includes('user should not be empty')).toBe(true)
       expect(message.includes('amount must be a positive number')).toBe(true)
@@ -364,9 +354,7 @@ describe('keys controller', () => {
     })
 
     it('address not found', async () => {
-      await req()
-        .delete(`/keys/${ctx.user}`)
-        .set('Authorization', `Bearer ${token}`)
+      await req().delete(`/keys/${ctx.user}`).set('Authorization', `Bearer ${token}`)
     })
 
     it('valid request', async () => {

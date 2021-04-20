@@ -60,10 +60,7 @@ describe('blockchainWriteService', () => {
   })
 
   it('addKeyToDevice', async () => {
-    const txHash = await service.addKeyToDevice(
-      ctx.assetId2,
-      ctx.device.address
-    )
+    const txHash = await service.addKeyToDevice(ctx.assetId2, ctx.device.address)
     expect(typeof txHash).toBe('string')
   })
 
@@ -86,10 +83,7 @@ describe('blockchainWriteService', () => {
   })
 
   it('removeKeyFromDevice', async () => {
-    const txHash = await service.removeKeyFromDevice(
-      ctx.assetId2,
-      ctx.device.address
-    )
+    const txHash = await service.removeKeyFromDevice(ctx.assetId2, ctx.device.address)
     expect(typeof txHash).toBe('string')
   })
 })

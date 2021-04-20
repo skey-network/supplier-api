@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException
-} from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 import { CreateAndTransferKeyDto, CreateKeyDto } from './keys.model'
@@ -40,11 +36,7 @@ export class KeysService {
     this.validateTimestamp(validTo)
     this.validateKeyLimit(amount)
 
-    const keys = await this.blockchainWriteService.generateNKeys(
-      device,
-      validTo,
-      amount
-    )
+    const keys = await this.blockchainWriteService.generateNKeys(device, validTo, amount)
 
     await this.blockchainWriteService.addNKeysToDevice(keys, device)
     return keys.map((key) => ({ assetId: key }))
@@ -80,10 +72,7 @@ export class KeysService {
 
   async burn(assetId: string) {
     const { dappAddress } = config().blockchain
-    const balance = await this.blockchainReadService.assetBalance(
-      dappAddress,
-      assetId
-    )
+    const balance = await this.blockchainReadService.assetBalance(dappAddress, assetId)
 
     if (balance !== 1) {
       throw new NotFoundException()
@@ -100,11 +89,7 @@ export class KeysService {
 
     await this.supplierService.updateTransferStatus(device, true)
 
-    const keys = await this.blockchainWriteService.generateNKeys(
-      device,
-      validTo,
-      amount
-    )
+    const keys = await this.blockchainWriteService.generateNKeys(device, validTo, amount)
 
     await this.blockchainWriteService.addNKeysToDevice(keys, device)
 
@@ -138,9 +123,7 @@ export class KeysService {
     const minValue = Date.now() + minDuration
 
     if (Date.now() + minDuration >= timestamp) {
-      throw new BadRequestException([
-        `validTo should be greater than ${minValue}`
-      ])
+      throw new BadRequestException([`validTo should be greater than ${minValue}`])
     }
   }
 }

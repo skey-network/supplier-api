@@ -84,9 +84,7 @@ describe('utils controller', () => {
 
       const { message } = res.body
 
-      expect(message.includes('address must be valid blockchain address')).toBe(
-        true
-      )
+      expect(message.includes('address must be valid blockchain address')).toBe(true)
       expect(message.includes('amount must be a positive number')).toBe(true)
       expect(message.includes('amount must be an integer number')).toBe(true)
     })
@@ -122,10 +120,37 @@ describe('utils controller', () => {
     })
 
     it('empty request', async () => {
+      await req().post('/utils/setup').set('Authorization', `Bearer ${token}`).expect(201)
+    })
+  })
+
+  describe('GET /utils/status', () => {
+    it('valid request', async () => {
+      await req().get('/utils/status').set('Authorization', `Bearer ${token}`).expect(200)
+    })
+
+    it('valid returned data', async () => {
+      const res = await req().get('/utils/status').set('Authorization', `Bearer ${token}`)
+
+      const { address, script, name, description, nodeUrl, chainId } = res.body
+
+      expect(address).toEqual(config().blockchain.dappAddress)
+      expect(script).toEqual(true)
+      expect(name).toEqual('dApp')
+      expect(description).toEqual('General Kenobi')
+      expect(nodeUrl).toEqual(config().blockchain.nodeUrl)
+      expect(chainId).toEqual(config().blockchain.chainId)
+    })
+
+    it('unauthorized', async () => {
+      await req().get('/utils/status').expect(401)
+    })
+
+    it('invalid token', async () => {
       await req()
-        .post('/utils/setup')
-        .set('Authorization', `Bearer ${token}`)
-        .expect(201)
+        .get('/utils/status')
+        .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
+        .expect(401)
     })
   })
 })

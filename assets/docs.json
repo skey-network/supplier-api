@@ -918,6 +918,46 @@
         }
       }
     },
+    "/utils/status": {
+      "get": {
+        "tags": [
+          "utils"
+        ],
+        "summary": "Show configuration",
+        "responses": {
+          "200": {
+            "description": "Valid response data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/keys": {
       "get": {
         "tags": [
@@ -1914,6 +1954,41 @@
             "type": "string",
             "description": "Transaction hash",
             "example": "AP5d8fLsWuQfzSVm35eU1Rhh58MVbYp1b1nnSUrSDZXW"
+          }
+        }
+      },
+      "inline_response_200_1": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Address of the dApp",
+            "example": "3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt"
+          },
+          "script": {
+            "type": "boolean",
+            "description": "Flag determining if a script was set",
+            "example": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the dApp",
+            "example": "dApp"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the dApp",
+            "example": "Lorem Ipsum dolor sit amet"
+          },
+          "nodeUrl": {
+            "type": "string",
+            "description": "URL of the node",
+            "example": "http://localhost:6869"
+          },
+          "chainId": {
+            "type": "string",
+            "description": "Chain ID",
+            "example": "R"
           }
         }
       },
