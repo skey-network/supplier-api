@@ -104,8 +104,7 @@ export class SupplierService {
           enabled: true,
           definition: {
             msisdn: args.msisdn,
-            serverPhoneNumber: args.serverPhoneNumber,
-            encoding: 'string'
+            serverPhoneNumber: args.serverPhoneNumber
           },
           activity: {}
         }
