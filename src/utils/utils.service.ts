@@ -53,30 +53,25 @@ export class UtilsService {
   }
 
   async status() {
-    const conf = config()
+    const entriesRegex = "^(name|description)$"
+    const { dappAddress, nodeUrl, chainId } = config().blockchain
 
-    const name: string = await this.blockchainReadService.readData(
-      'name',
-      conf.blockchain.dappAddress
-    )
-    const description: string = await this.blockchainReadService.readData(
-      'description',
-      conf.blockchain.dappAddress
-    )
-    const scriptInfo = this.blockchainReadService
-      .fetchScript(conf.blockchain.dappAddress)
-      .then((_) => true)
-      .catch((_) => false)
+    const getData = async() => {
+      const entries = await this.blockchainReadService.fetchWithRegex(
+        entriesRegex, dappAddress
+      )
 
-    const status: StatusResponse = {
-      address: conf.blockchain.dappAddress,
-      script: await scriptInfo,
-      name: name,
-      description: description,
-      nodeUrl: conf.blockchain.nodeUrl,
-      chainId: conf.blockchain.chainId
+      return {
+        name: entries.find((e) => e.key === 'name').value,
+        description: entries.find((e) => e.key === 'description').value,
+      }
     }
 
-    return status
+    const [script, data] = await Promise.all([
+      this.blockchainReadService.fetchScript(),
+      getData()
+    ])
+
+    return { address: dappAddress, script: !!script, ...data, nodeUrl, chainId }
   }
 }

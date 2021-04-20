@@ -926,7 +926,7 @@
         "summary": "Show configuration",
         "responses": {
           "200": {
-            "description": "foobar",
+            "description": "Valid response data",
             "content": {
               "application/json": {
                 "schema": {
