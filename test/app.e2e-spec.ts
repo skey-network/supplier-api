@@ -118,10 +118,7 @@ describe('app e2e', () => {
   })
 
   it('GET /keys', async () => {
-    await req()
-      .get('/keys')
-      .set('Authorization', `Bearer ${ctx.token}`)
-      .expect(200)
+    await req().get('/keys').set('Authorization', `Bearer ${ctx.token}`).expect(200)
   })
 
   it('PUT /keys/:assetId/transfer/:address', async () => {

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
-import { FaucetDto, SetupAction, SetupDto } from './utils.model'
+import { BlockchainReadService } from '../blockchain/blockchain.read.service'
+import { FaucetDto, SetupAction, SetupDto, StatusResponse } from './utils.model'
 import config from '../config'
 import { BlockchainCompilerService } from '../blockchain/blockchain.compiler.service'
 
@@ -8,7 +9,8 @@ import { BlockchainCompilerService } from '../blockchain/blockchain.compiler.ser
 export class UtilsService {
   constructor(
     private readonly blockchainWriteService: BlockchainWriteService,
-    private readonly blockchainCompilerService: BlockchainCompilerService
+    private readonly blockchainCompilerService: BlockchainCompilerService,
+    private readonly blockchainReadService: BlockchainReadService
   ) {}
 
   async faucet(payload: FaucetDto) {
@@ -48,5 +50,33 @@ export class UtilsService {
     }
 
     return steps
+  }
+
+  async status() {
+    const conf = config()
+
+    const name: string = await this.blockchainReadService.readData(
+      'name',
+      conf.blockchain.dappAddress
+    )
+    const description: string = await this.blockchainReadService.readData(
+      'description',
+      conf.blockchain.dappAddress
+    )
+    const scriptInfo = this.blockchainReadService
+      .fetchScript(conf.blockchain.dappAddress)
+      .then((_) => true)
+      .catch((_) => false)
+
+    const status: StatusResponse = {
+      address: conf.blockchain.dappAddress,
+      script: await scriptInfo,
+      name: name,
+      description: description,
+      nodeUrl: conf.blockchain.nodeUrl,
+      chainId: conf.blockchain.chainId
+    }
+
+    return status
   }
 }

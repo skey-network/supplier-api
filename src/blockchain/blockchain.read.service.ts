@@ -41,11 +41,12 @@ export class BlockchainReadService {
     return res
   }
 
-  async fetchNFTs(
-    limit: number,
-    after?: string | undefined,
-    address = dappAddress
-  ) {
+  async fetchScript(address = Crypto.address(seed, chainId)) {
+    const res = await this.request(`/addresses/scriptInfo/${address}`)
+    return res
+  }
+
+  async fetchNFTs(limit: number, after?: string | undefined, address = dappAddress) {
     const afterParam = after ? `after=${after}` : ''
     const path = `/assets/nft/${address}/limit/${limit}?${afterParam}`
     const res = await this.request(path)

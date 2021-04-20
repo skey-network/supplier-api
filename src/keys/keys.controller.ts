@@ -56,9 +56,7 @@ export class KeysController {
   }
 
   @Post('/generate_and_transfer')
-  async generateAndTransferKey(
-    @Body() createAndTransferKeyDto: CreateAndTransferKeyDto
-  ) {
+  async generateAndTransferKey(@Body() createAndTransferKeyDto: CreateAndTransferKeyDto) {
     return await this.keysService.createAndTransfer(createAndTransferKeyDto)
   }
 }

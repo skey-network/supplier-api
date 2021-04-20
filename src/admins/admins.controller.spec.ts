@@ -60,10 +60,7 @@ describe('admins controller', () => {
 
   describe('POST /auth/login', () => {
     it('admin user can log in', async () => {
-      const res = await req()
-        .post('/auth/login')
-        .send(config().admin)
-        .expect(201)
+      const res = await req().post('/auth/login').send(config().admin).expect(201)
 
       expect(res.body.access_token).toBeDefined()
       ctx.superadmin.token = res.body.access_token
@@ -213,12 +210,8 @@ describe('admins controller', () => {
         .set('Authorization', `Bearer ${ctx.admin.token}`)
         .expect(200)
 
-      expect(
-        res.body.find((user) => user.email === ctx.admin.email)
-      ).toBeDefined()
-      expect(
-        res.body.find((user) => user.email === ctx.editor.email)
-      ).toBeDefined()
+      expect(res.body.find((user) => user.email === ctx.admin.email)).toBeDefined()
+      expect(res.body.find((user) => user.email === ctx.editor.email)).toBeDefined()
 
       expect(res.body[0].passwordHash).toBeUndefined()
     })

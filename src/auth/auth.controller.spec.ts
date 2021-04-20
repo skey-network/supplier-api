@@ -39,10 +39,7 @@ describe('auth controller', () => {
 
       expect(typeof token).toBe('string')
 
-      await req()
-        .get('/devices')
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200)
+      await req().get('/devices').set('Authorization', `Bearer ${token}`).expect(200)
     })
 
     it('invalid credentials', async () => {

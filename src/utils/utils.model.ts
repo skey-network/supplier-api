@@ -39,3 +39,12 @@ export interface SetupAction {
   action: string
   txHash: string
 }
+
+export interface StatusResponse {
+  address: string
+  script: boolean
+  name: string
+  description: string
+  nodeUrl: string
+  chainId: string
+}

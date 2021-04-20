@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/jwt.guard'
 import { FaucetDto, SetupDto } from './utils.model'
 import { UtilsService } from './utils.service'
@@ -16,5 +16,10 @@ export class UtilsController {
   @Post('setup')
   async setup(@Body() setupDto: SetupDto) {
     return await this.utilsService.setup(setupDto)
+  }
+
+  @Get('status')
+  async status() {
+    return await this.utilsService.status()
   }
 }
