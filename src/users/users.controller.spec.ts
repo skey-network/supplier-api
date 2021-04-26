@@ -5,7 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import * as request from 'supertest'
 import { AppModule } from '../app.module'
-import { decrypt } from '../common/aes-encryption';
+import { decrypt } from '../common/aes-encryption'
 
 jest.setTimeout(3600000)
 
@@ -59,9 +59,9 @@ describe('users controller', () => {
         .expect(201)
 
       const { encryptedSeed } = res.body
-      let seedRegex = /(?:[a-z]{3,}\s){14}[a-z]{3,}/;
-      expect(encryptedSeed).toEqual(expect.not.stringMatching(seedRegex));
-      expect(typeof decrypt(encryptedSeed)).toBe('string');
+      let seedRegex = /(?:[a-z]{3,}\s){14}[a-z]{3,}/
+      expect(encryptedSeed).toEqual(expect.not.stringMatching(seedRegex))
+      expect(typeof decrypt(encryptedSeed)).toBe('string')
     })
 
     it('invalid data', async () => {

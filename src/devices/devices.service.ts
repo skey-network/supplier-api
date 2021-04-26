@@ -15,7 +15,7 @@ import { SupplierService } from '../supplier/supplier.service'
 import { addressRegex } from '../validators'
 import { Logger } from '../logger/Logger.service'
 import { getInstance } from 'skey-lib'
-import { encrypt } from '../common/aes-encryption';
+import { encrypt } from '../common/aes-encryption'
 
 @Injectable()
 export class DevicesService {

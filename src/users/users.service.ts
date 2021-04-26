@@ -3,7 +3,7 @@ import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import config from '../config'
 import { CreateUserDto } from './users.model'
-import { encrypt } from '../common/aes-encryption';
+import { encrypt } from '../common/aes-encryption'
 
 @Injectable()
 export class UsersService {
