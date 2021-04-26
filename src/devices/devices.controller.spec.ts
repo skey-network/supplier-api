@@ -242,7 +242,12 @@ describe('devices controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: device, validTo, amount: 1 })
+        .send({
+          device: device,
+          validTo,
+          amount: 1,
+          recipient: config().blockchain.dappAddress
+        })
         .set('Authorization', `Bearer ${token}`)
       assetId = res.body[0].assetId
     })
@@ -289,7 +294,12 @@ describe('devices controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: fakeDevice, validTo, amount: 1 })
+        .send({
+          device: fakeDevice,
+          validTo,
+          amount: 1,
+          recipient: config().blockchain.dappAddress
+        })
         .set('Authorization', `Bearer ${token}`)
       assetId = res.body[0].assetId
     })

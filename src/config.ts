@@ -29,8 +29,7 @@ export default () => ({
     user: Number(process.env.FAUCET_USER ?? '1000000')
   },
   key: {
-    minDuration: Number(process.env.KEY_MIN_DURATION ?? '3600000'),
-    maxAmount: Number(process.env.KEY_MAX_AMOUNT ?? '50')
+    minDuration: Number(process.env.KEY_MIN_DURATION ?? '3600000')
   },
   db: {
     key: process.env.DB_KEY,

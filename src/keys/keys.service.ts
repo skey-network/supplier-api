@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainReadService } from '../blockchain/blockchain.read.service'
-import { CreateAndTransferKeyDto, CreateKeyDto } from './keys.model'
+import { CreateAndTransferKeyDto, CreateKeyDto, CreateKeyResult } from './keys.model'
 import config from '../config'
 import { SupplierService } from '../supplier/supplier.service'
 
@@ -31,27 +31,62 @@ export class KeysService {
     return keys
   }
 
-  async create(createKeyDto: CreateKeyDto) {
-    const { device, validTo, amount } = createKeyDto
-    this.validateTimestamp(validTo)
-    this.validateKeyLimit(amount)
+  async create(createKeyDto: CreateKeyDto): Promise<CreateKeyResult[]> {
+    this.validateTimestamp(createKeyDto.validTo)
 
-    const keys = await this.blockchainWriteService.generateNKeys(device, validTo, amount)
+    const createKey = async (dto: CreateKeyDto) => {
+      const issueTx = await this.handleError(() =>
+        this.blockchainWriteService.generateKey(dto.device, dto.validTo)
+      )
 
-    await this.blockchainWriteService.addNKeysToDevice(keys, device)
-    return keys.map((key) => ({ assetId: key }))
+      if (!issueTx.success) return { success: false, error: issueTx.data }
+
+      if (dto.recipient === config().blockchain.dappAddress) {
+        return {
+          assetId: issueTx.data,
+          success: true
+        }
+      }
+
+      const transferTx = await this.handleError(() =>
+        this.blockchainWriteService.transfer(dto.recipient, issueTx.data)
+      )
+
+      if (!transferTx.success) {
+        return {
+          assetId: issueTx.data,
+          success: false,
+          error: transferTx.data
+        }
+      }
+
+      return {
+        assetId: issueTx.data,
+        transferTx: transferTx.data,
+        success: true
+      }
+    }
+
+    const keys = await Promise.all(
+      [...Array(createKeyDto.amount)].map(() => createKey(createKeyDto))
+    )
+
+    const assetIds = keys.filter((key) => key.assetId).map((key) => key.assetId)
+
+    const dataTx = await this.handleError(() =>
+      this.blockchainWriteService.addNKeysToDevice(assetIds, createKeyDto.device)
+    )
+
+    return keys.map((key) => {
+      if (dataTx.success) {
+        return { ...key, dataTx: dataTx.data }
+      }
+
+      return { ...key, success: false, error: dataTx.data }
+    })
   }
 
   async show(assetId: string) {
-    const balance = await this.blockchainReadService.assetBalance(
-      config().blockchain.dappAddress,
-      assetId
-    )
-
-    if (balance !== 1) {
-      throw new NotFoundException()
-    }
-
     const details = await this.blockchainReadService.fetchAsset(assetId)
     const { issuer, issueTimestamp, description } = details
     const [device, validTo] = this.readDescription(description)
@@ -105,13 +140,24 @@ export class KeysService {
     }))
   }
 
+  private async handleError<T>(func: () => Promise<T>) {
+    try {
+      return { success: true, data: await func() }
+    } catch (err) {
+      return {
+        success: false,
+        data: (err.response?.details?.message as string) ?? (err.message as string)
+      }
+    }
+  }
+
   private readDescription(description: string): [string, number] {
     const values = description.split('_')
     return [values[0], parseInt(values[1] ?? '0')]
   }
 
   private validateKeyLimit(amount: number) {
-    const { maxAmount } = config().key
+    const maxAmount = 100
 
     if (amount > maxAmount) {
       throw new BadRequestException([`amount cannot exceed ${maxAmount}`])
