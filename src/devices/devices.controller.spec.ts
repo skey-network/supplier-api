@@ -7,6 +7,7 @@ import * as request from 'supertest'
 import { AppModule } from '../app.module'
 import config from '../config'
 import * as Crypto from '@waves/ts-lib-crypto'
+import { decrypt } from '../common/aes-encryption'
 
 jest.setTimeout(3600000)
 
@@ -74,10 +75,24 @@ describe('devices controller', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
 
-      const { address, seed } = res.body
+      const { address, encryptedSeed } = res.body
+
+      console.log(res.body)
 
       expect(typeof address).toBe('string')
-      expect(typeof seed).toBe('string')
+      expect(typeof encryptedSeed).toBe('string')
+    })
+
+    it('seed is encrypted', async () => {
+      const res = await req()
+        .post('/devices')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201)
+
+      const { encryptedSeed } = res.body
+      let seedRegex = /(?:[a-z]{3,}\s){14}[a-z]{3,}/
+      expect(encryptedSeed).toEqual(expect.not.stringMatching(seedRegex))
+      expect(typeof decrypt(encryptedSeed)).toBe('string')
     })
 
     it('unauthorized', async () => {

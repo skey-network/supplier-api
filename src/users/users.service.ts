@@ -3,6 +3,7 @@ import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import config from '../config'
 import { CreateUserDto } from './users.model'
+import { encrypt } from '../common/aes-encryption'
 
 @Injectable()
 export class UsersService {
@@ -24,7 +25,7 @@ export class UsersService {
     data && (await this.blockchainWriteService.insertData(data, seed))
 
     // return account info
-    return { address, seed }
+    return { address, encryptedSeed: encrypt(seed) }
   }
 
   async show(address: string) {

@@ -34,5 +34,6 @@ export default () => ({
   db: {
     key: process.env.DB_KEY,
     path: process.env.DB_PATH
-  }
+  },
+  encryptionSalt: process.env.ENCRYPTION_SALT
 })
