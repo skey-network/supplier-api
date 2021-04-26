@@ -59,17 +59,19 @@ describe('keys controller', () => {
   describe('POST /keys', () => {
     it('valid request', async () => {
       const validTo = Date.now() + config().key.minDuration + 3_600_000
-      const amount = config().key.maxAmount < 4 ? 1 : 4
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount })
+        .send({ device: ctx.device, validTo, amount: 4, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
 
       expect(res.body).toBeInstanceOf(Array)
-      expect(res.body.length).toBe(amount)
+      expect(res.body.length).toBe(4)
       expect(typeof res.body[0].assetId).toBe('string')
+      expect(typeof res.body[0].transferTx).toBe('string')
+      expect(typeof res.body[0].dataTx).toBe('string')
+      expect(res.body[1].success).toBe(true)
     })
 
     it('invalid data', async () => {
@@ -77,7 +79,7 @@ describe('keys controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: 'hello', validTo, amount: -42 })
+        .send({ device: 'hello', validTo, amount: -42, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
         .expect(400)
 
@@ -90,27 +92,26 @@ describe('keys controller', () => {
     it('invalid timestamp', async () => {
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo: 1000, amount: 1 })
+        .send({ device: ctx.device, validTo: 1000, amount: 1, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
         .expect(400)
 
       const { message } = res.body
-      expect(/validTo/.test(message[0])).toBe(true)
+
+      expect(message.find((mes) => /validTo/.test(mes))).toBeDefined()
     })
 
     it('invalid amount', async () => {
       const validTo = Date.now() + config().key.minDuration + 3_600_000
-      const amount = config().key.maxAmount + 1
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount })
+        .send({ device: ctx.device, validTo, amount: 5000, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
         .expect(400)
 
       const { message } = res.body
-      const match = `amount cannot exceed ${config().key.maxAmount}`
-      expect(message[0]).toBe(match)
+      expect(message.includes('amount must not be greater than 80')).toBe(true)
     })
 
     it('unauthorized', async () => {
@@ -133,7 +134,7 @@ describe('keys controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount: 1 })
+        .send({ device: ctx.device, validTo, amount: 1, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
 
       assetId = res.body[0].assetId
@@ -182,7 +183,7 @@ describe('keys controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount: 1 })
+        .send({ device: ctx.device, validTo, amount: 1, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
 
       assetId = res.body[0].assetId
@@ -218,7 +219,12 @@ describe('keys controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount: 1 })
+        .send({
+          device: ctx.device,
+          validTo,
+          amount: 1,
+          recipient: config().blockchain.dappAddress
+        })
         .set('Authorization', `Bearer ${token}`)
 
       assetId = res.body[0].assetId
@@ -265,79 +271,79 @@ describe('keys controller', () => {
     })
   })
 
-  describe('POST /keys/generate_and_transfer', () => {
-    // What to do with supplier api
+  // describe('POST /keys/generate_and_transfer', () => {
+  // What to do with supplier api
 
-    // it('valid request', async () => {
-    //   const validTo = Date.now() + config().key.minDuration + 3_600_000
-    //   const amount = config().key.maxAmount < 4 ? 1 : 4
+  // it('valid request', async () => {
+  //   const validTo = Date.now() + config().key.minDuration + 3_600_000
+  //   const amount = 80 < 4 ? 1 : 4
 
-    //   const res = await req()
-    //     .post('/keys/generate_and_transfer')
-    //     .send({ device: ctx.device, validTo, amount, user: ctx.user })
-    //     .set('Authorization', `Bearer ${token}`)
-    //     .expect(201)
+  //   const res = await req()
+  //     .post('/keys/generate_and_transfer')
+  //     .send({ device: ctx.device, validTo, amount, user: ctx.user })
+  //     .set('Authorization', `Bearer ${token}`)
+  //     .expect(201)
 
-    //   expect(res.body).toBeInstanceOf(Array)
-    //   expect(res.body.length).toBe(amount)
-    //   expect(typeof res.body[0].assetId).toBe('string')
-    // })
+  //   expect(res.body).toBeInstanceOf(Array)
+  //   expect(res.body.length).toBe(amount)
+  //   expect(typeof res.body[0].assetId).toBe('string')
+  // })
 
-    it('invalid data', async () => {
-      const validTo = Date.now() + config().key.minDuration + 3_600_000
+  //   it('invalid data', async () => {
+  //     const validTo = Date.now() + config().key.minDuration + 3_600_000
 
-      const res = await req()
-        .post('/keys/generate_and_transfer')
-        .send({ device: 'hello', validTo, amount: -42 })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(400)
+  //     const res = await req()
+  //       .post('/keys/generate_and_transfer')
+  //       .send({ device: 'hello', validTo, amount: -42 })
+  //       .set('Authorization', `Bearer ${token}`)
+  //       .expect(400)
 
-      const { message } = res.body
+  //     const { message } = res.body
 
-      expect(message.includes('device must be valid blockchain address')).toBe(true)
-      expect(message.includes('user must be valid blockchain address')).toBe(true)
-      expect(message.includes('user must be a string')).toBe(true)
-      expect(message.includes('user should not be empty')).toBe(true)
-      expect(message.includes('amount must be a positive number')).toBe(true)
-    })
+  //     expect(message.includes('device must be valid blockchain address')).toBe(true)
+  //     expect(message.includes('user must be valid blockchain address')).toBe(true)
+  //     expect(message.includes('user must be a string')).toBe(true)
+  //     expect(message.includes('user should not be empty')).toBe(true)
+  //     expect(message.includes('amount must be a positive number')).toBe(true)
+  //   })
 
-    it('invalid timestamp', async () => {
-      const res = await req()
-        .post('/keys/generate_and_transfer')
-        .send({ device: ctx.device, validTo: 1000, amount: 1, user: ctx.user })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(400)
+  //   it('invalid timestamp', async () => {
+  //     const res = await req()
+  //       .post('/keys/generate_and_transfer')
+  //       .send({ device: ctx.device, validTo: 1000, amount: 1, user: ctx.user })
+  //       .set('Authorization', `Bearer ${token}`)
+  //       .expect(400)
 
-      const { message } = res.body
-      expect(/validTo/.test(message[0])).toBe(true)
-    })
+  //     const { message } = res.body
+  //     expect(/validTo/.test(message[0])).toBe(true)
+  //   })
 
-    it('invalid amount', async () => {
-      const validTo = Date.now() + config().key.minDuration + 3_600_000
-      const amount = config().key.maxAmount + 1
+  //   it('invalid amount', async () => {
+  //     const validTo = Date.now() + config().key.minDuration + 3_600_000
+  //     const amount = 80 + 1
 
-      const res = await req()
-        .post('/keys/generate_and_transfer')
-        .send({ device: ctx.device, validTo, amount, user: ctx.user })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(400)
+  //     const res = await req()
+  //       .post('/keys/generate_and_transfer')
+  //       .send({ device: ctx.device, validTo, amount, user: ctx.user })
+  //       .set('Authorization', `Bearer ${token}`)
+  //       .expect(400)
 
-      const { message } = res.body
-      const match = `amount cannot exceed ${config().key.maxAmount}`
-      expect(message[0]).toBe(match)
-    })
+  //     const { message } = res.body
+  //     const match = `amount cannot exceed ${80}`
+  //     expect(message[0]).toBe(match)
+  //   })
 
-    it('unauthorized', async () => {
-      await req().post('/keys/generate_and_transfer').expect(401)
-    })
+  //   it('unauthorized', async () => {
+  //     await req().post('/keys/generate_and_transfer').expect(401)
+  //   })
 
-    it('invalid token', async () => {
-      await req()
-        .post('/keys/generate_and_transfer')
-        .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
-        .expect(401)
-    })
-  })
+  //   it('invalid token', async () => {
+  //     await req()
+  //       .post('/keys/generate_and_transfer')
+  //       .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
+  //       .expect(401)
+  //   })
+  // })
 
   describe('DELETE /keys/:assetId', () => {
     let assetId = ''
@@ -347,7 +353,12 @@ describe('keys controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount: 1 })
+        .send({
+          device: ctx.device,
+          validTo,
+          amount: 1,
+          recipient: config().blockchain.dappAddress
+        })
         .set('Authorization', `Bearer ${token}`)
 
       assetId = res.body[0].assetId

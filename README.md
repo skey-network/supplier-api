@@ -77,9 +77,6 @@ npm test
 - **KEY_MIN_DURATION** - Minimal time in milliseconds when key is valid  
   **Example value** - `3600000`
 
-- **KEY_MAX_AMOUNT** - Maximal amount of keys to generate in single request
-  **Example value** - `50`
-
 - **ENCRYPTION_SALT** - Salt phrase used to encrypt account seeds while creating blockchain accounts.
   **Example value** - `foobar`
 
