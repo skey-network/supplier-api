@@ -1,7 +1,12 @@
-import { IsNotEmpty, IsInt, IsString, IsPositive } from 'class-validator'
+import { IsNotEmpty, IsInt, IsString, IsPositive, Max } from 'class-validator'
 import { IsAddress } from '../validators'
 
 export class CreateKeyDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsAddress
+  recipient: string
+
   @IsNotEmpty()
   @IsString()
   @IsAddress
@@ -9,12 +14,23 @@ export class CreateKeyDto {
 
   @IsNotEmpty()
   @IsInt()
+  @IsPositive()
+  @Max(Number.MAX_SAFE_INTEGER)
   validTo: number
 
   @IsNotEmpty()
   @IsInt()
   @IsPositive()
+  @Max(80) // max amount of items in list for ride script
   amount: number
+}
+
+export interface CreateKeyResult {
+  assetId?: string
+  transferTx?: string
+  dataTx?: string
+  success: boolean
+  error?: string
 }
 
 export class CreateAndTransferKeyDto {
