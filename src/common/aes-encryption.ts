@@ -4,7 +4,7 @@ import { Logger } from '../logger/Logger.service'
 const CryptoJS = require('crypto-js')
 
 const fetchSalt = (): string => {
-  let key = config().encryptionSalt
+  const key = config().encryptionSalt
   if (!key) {
     Logger.debug(key)
     throw new Error(
