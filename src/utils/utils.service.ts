@@ -53,17 +53,18 @@ export class UtilsService {
   }
 
   async status() {
-    const entriesRegex = "^(name|description)$"
+    const entriesRegex = '^(name|description)$'
     const { dappAddress, nodeUrl, chainId } = config().blockchain
 
-    const getData = async() => {
+    const getData = async () => {
       const entries = await this.blockchainReadService.fetchWithRegex(
-        entriesRegex, dappAddress
+        entriesRegex,
+        dappAddress
       )
 
       return {
         name: entries.find((e) => e.key === 'name').value,
-        description: entries.find((e) => e.key === 'description').value,
+        description: entries.find((e) => e.key === 'description').value
       }
     }
 
