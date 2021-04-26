@@ -15,6 +15,7 @@ import { SupplierService } from '../supplier/supplier.service'
 import { addressRegex } from '../validators'
 import { Logger } from '../logger/Logger.service'
 import { getInstance } from 'skey-lib'
+import { encrypt } from '../common/aes-encryption';
 
 @Injectable()
 export class DevicesService {
@@ -60,7 +61,7 @@ export class DevicesService {
     await Promise.all(promises)
 
     // return account info
-    return { address, seed }
+    return { address, encryptedSeed: encrypt(seed) }
   }
 
   async index() {
