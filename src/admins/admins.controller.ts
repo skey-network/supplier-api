@@ -17,8 +17,26 @@ import { CreateAdminDto, UpdateAdminDto } from './admins.model'
 import { AdminsService } from './admins.service'
 import config from '../config'
 import { Logger } from '../logger/Logger.service'
+import { Admin } from './admins.entity'
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiUnauthorizedResponse,
+  ApiNotFoundResponse,
+  ApiQuery
+} from '@nestjs/swagger'
+import {
+  UnauthorizedResponse,
+  ForbiddenResponse,
+  NotFoundResponse,
+  CustomErrorMessage
+} from '../common/responses.swagger'
 
 @Controller('admins')
+@ApiTags('admins')
 @UseGuards(AdminGuard)
 @UseGuards(JwtAuthGuard)
 @Catch(QueryFailedError, EntityNotFoundError)
@@ -28,26 +46,55 @@ export class AdminsController implements OnApplicationBootstrap {
   private readonly logger = new Logger(AdminsController.name)
 
   @Get()
+  @ApiOperation({ summary: 'Get all admins' })
+  @ApiBearerAuth()
+  @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenResponse })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedResponse })
+  @ApiResponse({ status: 200, description: 'Returns admin info', type: 'array',  })
   async findAll() {
     return await this.adminsService.findAll()
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get admin by id' })
+  @ApiBearerAuth()
+  @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
+  @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
+  @ApiNotFoundResponse({ description: 'Item not found', type: NotFoundResponse })
+  @ApiResponse({ status: 200, description: 'Returns admin info', type: Admin })
   async findOne(@Param('id') id: string) {
     return await this.adminsService.findOne(id)
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete admin' })
+  @ApiBearerAuth()
+  @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
+  @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
+  @ApiNotFoundResponse({ description: 'Item not found', type: NotFoundResponse })
+  @ApiResponse({ status: 200, description: 'Admin deleted'})
   async remove(@Param('id') id: string) {
     return await this.adminsService.remove(id)
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create new admin' })
+  @ApiBearerAuth()
+  @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
+  @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
+  @ApiResponse({ status: 400, description: 'Custom error message', type: CustomErrorMessage })
+  @ApiResponse({ status: 201, description: 'Admin created', type: Admin})
   async create(@Body() createAdminDto: CreateAdminDto) {
     return await this.adminsService.create(createAdminDto)
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update existing admin by id' })
+  @ApiBearerAuth()
+  @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
+  @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
+  @ApiResponse({ status: 400, description: 'Custom error message', type: CustomErrorMessage })
+  @ApiResponse({ status: 201, description: 'Admin updated', type: Admin})
   async update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
     return await this.adminsService.update(id, updateAdminDto)
   }

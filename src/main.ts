@@ -3,7 +3,7 @@ configure()
 
 import { HttpAdapterHost, NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
-import { SwaggerModule } from '@nestjs/swagger'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { readFileSync } from 'fs'
 import { ValidationPipe } from '@nestjs/common'
 import { LoggerInterceptor } from './logger/logger.interceptor'
@@ -23,8 +23,17 @@ export const bootstrap = async () => {
   app.useGlobalInterceptors(new LoggerInterceptor())
   app.useGlobalFilters(new LoggerExceptionFilter(httpAdapter))
 
-  const document = JSON.parse(readFileSync('./assets/docs.json').toString())
-  SwaggerModule.setup('api_docs', app, document)
+  const document = SwaggerModule.createDocument(
+    app,
+    new DocumentBuilder()
+      .setTitle("Supplier API")
+      .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
+      .build()
+  )
+
+  SwaggerModule.setup('api_docs', app, document, {
+    swaggerOptions: { persistAuthorization: true }
+  })
 
   const logger = new Logger('NestApplication')
 
