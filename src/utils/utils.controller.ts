@@ -3,8 +3,17 @@ import { JwtAuthGuard } from '../auth/jwt.guard'
 import { FaucetDto, SetupDto } from './utils.model'
 import { UtilsService } from './utils.service'
 
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
+import {
+  ApiFilledUnauthorizedResponse,
+  ApiFilledForbiddenResponse,
+  ApiFilledNotFoundResponse,
+  ApiFilledCustomErrorResponse
+} from '../common/responses.swagger'
+
 @UseGuards(JwtAuthGuard)
 @Controller('utils')
+@ApiTags('utils')
 export class UtilsController {
   constructor(private readonly utilsService: UtilsService) {}
 

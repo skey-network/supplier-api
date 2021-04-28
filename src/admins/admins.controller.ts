@@ -18,20 +18,12 @@ import { AdminsService } from './admins.service'
 import config from '../config'
 import { Logger } from '../logger/Logger.service'
 import { Admin } from './admins.entity'
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiForbiddenResponse,
-  ApiUnauthorizedResponse,
-  ApiNotFoundResponse
-} from '@nestjs/swagger'
-import {
-  UnauthorizedResponse,
-  ForbiddenResponse,
-  NotFoundResponse,
-  CustomErrorMessage
+  ApiFilledUnauthorizedResponse,
+  ApiFilledForbiddenResponse,
+  ApiFilledNotFoundResponse,
+  ApiFilledCustomErrorResponse
 } from '../common/responses.swagger'
 
 @Controller('admins')
@@ -47,18 +39,23 @@ export class AdminsController implements OnApplicationBootstrap {
 
   @Get()
   @ApiOperation({ summary: 'Get all admins' })
-  @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenResponse })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedResponse })
-  @ApiResponse({ status: 200, description: 'Returns admin info', type: 'array',  })
+  @ApiFilledForbiddenResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiResponse({
+    status: 200,
+    description: 'Returns admin info',
+    type: Admin,
+    isArray: true
+  })
   async findAll() {
     return await this.adminsService.findAll()
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get admin by id' })
-  @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
-  @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
-  @ApiNotFoundResponse({ description: 'Item not found', type: NotFoundResponse })
+  @ApiFilledForbiddenResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiFilledNotFoundResponse()
   @ApiResponse({ status: 200, description: 'Returns admin info', type: Admin })
   async findOne(@Param('id') id: string) {
     return await this.adminsService.findOne(id)
@@ -66,30 +63,30 @@ export class AdminsController implements OnApplicationBootstrap {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete admin' })
-  @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
-  @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
-  @ApiNotFoundResponse({ description: 'Item not found', type: NotFoundResponse })
-  @ApiResponse({ status: 200, description: 'Admin deleted'})
+  @ApiFilledForbiddenResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiFilledNotFoundResponse()
+  @ApiResponse({ status: 200, description: 'Admin deleted' })
   async remove(@Param('id') id: string) {
     return await this.adminsService.remove(id)
   }
 
   @Post()
   @ApiOperation({ summary: 'Create new admin' })
-  @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
-  @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
-  @ApiResponse({ status: 400, description: 'Custom error message', type: CustomErrorMessage })
-  @ApiResponse({ status: 201, description: 'Admin created', type: Admin})
+  @ApiFilledForbiddenResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiFilledCustomErrorResponse()
+  @ApiResponse({ status: 201, description: 'Admin created', type: Admin })
   async create(@Body() createAdminDto: CreateAdminDto) {
     return await this.adminsService.create(createAdminDto)
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Update existing admin by id' })
-  @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
-  @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
-  @ApiResponse({ status: 400, description: 'Custom error message', type: CustomErrorMessage })
-  @ApiResponse({ status: 201, description: 'Admin updated', type: Admin})
+  @ApiFilledForbiddenResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiFilledCustomErrorResponse()
+  @ApiResponse({ status: 201, description: 'Admin updated', type: Admin })
   async update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
     return await this.adminsService.update(id, updateAdminDto)
   }

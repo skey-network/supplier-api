@@ -4,8 +4,17 @@ import { AddressValidationPipe } from '../validators'
 import { UsersService } from './users.service'
 import { CreateUserDto } from './users.model'
 
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
+import {
+  ApiFilledUnauthorizedResponse,
+  ApiFilledForbiddenResponse,
+  ApiFilledNotFoundResponse,
+  ApiFilledCustomErrorResponse
+} from '../common/responses.swagger'
+
 @UseGuards(JwtAuthGuard)
 @Controller('users')
+@ApiTags('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

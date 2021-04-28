@@ -26,7 +26,7 @@ export const bootstrap = async () => {
   const document = SwaggerModule.createDocument(
     app,
     new DocumentBuilder()
-      .setTitle("Supplier API")
+      .setTitle('Supplier API')
       .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
       .build()
   )
