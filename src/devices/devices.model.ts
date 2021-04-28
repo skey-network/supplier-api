@@ -6,6 +6,7 @@ import {
   IsPositive,
   IsNumber
 } from 'class-validator'
+import { ApiProperty } from '@nestjs/swagger'
 
 export class CreateConnectionDto {
   @IsNotEmpty()
@@ -28,6 +29,10 @@ export class CreateConnectionDto {
 export class CreateDeviceDto {
   @IsString()
   @IsOptional()
+  @ApiProperty({
+    description: 'Device name',
+    example: 'Example device'
+  })
   name?: string
 
   @IsString()
@@ -80,6 +85,17 @@ export class DeviceCommandDto {
 
   @IsString()
   keyAssetId: string
+}
+
+export class Device {
+  @ApiProperty({ description: 'SmartKey address', example: '3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud' })
+  address: string
+
+  @ApiProperty({
+    description: 'AES encrypted waves backup phrase. Refer to the README for details.',
+    example: 'U2FsdGVkX1+UHPgmbS60YfwtbnEB+h6y9Q9VoR1aqB+GYBB7LQW7Jxruasw6STPih3yk2/Ty79KMcp4SllG3b00P0IR/jpuyzTw1wQ5UHNCYk7YpqAuwwyxArlgWQP/IFdZkBWpJtVJ0PQ8ln8Odso5TlBhvEljxsRlGMe4uKks='
+  })
+  encryptedSeed: string
 }
 
 export interface DeviceCommandPayload {

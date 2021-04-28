@@ -25,8 +25,7 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiUnauthorizedResponse,
-  ApiNotFoundResponse,
-  ApiQuery
+  ApiNotFoundResponse
 } from '@nestjs/swagger'
 import {
   UnauthorizedResponse,
@@ -37,6 +36,7 @@ import {
 
 @Controller('admins')
 @ApiTags('admins')
+@ApiBearerAuth()
 @UseGuards(AdminGuard)
 @UseGuards(JwtAuthGuard)
 @Catch(QueryFailedError, EntityNotFoundError)
@@ -47,7 +47,6 @@ export class AdminsController implements OnApplicationBootstrap {
 
   @Get()
   @ApiOperation({ summary: 'Get all admins' })
-  @ApiBearerAuth()
   @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenResponse })
   @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedResponse })
   @ApiResponse({ status: 200, description: 'Returns admin info', type: 'array',  })
@@ -57,7 +56,6 @@ export class AdminsController implements OnApplicationBootstrap {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get admin by id' })
-  @ApiBearerAuth()
   @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
   @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
   @ApiNotFoundResponse({ description: 'Item not found', type: NotFoundResponse })
@@ -68,7 +66,6 @@ export class AdminsController implements OnApplicationBootstrap {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete admin' })
-  @ApiBearerAuth()
   @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
   @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
   @ApiNotFoundResponse({ description: 'Item not found', type: NotFoundResponse })
@@ -79,7 +76,6 @@ export class AdminsController implements OnApplicationBootstrap {
 
   @Post()
   @ApiOperation({ summary: 'Create new admin' })
-  @ApiBearerAuth()
   @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
   @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
   @ApiResponse({ status: 400, description: 'Custom error message', type: CustomErrorMessage })
@@ -90,7 +86,6 @@ export class AdminsController implements OnApplicationBootstrap {
 
   @Put(':id')
   @ApiOperation({ summary: 'Update existing admin by id' })
-  @ApiBearerAuth()
   @ApiForbiddenResponse({ description: 'User role must be admin', type: ForbiddenResponse })
   @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
   @ApiResponse({ status: 400, description: 'Custom error message', type: CustomErrorMessage })

@@ -20,7 +20,25 @@ import {
 } from './devices.model'
 import { DevicesService } from './devices.service'
 import { DevicesCommandService } from './command.service'
+import { Device } from './devices.model'
 
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiUnauthorizedResponse,
+  ApiNotFoundResponse
+} from '@nestjs/swagger'
+import {
+  UnauthorizedResponse,
+  ForbiddenResponse,
+  NotFoundResponse,
+  CustomErrorMessage
+} from '../common/responses.swagger'
+
+@ApiTags('devices')
 @Controller('devices')
 export class DevicesController {
   constructor(
@@ -30,6 +48,11 @@ export class DevicesController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
+  @ApiOperation({ description: 'Add a new device' })
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: 'User not authorized', type: UnauthorizedResponse })
+  @ApiResponse({ status: 400, description: 'Custom error message', type: CustomErrorMessage })
+  @ApiResponse({ status: 201, description: 'Admin created', type: Device })
   async create(@Body() createDeviceDto: CreateDeviceDto) {
     return await this.devicesService.create(createDeviceDto)
   }
