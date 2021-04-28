@@ -7,6 +7,7 @@ import * as request from 'supertest'
 import { AppModule } from '../app.module'
 import * as Crypto from '@waves/ts-lib-crypto'
 import config from '../config'
+import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 
 jest.setTimeout(3600000)
 
@@ -23,6 +24,7 @@ describe('utils controller', () => {
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
   let token = ''
+  let blockchainWriteService: BlockchainWriteService
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -140,6 +142,22 @@ describe('utils controller', () => {
       expect(description).toEqual('General Kenobi')
       expect(nodeUrl).toEqual(config().blockchain.nodeUrl)
       expect(chainId).toEqual(config().blockchain.chainId)
+    })
+
+    it('returns blank data if not present', async () => {
+      blockchainWriteService = new BlockchainWriteService();
+
+      await blockchainWriteService.insertData([
+        { key: 'name', value: undefined },
+        { key: 'description', value: undefined }
+      ])
+
+      const res = await req().get('/utils/status').set('Authorization', `Bearer ${token}`)
+
+      const { name, description } = res.body
+
+      expect(name).toEqual(undefined)
+      expect(description).toEqual(undefined)
     })
 
     it('unauthorized', async () => {
