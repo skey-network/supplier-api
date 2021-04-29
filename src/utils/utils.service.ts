@@ -63,8 +63,8 @@ export class UtilsService {
       )
 
       return {
-        name: entries.find((e) => e.key === 'name').value,
-        description: entries.find((e) => e.key === 'description').value
+        name: entries.find((e) => e.key === 'name')?.value,
+        description: entries.find((e) => e.key === 'description')?.value
       }
     }
 
