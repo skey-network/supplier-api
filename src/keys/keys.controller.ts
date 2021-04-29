@@ -91,19 +91,21 @@ export class KeysController {
   @ApiOperation({
     summary: 'Generate new keys',
     description:
-      'Generate new keys and transfer to multiple addresses. Maximal amount of keys created in single request is 80.'
+      'Generate new keys and transfer them to a blockchain address. Maximum amount of keys created in single request is 80.'
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiResponse({
     status: 400,
-    description: 'Errors while creating keys',
-    type: CreateKeyResultResponseWithError
+    description: 'Errors while creating key',
+    type: CreateKeyResultResponseWithError,
+    isArray: true
   })
   @ApiResponse({
     status: 201,
-    description: 'Keys generated',
-    type: CreateKeyResultResponse
+    description: 'Key generated',
+    type: CreateKeyResultResponse,
+    isArray: true
   })
   async create(@Body() createKeyDto: CreateKeyDto) {
     return await this.keysService.create(createKeyDto)
@@ -117,14 +119,14 @@ export class KeysController {
 
   @Get(':assetId')
   @ApiOperation({
-    summary: 'Get details of key',
+    summary: 'Get details of a key',
     description: 'Fetches data from blockchain',
     deprecated: true
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
-  @ApiResponse({ status: 200, description: 'Key data fetched', type: Key })
+  @ApiResponse({ status: 200, description: 'Key data', type: Key })
   @ApiParam({
     name: 'assetId',
     description: 'Key asset id',

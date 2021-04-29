@@ -80,6 +80,9 @@ npm test
 - **ENCRYPTION_SALT** - Salt phrase used to encrypt account seeds while creating blockchain accounts.
   **Example value** - `foobar`
 
+- **ENCRYPTION_IV** - Initial vector used to encrypt account seeds while creating blockchain accounts.
+  **Example value** - `0d8fa75738410842`
+
 ## Seed phrase encryption
 
 When this API creates a new blockchain account, it's seeds are encrypted with AES using `crypto-js`:
@@ -92,8 +95,9 @@ Example usage:
 const CryptoJS = require('crypto-js')
 
 function decrypt(message) {
-  let salt = 'foobar'
+  const salt = 'foobar'
+  const iv = '0d8fa75738410842'
 
-  return CryptoJS.AES.decrypt(message, salt).toString(CryptoJS.enc.Utf8)
+  return CryptoJS.AES.decrypt(message, salt, { iv }).toString(CryptoJS.enc.Utf8)
 }
 ```
