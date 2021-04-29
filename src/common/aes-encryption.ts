@@ -1,28 +1,39 @@
 import config from '../config'
-import { Logger } from '../logger/Logger.service'
 
-const CryptoJS = require('crypto-js')
+import * as Crypto from 'crypto-js'
 
-const fetchSalt = (): string => {
-  const key = config().encryptionSalt
-  if (!key) {
-    Logger.debug(key)
+// ENCRYPTION DETAILS
+// https://www.devglan.com/online-tools/aes-encryption-decryption
+// mode: CBC
+// keySize: 256
+// IV: set in ENV ENCRYPTION_IV
+// SecretKey: password => SHA256 => first 32 letters
+// outputFormat: Base64
+
+const fetchSaltAndIv = () => {
+  const enc = config().encryption
+  if (!enc.salt || !enc.iv) {
     throw new Error(
-      'Encryption salt has not been set! Please set ENV variable called ENCRYPTION_SALT'
+      'Encryption salt or IV has not been set! Please set ENV variables called ENCRYPTION_SALT and ENCRYPTION_IV'
     )
   }
 
-  return key
+  return({
+    salt: Crypto.enc.Utf8.parse(Crypto.SHA256(enc.salt).toString().substr(0, 32)),
+    iv: Crypto.enc.Utf8.parse(enc.iv)
+  })
 }
 
-export const encrypt = (message: string): string => {
-  const key = fetchSalt()
+export const encrypt = (text: string) => {
+  const keys = fetchSaltAndIv()
+  const enc = Crypto.AES.encrypt(text, keys.salt, { iv: keys.iv })
 
-  return CryptoJS.AES.encrypt(message, key).toString()
+  return enc.ciphertext.toString(Crypto.enc.Base64)
 }
 
-export const decrypt = (message: string): string => {
-  const key = fetchSalt()
+export const decrypt = (text: string) => {
+  const keys = fetchSaltAndIv()
+  const dec = Crypto.AES.decrypt(text, keys.salt, { iv: keys.iv })
 
-  return CryptoJS.AES.decrypt(message, key).toString(CryptoJS.enc.Utf8)
+  return dec.toString(Crypto.enc.Utf8)
 }
