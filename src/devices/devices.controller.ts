@@ -20,14 +20,15 @@ import {
 } from './devices.model'
 import { DevicesService } from './devices.service'
 import { DevicesCommandService } from './command.service'
-import { Device, ConnectionDetailsResponse } from './devices.model'
+import { ConnectionDetailsResponse } from './devices.model'
 
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
   ApiFilledNotFoundResponse,
   ApiFilledCustomErrorResponse,
-  TransactionResponse
+  TransactionResponse,
+  BlockchainAddress
 } from '../common/responses.swagger'
 
 @ApiTags('devices')
@@ -51,7 +52,11 @@ export class DevicesController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledCustomErrorResponse()
-  @ApiResponse({ status: 201, description: 'Device created successfully', type: Device })
+  @ApiResponse({
+    status: 201,
+    description: 'Device created successfully',
+    type: BlockchainAddress
+  })
   async create(@Body() createDeviceDto: CreateDeviceDto) {
     return await this.devicesService.create(createDeviceDto)
   }
@@ -84,7 +89,11 @@ export class DevicesController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
-  @ApiResponse({ status: 200, description: 'Device data fetched', type: Device })
+  @ApiResponse({
+    status: 200,
+    description: 'Device data fetched',
+    type: BlockchainAddress
+  })
   async show(@Param('address', AddressValidationPipe) address: string) {
     return await this.devicesService.show(address)
   }

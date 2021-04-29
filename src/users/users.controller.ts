@@ -2,14 +2,15 @@ import { Controller, Get, Param, Post, UseGuards, Body } from '@nestjs/common'
 import { JwtAuthGuard } from '../auth/jwt.guard'
 import { AddressValidationPipe } from '../validators'
 import { UsersService } from './users.service'
-import { CreateUserDto } from './users.model'
+import { CreateUserDto, User } from './users.model'
 
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
   ApiFilledForbiddenResponse,
   ApiFilledNotFoundResponse,
-  ApiFilledCustomErrorResponse
+  ApiFilledCustomErrorResponse,
+  BlockchainAddress
 } from '../common/responses.swagger'
 
 @UseGuards(JwtAuthGuard)
@@ -19,10 +20,31 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @ApiOperation({
+    summary: 'Add new user',
+    description: 'Create new address, transfer funds and save in dApp storage'
+  })
+  @ApiBearerAuth()
+  @ApiFilledCustomErrorResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully',
+    type: BlockchainAddress
+  })
   async create(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.create(createUserDto)
   }
 
+  @ApiOperation({
+    summary: 'Get details of user',
+    description: 'Fetch user data',
+    deprecated: true
+  })
+  @ApiBearerAuth()
+  @ApiFilledCustomErrorResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiResponse({ status: 200, description: 'User data fetched', type: User })
   @Get(':address')
   async show(@Param('address', AddressValidationPipe) address: string) {
     return await this.usersService.show(address)

@@ -61,6 +61,21 @@ export class CustomErrorMessage {
   details: string
 }
 
+export class BlockchainAddress {
+  @ApiProperty({
+    description: 'SmartKey address',
+    example: '3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud'
+  })
+  address: string
+
+  @ApiProperty({
+    description: 'AES encrypted waves backup phrase. Refer to the README for details.',
+    example:
+      'U2FsdGVkX1+UHPgmbS60YfwtbnEB+h6y9Q9VoR1aqB+GYBB7LQW7Jxruasw6STPih3yk2/Ty79KMcp4SllG3b00P0IR/jpuyzTw1wQ5UHNCYk7YpqAuwwyxArlgWQP/IFdZkBWpJtVJ0PQ8ln8Odso5TlBhvEljxsRlGMe4uKks='
+  })
+  encryptedSeed: string
+}
+
 export const ApiFilledUnauthorizedResponse = (options: ApiResponseOptions = {}) =>
   ApiUnauthorizedResponse({
     description: 'User not authorized',
