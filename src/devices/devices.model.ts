@@ -186,3 +186,29 @@ export interface DeviceCommandResponse {
   script: string
   waitForTx: boolean
 }
+
+export class DeviceData {
+  @ApiProperty({
+    description: 'Device address',
+    example: '3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud'
+  })
+  address: string
+
+  @ApiProperty({
+    description: 'Balance on the address',
+    example: 500000000
+  })
+  balance: number
+
+  @ApiProperty({
+    description: 'DApp address',
+    example: '3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud'
+  })
+  ownerDapp: string
+
+  @ApiProperty({
+    description: 'Flag to check if device is connected',
+    example: true
+  })
+  connected: boolean
+}

@@ -20,7 +20,7 @@ import {
 } from './devices.model'
 import { DevicesService } from './devices.service'
 import { DevicesCommandService } from './command.service'
-import { ConnectionDetailsResponse } from './devices.model'
+import { ConnectionDetailsResponse, DeviceData } from './devices.model'
 
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
 import {
@@ -84,8 +84,7 @@ export class DevicesController {
   @ApiFilledUnauthorizedResponse()
   @ApiResponse({
     status: 200,
-    type: String,
-    isArray: true
+    type: [String]
   })
   async index() {
     return await this.devicesService.index()
@@ -110,7 +109,7 @@ export class DevicesController {
   @ApiResponse({
     status: 200,
     description: 'Device data fetched',
-    type: BlockchainAddress
+    type: DeviceData
   })
   async show(@Param('address', AddressValidationPipe) address: string) {
     return await this.devicesService.show(address)

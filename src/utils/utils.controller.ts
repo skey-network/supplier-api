@@ -26,7 +26,7 @@ export class UtilsController {
 
   @Post('faucet')
   @ApiOperation({
-    summary: 'Transfer funds for given address',
+    summary: 'Transfer funds to given address',
     description: 'Transfer funds from dApp to given address'
   })
   @ApiBearerAuth()

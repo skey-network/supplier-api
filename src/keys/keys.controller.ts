@@ -20,11 +20,12 @@ import {
   CreateAndTransferKeyDto,
   CreateKeyDto,
   CreateKeyResultResponse,
-  CreateKeyResultResponseWithError
+  CreateKeyResultResponseWithError,
+  KeyExample
 } from './keys.model'
 import { KeysService } from './keys.service'
 
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiProperty } from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
   ApiFilledNotFoundResponse,
@@ -48,7 +49,8 @@ export class KeysController {
   @Get()
   @ApiOperation({
     summary: 'List all keys',
-    description: 'Fetch keys from dApp'
+    description: 'Fetch keys from dApp',
+    deprecated: true
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
@@ -80,7 +82,7 @@ export class KeysController {
     type: CreateKeyResultResponseWithError
   })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'Keys generated',
     type: CreateKeyResultResponse
   })
@@ -103,7 +105,7 @@ export class KeysController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
-  @ApiResponse({ status: 200, description: 'Key data fetched' })
+  @ApiResponse({ status: 200, description: 'Key data fetched', type: KeyExample })
   async show(@Param('assetId', AssetIdValidationPipe) assetId: string) {
     return await this.keysService.show(assetId)
   }
@@ -143,8 +145,8 @@ export class KeysController {
 
   @Delete(':assetId')
   @ApiOperation({
-    summary: 'Burn key',
-    description: "Burn key when it's on dApp account"
+    summary: 'Burn/delete key',
+    description: "Burn/delete a key - it has to be on dApp account"
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()

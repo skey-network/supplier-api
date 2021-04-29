@@ -130,3 +130,35 @@ export class CreateAndTransferKeyDto {
   })
   amount: number
 }
+
+export class KeyExample {
+  @ApiProperty({
+    description: 'ID of key',
+    example: '9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf'
+  })
+  assetId: string
+
+  @ApiProperty({
+    description: 'Address of issuer',
+    example: '3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud'
+  })
+  issuer: string
+
+  @ApiProperty({
+    description: 'Address of device',
+    example: '3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud'
+  })
+  device: string
+
+  @ApiProperty({
+    description: 'Time of issue in Epoch timestamp',
+    example: 1592861516794
+  })
+  issuedAt: number
+
+  @ApiProperty({
+    description: 'Time of expiration in Epoch timestamp',
+    example: 1592861516794
+  })
+  validTo: number
+}
