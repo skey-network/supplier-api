@@ -37,6 +37,12 @@ export class AdminsController implements OnApplicationBootstrap {
 
   private readonly logger = new Logger(AdminsController.name)
 
+  //
+  // -------------------------------------------------------
+  // GET /admins
+  // -------------------------------------------------------
+  //
+
   @Get()
   @ApiOperation({ summary: 'Get all admins' })
   @ApiFilledForbiddenResponse()
@@ -51,6 +57,12 @@ export class AdminsController implements OnApplicationBootstrap {
     return await this.adminsService.findAll()
   }
 
+  //
+  // -------------------------------------------------------
+  // GET /admins/:id
+  // -------------------------------------------------------
+  //
+
   @Get(':id')
   @ApiOperation({ summary: 'Get admin by id' })
   @ApiFilledForbiddenResponse()
@@ -60,6 +72,12 @@ export class AdminsController implements OnApplicationBootstrap {
   async findOne(@Param('id') id: string) {
     return await this.adminsService.findOne(id)
   }
+
+  //
+  // -------------------------------------------------------
+  // DELETE /admins/:id
+  // -------------------------------------------------------
+  //
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete admin' })
@@ -71,6 +89,12 @@ export class AdminsController implements OnApplicationBootstrap {
     return await this.adminsService.remove(id)
   }
 
+  //
+  // -------------------------------------------------------
+  // POST /admins
+  // -------------------------------------------------------
+  //
+
   @Post()
   @ApiOperation({ summary: 'Create new admin' })
   @ApiFilledForbiddenResponse()
@@ -80,6 +104,12 @@ export class AdminsController implements OnApplicationBootstrap {
   async create(@Body() createAdminDto: CreateAdminDto) {
     return await this.adminsService.create(createAdminDto)
   }
+
+  //
+  // -------------------------------------------------------
+  // PUT /admins/:id
+  // -------------------------------------------------------
+  //
 
   @Put(':id')
   @ApiOperation({ summary: 'Update existing admin by id' })

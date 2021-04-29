@@ -10,6 +10,12 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger'
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  //
+  // -------------------------------------------------------
+  // POST /auth/login
+  // -------------------------------------------------------
+  //
+
   @Post('login')
   @ApiOperation({ summary: 'Log in and get JWT token' })
   @ApiQuery({ type: QueryParams })

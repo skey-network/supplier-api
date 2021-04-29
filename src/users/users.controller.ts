@@ -19,6 +19,12 @@ import {
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  //
+  // -------------------------------------------------------
+  // POST /users
+  // -------------------------------------------------------
+  //
+
   @Post()
   @ApiOperation({
     summary: 'Add new user',
@@ -35,6 +41,12 @@ export class UsersController {
   async create(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.create(createUserDto)
   }
+
+  //
+  // -------------------------------------------------------
+  // GET /users/:address
+  // -------------------------------------------------------
+  //
 
   @ApiOperation({
     summary: 'Get details of user',

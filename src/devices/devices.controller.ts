@@ -39,6 +39,12 @@ export class DevicesController {
     private readonly devicesCommandService: DevicesCommandService
   ) {}
 
+  //
+  // -------------------------------------------------------
+  // POST /devices
+  // -------------------------------------------------------
+  //
+
   @UseGuards(JwtAuthGuard)
   @Post()
   @ApiOperation({
@@ -61,6 +67,12 @@ export class DevicesController {
     return await this.devicesService.create(createDeviceDto)
   }
 
+  //
+  // -------------------------------------------------------
+  // GET /devices
+  // -------------------------------------------------------
+  //
+
   @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOperation({
@@ -78,6 +90,12 @@ export class DevicesController {
   async index() {
     return await this.devicesService.index()
   }
+
+  //
+  // -------------------------------------------------------
+  // GET /devices/:address
+  // -------------------------------------------------------
+  //
 
   @UseGuards(JwtAuthGuard)
   @Get(':address')
@@ -98,6 +116,12 @@ export class DevicesController {
     return await this.devicesService.show(address)
   }
 
+  //
+  // -------------------------------------------------------
+  // DELETE /devices/:address
+  // -------------------------------------------------------
+  //
+
   @UseGuards(JwtAuthGuard)
   @Delete(':address')
   @ApiOperation({
@@ -115,6 +139,12 @@ export class DevicesController {
   async destroy(@Param('address', AddressValidationPipe) address: string) {
     return await this.devicesService.destroy(address)
   }
+
+  //
+  // -------------------------------------------------------
+  // POST /devices/:address/keys/:assetId
+  // -------------------------------------------------------
+  //
 
   @UseGuards(JwtAuthGuard)
   @Post(':address/keys/:assetId')
@@ -136,6 +166,12 @@ export class DevicesController {
   ) {
     return await this.devicesService.addKey(address, assetId)
   }
+
+  //
+  // -------------------------------------------------------
+  // DELETE /devices/keys/:assetId
+  // -------------------------------------------------------
+  //
 
   @UseGuards(JwtAuthGuard)
   @Delete(':address/keys/:assetId')
@@ -159,6 +195,12 @@ export class DevicesController {
     return await this.devicesService.removeKey(address, assetId)
   }
 
+  //
+  // -------------------------------------------------------
+  // PUT /devices/:address
+  // -------------------------------------------------------
+  //
+
   // TODO not tested
   @UseGuards(JwtAuthGuard)
   @Put(':address')
@@ -178,6 +220,12 @@ export class DevicesController {
     return await this.devicesService.edit(address, editDeviceDto)
   }
 
+  //
+  // -------------------------------------------------------
+  // GET /devices/:address/connection
+  // -------------------------------------------------------
+  //
+
   @UseGuards(JwtAuthGuard)
   @Get(':address/connection')
   @ApiOperation({
@@ -195,6 +243,12 @@ export class DevicesController {
   async connection(@Param('address', AddressValidationPipe) address: string) {
     return await this.devicesService.connection(address)
   }
+
+  //
+  // -------------------------------------------------------
+  // POST /devices/:address/connect
+  // -------------------------------------------------------
+  //
 
   @UseGuards(JwtAuthGuard)
   @Post(':address/connect')
@@ -217,6 +271,12 @@ export class DevicesController {
     return await this.devicesService.connect(address, createConnectionDto)
   }
 
+  //
+  // -------------------------------------------------------
+  // DELETE /devices/:address/disconnect
+  // -------------------------------------------------------
+  //
+
   @UseGuards(JwtAuthGuard)
   @Delete(':address/disconnect')
   @ApiOperation({
@@ -235,6 +295,12 @@ export class DevicesController {
     return await this.devicesService.disconnect(address)
   }
 
+  //
+  // -------------------------------------------------------
+  // POST /devices/device_message
+  // -------------------------------------------------------
+  //
+
   @Post('device_message')
   @ApiOperation({
     summary: 'Endpoint for IoT',
@@ -245,6 +311,12 @@ export class DevicesController {
   async deviceMessage(@Body() deviceMessageDto: DeviceMessageDto) {
     return await this.devicesService.deviceMessage(deviceMessageDto)
   }
+
+  //
+  // -------------------------------------------------------
+  // POST /devices/:address/commands/:command
+  // -------------------------------------------------------
+  //
 
   @UseGuards(JwtAuthGuard)
   @Post(':address/commands/:command')

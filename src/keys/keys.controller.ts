@@ -39,6 +39,12 @@ import {
 export class KeysController {
   constructor(private readonly keysService: KeysService) {}
 
+  //
+  // -------------------------------------------------------
+  // GET /keys
+  // -------------------------------------------------------
+  //
+
   @Get()
   @ApiOperation({
     summary: 'List all keys',
@@ -53,6 +59,12 @@ export class KeysController {
   ) {
     return await this.keysService.index(limit, after)
   }
+
+  //
+  // -------------------------------------------------------
+  // POST /keys
+  // -------------------------------------------------------
+  //
 
   @Post()
   @ApiOperation({
@@ -76,6 +88,12 @@ export class KeysController {
     return await this.keysService.create(createKeyDto)
   }
 
+  //
+  // -------------------------------------------------------
+  // GET /keys/:assetId
+  // -------------------------------------------------------
+  //
+
   @Get(':assetId')
   @ApiOperation({
     summary: 'Get details of key',
@@ -89,6 +107,12 @@ export class KeysController {
   async show(@Param('assetId', AssetIdValidationPipe) assetId: string) {
     return await this.keysService.show(assetId)
   }
+
+  //
+  // -------------------------------------------------------
+  // PUT /keys/:assetId/transfer/:address
+  // -------------------------------------------------------
+  //
 
   @Put(':assetId/transfer/:address')
   @ApiOperation({
@@ -111,6 +135,12 @@ export class KeysController {
     return await this.keysService.transfer(assetId, address)
   }
 
+  //
+  // -------------------------------------------------------
+  // DELETE /keys/:assetId
+  // -------------------------------------------------------
+  //
+
   @Delete(':assetId')
   @ApiOperation({
     summary: 'Burn key',
@@ -128,6 +158,12 @@ export class KeysController {
   async burn(@Param('assetId', AssetIdValidationPipe) assetId: string) {
     return await this.keysService.burn(assetId)
   }
+
+  //
+  // -------------------------------------------------------
+  // POST /keys/generate_and_transfer
+  // -------------------------------------------------------
+  //
 
   @Post('/generate_and_transfer')
   @ApiOperation({
