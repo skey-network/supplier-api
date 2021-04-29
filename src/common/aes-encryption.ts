@@ -18,10 +18,10 @@ const fetchSaltAndIv = () => {
     )
   }
 
-  return({
+  return {
     salt: Crypto.enc.Utf8.parse(Crypto.SHA256(enc.salt).toString().substr(0, 32)),
     iv: Crypto.enc.Utf8.parse(enc.iv)
-  })
+  }
 }
 
 export const encrypt = (text: string) => {

@@ -145,7 +145,7 @@ describe('utils controller', () => {
     })
 
     it('returns blank data if not present', async () => {
-      blockchainWriteService = new BlockchainWriteService();
+      blockchainWriteService = new BlockchainWriteService()
 
       await blockchainWriteService.insertData([
         { key: 'name', value: undefined },

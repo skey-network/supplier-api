@@ -18,7 +18,13 @@ import { AdminsService } from './admins.service'
 import config from '../config'
 import { Logger } from '../logger/Logger.service'
 import { Admin } from './admins.entity'
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger'
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam
+} from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
   ApiFilledForbiddenResponse,
@@ -64,7 +70,7 @@ export class AdminsController implements OnApplicationBootstrap {
   //
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get admin by id' })
+  @ApiOperation({ summary: 'Get admin info' })
   @ApiFilledForbiddenResponse()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
@@ -114,7 +120,7 @@ export class AdminsController implements OnApplicationBootstrap {
   //
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update existing admin by id' })
+  @ApiOperation({ summary: 'Update existing admin' })
   @ApiFilledForbiddenResponse()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledCustomErrorResponse()
