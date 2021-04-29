@@ -25,7 +25,7 @@ import {
 } from './keys.model'
 import { KeysService } from './keys.service'
 
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiProperty } from '@nestjs/swagger'
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiProperty, ApiParam } from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
   ApiFilledNotFoundResponse,
@@ -55,6 +55,8 @@ export class KeysController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiResponse({ status: 200, description: 'List of keys', type: String, isArray: true })
+  @ApiParam({ name: 'limit', description: 'Number of keys to be returned (defaults to 50)', example: 50 })
+  @ApiParam({ name: 'after', description: 'AssetId of key to paginate after (defaults to first token)', example: '9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf' })
   async index(
     @Query('limit', LimitPipe) limit: number,
     @Query('after', OptionalAssetIdValidationPipe) after: string
@@ -106,6 +108,7 @@ export class KeysController {
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
   @ApiResponse({ status: 200, description: 'Key data fetched', type: KeyExample })
+  @ApiParam({ name: 'assetId', description: 'Key asset id', example: '9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf' })
   async show(@Param('assetId', AssetIdValidationPipe) assetId: string) {
     return await this.keysService.show(assetId)
   }
@@ -130,6 +133,8 @@ export class KeysController {
     description: 'Key transferred successfully',
     type: TransactionResponse
   })
+  @ApiParam({ name: 'assetId', description: 'Key asset id', example: '9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf' })
+  @ApiParam({ name: 'address', description: 'Address to transfer key to', example: '3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud' })
   async transfer(
     @Param('assetId', AssetIdValidationPipe) assetId: string,
     @Param('address', AddressValidationPipe) address: string
@@ -146,7 +151,7 @@ export class KeysController {
   @Delete(':assetId')
   @ApiOperation({
     summary: 'Burn/delete key',
-    description: "Burn/delete a key - it has to be on dApp account"
+    description: "Burn/delete a key - to be able to burn it, it has to be on the dApp account"
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
@@ -157,6 +162,7 @@ export class KeysController {
     description: 'Key burned successfully',
     type: TransactionResponse
   })
+  @ApiParam({ name: 'assetId', description: 'Key asset id', example: '9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf' })
   async burn(@Param('assetId', AssetIdValidationPipe) assetId: string) {
     return await this.keysService.burn(assetId)
   }

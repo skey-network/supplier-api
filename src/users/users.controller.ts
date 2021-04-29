@@ -4,7 +4,7 @@ import { AddressValidationPipe } from '../validators'
 import { UsersService } from './users.service'
 import { CreateUserDto, User } from './users.model'
 
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
   ApiFilledForbiddenResponse,
@@ -57,6 +57,7 @@ export class UsersController {
   @ApiFilledCustomErrorResponse()
   @ApiFilledUnauthorizedResponse()
   @ApiResponse({ status: 200, description: 'User data fetched', type: User })
+  @ApiParam({ name: 'address', description: 'Blockchain address of user', example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k' })
   @Get(':address')
   async show(@Param('address', AddressValidationPipe) address: string) {
     return await this.usersService.show(address)

@@ -83,7 +83,7 @@ describe('devices controller', () => {
       expect(typeof encryptedSeed).toBe('string')
     })
 
-    it.only('seed is encrypted', async () => {
+    it('seed is encrypted', async () => {
       const res = await req()
         .post('/devices')
         .set('Authorization', `Bearer ${token}`)

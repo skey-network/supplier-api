@@ -22,7 +22,7 @@ import { DevicesService } from './devices.service'
 import { DevicesCommandService } from './command.service'
 import { ConnectionDetailsResponse, DeviceData } from './devices.model'
 
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
   ApiFilledNotFoundResponse,
@@ -50,7 +50,7 @@ export class DevicesController {
   @ApiOperation({
     summary: 'Add a new device',
     description: `This request performs multiple actions: \n
-    - create new waves account \n
+    - create new blockchain account \n
     - transfer funds to this account \n
     - set account script on this account \n
     - add device address to dApp storage`
@@ -77,14 +77,19 @@ export class DevicesController {
   @Get()
   @ApiOperation({
     summary: 'List of all devices',
-    description: 'Fetch all devices from dApp and forward to client',
+    description: 'Fetch blockchain addresses of all devices from dApp',
     deprecated: true
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiResponse({
     status: 200,
-    type: [String]
+    schema: {
+      items: {
+        type: 'string'
+      },
+      example: ['3MwzVVTXiYGQsp48VX8adQ8cpqERGusRZfD', '2NBPqqjDH2eYmoHeXNPnHhLvA7D4UDQXQcx', '7MvTY6UrP8PHPv5DYTs1uCQ8HSQ3tkP6JdQ']
+    }
   })
   async index() {
     return await this.devicesService.index()
@@ -108,9 +113,10 @@ export class DevicesController {
   @ApiFilledNotFoundResponse()
   @ApiResponse({
     status: 200,
-    description: 'Device data fetched',
+    description: 'Device data',
     type: DeviceData
   })
+  @ApiParam({ name: 'address', description: 'Device address', example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k' })
   async show(@Param('address', AddressValidationPipe) address: string) {
     return await this.devicesService.show(address)
   }
@@ -135,6 +141,7 @@ export class DevicesController {
     description: 'Device removed successfully',
     type: TransactionResponse
   })
+  @ApiParam({ name: 'address', description: 'Device address', example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k' })
   async destroy(@Param('address', AddressValidationPipe) address: string) {
     return await this.devicesService.destroy(address)
   }
@@ -159,6 +166,8 @@ export class DevicesController {
     description: 'Key added successfully',
     type: TransactionResponse
   })
+  @ApiParam({ name: 'address', description: 'Device address', example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k' })
+  @ApiParam({ name: 'assetId', description: 'ID of asset', example: '7HbEUg9yWMGtJ9dNW24rvcseiPYXAAaCoe23StkcyWXS' })
   async addKey(
     @Param('address', AddressValidationPipe) address: string,
     @Param('assetId', AssetIdValidationPipe) assetId: string
@@ -168,7 +177,7 @@ export class DevicesController {
 
   //
   // -------------------------------------------------------
-  // DELETE /devices/keys/:assetId
+  // DELETE /devices/:address/keys/:assetId
   // -------------------------------------------------------
   //
 
@@ -187,6 +196,8 @@ export class DevicesController {
     description: 'Key removed successfully',
     type: TransactionResponse
   })
+  @ApiParam({ name: 'address', description: 'Device address', example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k' })
+  @ApiParam({ name: 'assetId', description: 'ID of asset', example: '7HbEUg9yWMGtJ9dNW24rvcseiPYXAAaCoe23StkcyWXS' })
   async removeKey(
     @Param('address', AddressValidationPipe) address: string,
     @Param('assetId', AssetIdValidationPipe) assetId: string
@@ -211,7 +222,8 @@ export class DevicesController {
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
   @ApiFilledCustomErrorResponse()
-  @ApiResponse({ status: 201, description: 'Device updated', type: TransactionResponse })
+  @ApiResponse({ status: 200, description: 'Device updated', type: TransactionResponse })
+  @ApiParam({ name: 'address', description: 'Device address', example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k' })
   async edit(
     @Param('address', AddressValidationPipe) address: string,
     @Body() editDeviceDto: EditDeviceDto
@@ -236,9 +248,10 @@ export class DevicesController {
   @ApiFilledNotFoundResponse()
   @ApiResponse({
     status: 200,
-    description: 'Connection details fetched',
+    description: 'Connection details',
     type: ConnectionDetailsResponse
   })
+  @ApiParam({ name: 'address', description: 'Device address', example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k' })
   async connection(@Param('address', AddressValidationPipe) address: string) {
     return await this.devicesService.connection(address)
   }
@@ -253,7 +266,7 @@ export class DevicesController {
   @Post(':address/connect')
   @ApiOperation({
     summary: 'Connect device to provider',
-    description: 'Connect device to orange live objects and update status in dApp'
+    description: 'Connect device to Orange Live Object'
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
@@ -263,6 +276,7 @@ export class DevicesController {
     description: 'Device connected successfully',
     type: ConnectionDetailsResponse
   })
+  @ApiParam({ name: 'address', description: 'Device address', example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k' })
   async connect(
     @Param('address', AddressValidationPipe) address: string,
     @Body() createConnectionDto: CreateConnectionDto
@@ -280,7 +294,7 @@ export class DevicesController {
   @Delete(':address/disconnect')
   @ApiOperation({
     summary: 'Disconnect device from provider',
-    description: 'Disconnect device from orange live objects and update status in dApp'
+    description: 'Disconnect device from Orange Live Object'
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
@@ -290,6 +304,7 @@ export class DevicesController {
     description: 'Device disconnected successfully',
     type: TransactionResponse
   })
+  @ApiParam({ name: 'address', description: 'Device address', example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k' })
   async disconnect(@Param('address', AddressValidationPipe) address: string) {
     return await this.devicesService.disconnect(address)
   }
@@ -302,11 +317,11 @@ export class DevicesController {
 
   @Post('device_message')
   @ApiOperation({
-    summary: 'Endpoint for IoT',
-    description: 'Endpoint for IoT'
+    summary: 'Send a message to IoT',
+    description: 'Send a message to IoT'
   })
   @ApiFilledUnauthorizedResponse()
-  @ApiResponse({ status: 200, description: 'Device disconnected successfully' })
+  @ApiResponse({ status: 201, description: 'Successful message', schema: { example: {} } })
   async deviceMessage(@Body() deviceMessageDto: DeviceMessageDto) {
     return await this.devicesService.deviceMessage(deviceMessageDto)
   }
@@ -327,6 +342,9 @@ export class DevicesController {
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
   @ApiResponse({ status: 200, description: 'Command sent' })
+  @ApiParam({ name: 'address', description: 'Device address', example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k' })
+  @ApiParam({ name: 'command', description: 'Name of the command to execute', example: 'open' })
+  @ApiParam({ name: 'waitForTx', description: 'Send true to wait for response from the blockchain', example: 'true' })
   async command(
     @Param('address') deviceAddress: string,
     @Param('command') command: string,

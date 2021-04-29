@@ -207,7 +207,7 @@ export class DeviceData {
   ownerDapp: string
 
   @ApiProperty({
-    description: 'Flag to check if device is connected',
+    description: 'Is device connected?',
     example: true
   })
   connected: boolean

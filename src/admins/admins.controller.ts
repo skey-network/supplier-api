@@ -18,7 +18,7 @@ import { AdminsService } from './admins.service'
 import config from '../config'
 import { Logger } from '../logger/Logger.service'
 import { Admin } from './admins.entity'
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
   ApiFilledForbiddenResponse,
@@ -69,6 +69,7 @@ export class AdminsController implements OnApplicationBootstrap {
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
   @ApiResponse({ status: 200, description: 'Returns admin info', type: Admin })
+  @ApiParam({ name: 'id', description: 'ID of admin', example: 123 })
   async findOne(@Param('id') id: string) {
     return await this.adminsService.findOne(id)
   }
@@ -85,6 +86,7 @@ export class AdminsController implements OnApplicationBootstrap {
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
   @ApiResponse({ status: 200, description: 'Admin deleted' })
+  @ApiParam({ name: 'id', description: 'ID of admin', example: 123 })
   async remove(@Param('id') id: string) {
     return await this.adminsService.remove(id)
   }
@@ -117,6 +119,7 @@ export class AdminsController implements OnApplicationBootstrap {
   @ApiFilledUnauthorizedResponse()
   @ApiFilledCustomErrorResponse()
   @ApiResponse({ status: 201, description: 'Admin updated', type: Admin })
+  @ApiParam({ name: 'id', description: 'ID of admin', example: 123 })
   async update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
     return await this.adminsService.update(id, updateAdminDto)
   }
