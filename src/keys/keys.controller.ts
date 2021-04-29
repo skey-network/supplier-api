@@ -21,7 +21,7 @@ import {
   CreateKeyDto,
   CreateKeyResultResponse,
   CreateKeyResultResponseWithError,
-  KeyExample
+  Key
 } from './keys.model'
 import { KeysService } from './keys.service'
 
@@ -61,16 +61,18 @@ export class KeysController {
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
-  @ApiResponse({ status: 200, description: 'List of keys', type: String, isArray: true })
+  @ApiResponse({ status: 200, description: 'List of keys', type: Key, isArray: true })
   @ApiParam({
     name: 'limit',
     description: 'Number of keys to be returned (defaults to 50)',
-    example: 50
+    example: 50,
+    required: false
   })
   @ApiParam({
     name: 'after',
     description: 'AssetId of key to paginate after (defaults to first token)',
-    example: '9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf'
+    example: '9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf',
+    required: false
   })
   async index(
     @Query('limit', LimitPipe) limit: number,
@@ -122,7 +124,7 @@ export class KeysController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
-  @ApiResponse({ status: 200, description: 'Key data fetched', type: KeyExample })
+  @ApiResponse({ status: 200, description: 'Key data fetched', type: Key })
   @ApiParam({
     name: 'assetId',
     description: 'Key asset id',

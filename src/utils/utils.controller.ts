@@ -58,7 +58,37 @@ export class UtilsController {
   @ApiResponse({
     status: 201,
     description: 'Script set',
-    type: SetupActionResponse
+    schema: {
+      items: {
+        type: 'array'
+      },
+      properties: {
+        action: {
+          type: 'string',
+          description: 'Name of performed action',
+          example: 'setScript'
+        },
+        txHash: {
+          type: 'string',
+          description: 'Transaction ID',
+          example: 'ETxijrCfCwtBYZG2GgVyU9pHvQ6GguXtrGxXpeEjM4kn'
+        }
+      },
+      example: [
+        {
+          action: "setScript",
+          txHash: "ETxijrCfCwtBYZG2GgVyU9pHvQ6GguXtrGxXpeEjM4kn"
+        },
+        {
+          action: "setName",
+          txHash: "6u7nx69CGM8P589A6ZG7Um1MNF4889YSx6m1QrzVt5Zg"
+        },
+        {
+          action: "setDescription",
+          txHash: "ED8mT6b1UTmBSNv79Z93iJbXTgQ2xHbbVZeRNjGdtTFo"
+        }
+      ]
+    }
   })
   async setup(@Body() setupDto: SetupDto) {
     return await this.utilsService.setup(setupDto)

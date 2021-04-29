@@ -131,7 +131,7 @@ export class CreateAndTransferKeyDto {
   amount: number
 }
 
-export class KeyExample {
+export class Key {
   @ApiProperty({
     description: 'ID of key',
     example: '9kY6qhKMRs4jHBPTHV1Pgdzqbo3X4XmBM7koAxwR9RTf'
@@ -154,7 +154,7 @@ export class KeyExample {
     description: 'Time of issue in Epoch timestamp',
     example: 1592861516794
   })
-  issuedAt: number
+  issueTimestamp: number
 
   @ApiProperty({
     description: 'Time of expiration in Epoch timestamp',
