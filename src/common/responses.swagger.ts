@@ -33,7 +33,7 @@ export class NotFoundResponse {
   })
   statusCode: number
 
-  @ApiProperty({ example: 'Item not found' })
+  @ApiProperty({ example: 'Not found' })
   message: string
 }
 
@@ -54,11 +54,14 @@ export class AssetTransactionResponse extends TransactionResponse {
 }
 
 export class CustomErrorMessage {
-  @ApiProperty({ example: 'custom error message' })
-  message: string
+  @ApiProperty({ example: 400, description: 'HTTP response code' })
+  statusCode: number
 
-  @ApiProperty({ example: "{ 'status': 409 }" })
-  details: string
+  @ApiProperty({ example: ['custom error message'], description: 'Error message(s)' })
+  message: string[]
+
+  @ApiProperty({ example: "Bad request" })
+  error: string
 }
 
 export class BlockchainAddress {

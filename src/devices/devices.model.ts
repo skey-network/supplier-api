@@ -65,28 +65,28 @@ export class CreateDeviceDto {
   @IsOptional()
   @ApiProperty({
     description: 'Latitude',
-    example: '20.0',
+    example: 20.0,
     required: false
   })
-  lat?: string
+  lat?: number
 
   @IsNumber()
   @IsOptional()
   @ApiProperty({
     description: 'Longitude',
-    example: '15.0',
+    example: 15.0,
     required: false
   })
-  lng?: string
+  lng?: number
 
   @IsNumber()
   @IsOptional()
   @ApiProperty({
     description: 'Altitude',
-    example: '2400',
+    example: 2400,
     required: false
   })
-  alt?: string
+  alt?: number
 
   @IsString()
   @IsOptional()
@@ -118,6 +118,20 @@ export class CreateDeviceDto {
 
 export interface EditDeviceDto {
   [key: string]: string | number | boolean | null
+}
+
+export class EditDevice {
+  @ApiProperty({
+    example: 'value1',
+    required: false
+  })
+  key1?: string
+
+  @ApiProperty({
+    example: 123,
+    required: false
+  })
+  key2?: number
 }
 
 export class DeviceMessageDto {

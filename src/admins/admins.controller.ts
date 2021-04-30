@@ -55,7 +55,7 @@ export class AdminsController implements OnApplicationBootstrap {
   @ApiFilledUnauthorizedResponse()
   @ApiResponse({
     status: 200,
-    description: 'Returns admin info',
+    description: 'Returns info about all admins',
     type: Admin,
     isArray: true
   })

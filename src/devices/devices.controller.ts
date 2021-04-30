@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../auth/jwt.guard'
 import {
   CreateDeviceDto,
   EditDeviceDto,
+  EditDevice,
   CreateConnectionDto,
   DeviceMessageDto,
   DeviceCommandDto
@@ -27,8 +28,8 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiQuery,
-  ApiParam
+  ApiParam,
+  ApiBody
 } from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
@@ -56,10 +57,7 @@ export class DevicesController {
   @Post()
   @ApiOperation({
     summary: 'Add a new device',
-    description: `This request creates a new blockchain account \n
-    - transfer funds to this account \n
-    - set account script on this account \n
-    - add device address to dApp storage`
+    description: `Create a new blockchain account for a device`
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
@@ -121,6 +119,7 @@ export class DevicesController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
+  @ApiFilledCustomErrorResponse()
   @ApiResponse({
     status: 200,
     description: 'Device data',
@@ -150,6 +149,7 @@ export class DevicesController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
+  @ApiFilledCustomErrorResponse()
   @ApiResponse({
     status: 200,
     description: 'Device removed successfully',
@@ -179,6 +179,7 @@ export class DevicesController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
+  @ApiFilledCustomErrorResponse()
   @ApiResponse({
     status: 200,
     description: 'Key added successfully',
@@ -262,6 +263,7 @@ export class DevicesController {
     description: 'Device address',
     example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k'
   })
+  @ApiBody({ type: EditDevice })
   async edit(
     @Param('address', AddressValidationPipe) address: string,
     @Body() editDeviceDto: EditDeviceDto
@@ -284,6 +286,7 @@ export class DevicesController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
+  @ApiFilledCustomErrorResponse()
   @ApiResponse({
     status: 200,
     description: 'Connection details',
@@ -313,6 +316,7 @@ export class DevicesController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
+  @ApiFilledCustomErrorResponse()
   @ApiResponse({
     status: 200,
     description: 'Device connected successfully',
@@ -345,6 +349,7 @@ export class DevicesController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
+  @ApiFilledCustomErrorResponse()
   @ApiResponse({
     status: 200,
     description: 'Device disconnected successfully',
@@ -395,6 +400,7 @@ export class DevicesController {
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledNotFoundResponse()
+  @ApiFilledCustomErrorResponse()
   @ApiResponse({ status: 200, description: 'Command sent' })
   @ApiParam({
     name: 'address',

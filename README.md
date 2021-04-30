@@ -101,3 +101,14 @@ function decrypt(message) {
   return CryptoJS.AES.decrypt(message, salt, { iv }).toString(CryptoJS.enc.Utf8)
 }
 ```
+
+## Encryption details
+
+Test over here:
+https://www.devglan.com/online-tools/aes-encryption-decryption
+
+- mode: CBC
+- keySize: 256
+- IV: set in ENV variable **ENCRYPTION_IV**
+- SecretKey: **ENCRYPTION_SALT** => SHA256 => first 32 letters
+- outputFormat: Base64
