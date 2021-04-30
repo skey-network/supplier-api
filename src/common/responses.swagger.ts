@@ -60,7 +60,7 @@ export class CustomErrorMessage {
   @ApiProperty({ example: ['custom error message'], description: 'Error message(s)' })
   message: string[]
 
-  @ApiProperty({ example: "Bad request" })
+  @ApiProperty({ example: 'Bad request' })
   error: string
 }
 

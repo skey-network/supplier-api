@@ -76,16 +76,16 @@ export class UtilsController {
       },
       example: [
         {
-          action: "setScript",
-          txHash: "ETxijrCfCwtBYZG2GgVyU9pHvQ6GguXtrGxXpeEjM4kn"
+          action: 'setScript',
+          txHash: 'ETxijrCfCwtBYZG2GgVyU9pHvQ6GguXtrGxXpeEjM4kn'
         },
         {
-          action: "setName",
-          txHash: "6u7nx69CGM8P589A6ZG7Um1MNF4889YSx6m1QrzVt5Zg"
+          action: 'setName',
+          txHash: '6u7nx69CGM8P589A6ZG7Um1MNF4889YSx6m1QrzVt5Zg'
         },
         {
-          action: "setDescription",
-          txHash: "ED8mT6b1UTmBSNv79Z93iJbXTgQ2xHbbVZeRNjGdtTFo"
+          action: 'setDescription',
+          txHash: 'ED8mT6b1UTmBSNv79Z93iJbXTgQ2xHbbVZeRNjGdtTFo'
         }
       ]
     }
