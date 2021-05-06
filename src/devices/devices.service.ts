@@ -9,7 +9,8 @@ import {
   CreateConnectionDto,
   DeviceMessageDto,
   DeviceCommandDto,
-  DeviceCommandResponse
+  DeviceCommandResponse,
+  DeviceConnectExistingDto
 } from './devices.model'
 import { SupplierService } from '../supplier/supplier.service'
 import { addressRegex } from '../validators'
@@ -48,14 +49,18 @@ export class DevicesService {
       // save device in dApp data storage
       this.blockchainWriteService.insertData([
         { key: this.deviceKey(address), value: false }
-      ]),
-
-      // set up device initial data
-      this.blockchainWriteService.insertData(
-        this.entriesForNewDevice(createDeviceDto),
-        seed
-      )
+      ])
     ]
+
+    if (createDeviceDto) {
+      // set up device initial data
+      promises.push(
+        this.blockchainWriteService.insertData(
+          this.entriesForNewDevice(createDeviceDto),
+          seed
+        )
+      )
+    }
 
     // wait for data transactions
     await Promise.all(promises)
@@ -175,6 +180,30 @@ export class DevicesService {
     this.logger.log(txHash)
 
     return { txHash }
+  }
+
+  async connectExisting(params: DeviceConnectExistingDto) {
+    let address = null
+    let encryptedSeed = null
+    if (params.address) {
+      await this.deviceExists(params.address)
+
+      if (params.deviceParams) {
+        throw new BadRequestException(
+          'Device parameters can only be passed when creating a new Device'
+        )
+      }
+
+      address = params.address
+    } else {
+      let createdDevice = await this.create(params.deviceParams)
+      address = createdDevice.address
+      encryptedSeed = createdDevice.encryptedSeed
+    }
+
+    const res = await this.supplierService.updateDeviceId(params.deviceId, address)
+
+    return { status: 'device connected', details: res.data, address, encryptedSeed }
   }
 
   parseLocation(payload: string) {

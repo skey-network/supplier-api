@@ -8,8 +8,13 @@ import { AppModule } from '../app.module'
 import config from '../config'
 import * as Crypto from '@waves/ts-lib-crypto'
 import { decrypt } from '../common/aes-encryption'
+import fetchMock from 'jest-fetch-mock'
 
 jest.setTimeout(3600000)
+
+const SUPPLIER_URL = config().supplier.url
+const DEVICE_NAME_PREFIX = 'urn:lo:nsid:sms:'
+const BLOCKCHAIN_NODE_URL = config().blockchain.nodeUrl
 
 // ===============================================
 // Make sure you have enough tokens before testing
@@ -76,8 +81,6 @@ describe('devices controller', () => {
         .expect(201)
 
       const { address, encryptedSeed } = res.body
-
-      console.log(res.body)
 
       expect(typeof address).toBe('string')
       expect(typeof encryptedSeed).toBe('string')
@@ -339,6 +342,199 @@ describe('devices controller', () => {
         .post(`/devices/${device}/keys/${assetId}`)
         .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
         .expect(401)
+    })
+  })
+
+  describe('POST /devices/connect_existing', () => {
+    const validMockResponse = (device: string) => {
+      return {
+        defaultDataStreamId: `urn:lo:nsid:mysensor:001`,
+        description: 'desc',
+        group: {
+          id: 'E89AE',
+          path: '/france/paris'
+        },
+        id: `urn:lo:nsid:sms:${device}`,
+        name: 'sensor #12',
+        properties: {
+          manufacturer: 'MyDeviceMaker, Inc.',
+          hwVersion: '2.0.1.7-us_64'
+        },
+        staticLocation: {
+          alt: 5.00001,
+          lat: 45.000009,
+          lon: -30.00001
+        },
+        tags: ['demo', 'sensor']
+      }
+    }
+
+    let device = ''
+    const dummyId = 'foobar'
+
+    beforeAll(async () => {
+      const deviceRes = await req()
+        .post('/devices')
+        .set('Authorization', `Bearer ${token}`)
+      device = deviceRes.body.address
+    })
+
+    beforeEach(async () => {
+      fetchMock.resetMocks()
+    })
+
+    describe('valid request', () => {
+      describe('when providing blockchain address', () => {
+        beforeEach(() => {
+          fetchMock.mockIf(
+            new RegExp(SUPPLIER_URL),
+            JSON.stringify(validMockResponse(device))
+          )
+        })
+
+        it('returns status 201', async () => {
+          await req()
+            .post('/devices/connect_existing')
+            .send({ deviceId: dummyId, address: device })
+            .set('Authorization', `Bearer ${token}`)
+            .expect(201)
+        })
+
+        it('returns valid device ID', async () => {
+          const res = await req()
+            .post('/devices/connect_existing')
+            .send({ deviceId: dummyId, address: device })
+            .set('Authorization', `Bearer ${token}`)
+
+          expect(res.body.details.data.id).toEqual(`${DEVICE_NAME_PREFIX}${device}`)
+        })
+      })
+
+      describe('when not providing blockchain address', () => {
+        beforeEach(() => {
+          fetchMock.mockIf(
+            new RegExp(SUPPLIER_URL),
+            JSON.stringify(validMockResponse(dummyId))
+          )
+        })
+
+        it('returns status 201', async () => {
+          await req()
+            .post('/devices/connect_existing')
+            .send({ deviceId: dummyId })
+            .set('Authorization', `Bearer ${token}`)
+            .expect(201)
+        })
+
+        it('returns blockchain address', async () => {
+          const res = await req()
+            .post('/devices/connect_existing')
+            .send({ deviceId: dummyId })
+            .set('Authorization', `Bearer ${token}`)
+
+          expect(res.body.address).not.toBeUndefined
+        })
+
+        it('returns encrypted seed', async () => {
+          const res = await req()
+            .post('/devices/connect_existing')
+            .send({ deviceId: dummyId })
+            .set('Authorization', `Bearer ${token}`)
+
+          const { encryptedSeed } = res.body
+          let seedRegex = /(?:[a-z]{3,}\s){14}[a-z]{3,}/
+          expect(encryptedSeed).toEqual(expect.not.stringMatching(seedRegex))
+          expect(typeof decrypt(encryptedSeed)).toBe('string')
+        })
+      })
+    })
+
+    describe('invalid request', () => {
+      it('supplier device does not exist', async () => {
+        fetchMock.mockIf(new RegExp(SUPPLIER_URL), JSON.stringify({}), { status: 404 })
+        await req()
+          .post('/devices/connect_existing')
+          .send({ deviceId: dummyId, address: device })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(404)
+      })
+
+      it('blockchain account does not exist', async () => {
+        fetchMock.mockIf(
+          new RegExp(SUPPLIER_URL),
+          JSON.stringify(validMockResponse(dummyId))
+        )
+
+        await req()
+          .post('/devices/connect_existing')
+          .send({ deviceId: dummyId, address: dummyId })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(404)
+      })
+
+      it('device details provided but address already provided', async () => {
+        fetchMock.mockIf(
+          new RegExp(SUPPLIER_URL),
+          JSON.stringify(validMockResponse(device))
+        )
+        const res = await req()
+          .post('/devices/connect_existing')
+          .send({
+            deviceId: dummyId,
+            address: device,
+            deviceParams: { name: 'rbb', desc: 'rbb desc' }
+          })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(400)
+      })
+
+      it('supplier api returns internal error', async () => {
+        fetchMock.mockIf(new RegExp(SUPPLIER_URL), (req) => {
+          return Promise.reject(new Error('Something went wrong'))
+        })
+
+        await req()
+          .post('/devices/connect_existing')
+          .send({ deviceId: dummyId, address: device })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(400)
+      })
+
+      it('blockchain API returns internal error', async () => {
+        fetchMock.mockIf(new RegExp(BLOCKCHAIN_NODE_URL), (req) => {
+          return Promise.reject(new Error('Something went wrong'))
+        })
+
+        const res = await req()
+          .post('/devices/connect_existing')
+          .send({ deviceId: dummyId, address: device })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(400)
+      })
+
+      it('device ID not present', async () => {
+        const res = await req()
+          .post('/devices/connect_existing')
+          .send({ address: device })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(400)
+      })
+
+      it('device ID is an empty string', async () => {
+        await req()
+          .post('/devices/connect_existing')
+          .send({ deviceId: '', address: device })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(400)
+      })
+
+      it('address is an empty string', async () => {
+        await req()
+          .post('/devices/connect_existing')
+          .send({ deviceId: dummyId, address: '' })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(400)
+      })
     })
   })
 })

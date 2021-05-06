@@ -17,10 +17,13 @@ import {
   EditDevice,
   CreateConnectionDto,
   DeviceMessageDto,
-  DeviceCommandDto
+  DeviceCommandDto,
+  DeviceConnectExistingDto,
+  DeviceConnectExistingResponse
 } from './devices.model'
 import { DevicesService } from './devices.service'
 import { DevicesCommandService } from './command.service'
+import { Logger } from '../logger/Logger.service'
 import { ConnectionDetailsResponse, DeviceData } from './devices.model'
 
 import {
@@ -441,5 +444,24 @@ export class DevicesController {
       waitForTx: wait,
       ...deviceCommandDto
     })
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('connect_existing')
+  @ApiOperation({
+    summary: 'Connect an existing Device to the blockchain',
+    description: 'Connect an existing Device to the blockchain'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Device disconnected successfully',
+    type: DeviceConnectExistingResponse
+  })
+  @ApiBearerAuth()
+  @ApiFilledUnauthorizedResponse()
+  @ApiFilledNotFoundResponse()
+  @ApiFilledCustomErrorResponse()
+  async connectExisting(@Body() deviceConnectExistingDto: DeviceConnectExistingDto) {
+    return await this.devicesService.connectExisting(deviceConnectExistingDto)
   }
 }

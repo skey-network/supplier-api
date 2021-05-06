@@ -173,6 +173,32 @@ export class DeviceCommandDto {
   keyAssetId: string
 }
 
+export class DeviceConnectExistingDto {
+  @IsString()
+  @ApiProperty({
+    description: 'ID of existing Device without prefixes',
+    example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k'
+  })
+  deviceId: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: '[Optional] Blockchain address to assign existing device to',
+    example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k',
+    required: false
+  })
+  address?: string
+
+  @IsOptional()
+  @ApiProperty({
+    description:
+      "[Optional] Attributes of a new blockchain Device. Don't provide this attribute when connecting to an existing address",
+    required: false
+  })
+  deviceParams?: CreateDeviceDto
+}
+
 export class ConnectionDetailsResponse {
   @ApiProperty({
     description: 'Connection status',
@@ -225,4 +251,31 @@ export class DeviceData {
     example: true
   })
   connected: boolean
+}
+
+export class DeviceConnectExistingResponse extends ConnectionDetailsResponse {
+  @IsString()
+  @ApiProperty({
+    description: 'Connection status',
+    example: 'device connected'
+  })
+  status: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Address of device on the blockchain',
+    example: '3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud'
+  })
+  address?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description:
+      'AES encrypted backup phrase. Returned only when creating a new blockchain address.',
+    example:
+      'U2FsdGVkX1+UHPgmbS60YfwtbnEB+h6y9Q9VoR1aqB+GYBB7LQW7Jxruasw6STPih3yk2/Ty79KMcp4SllG3b00P0IR/jpuyzTw1wQ5UHNCYk7YpqAuwwyxArlgWQP/IFdZkBWpJtVJ0PQ8ln8Odso5TlBhvEljxsRlGMe4uKks='
+  })
+  encryptedSeed?: string
 }
