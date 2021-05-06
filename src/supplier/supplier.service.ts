@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { ConnectionData } from './supplier.interfaces'
 import config from '../config'
 import fetch, { RequestInit } from 'node-fetch'
@@ -54,6 +54,28 @@ export class SupplierService {
     return res
   }
 
+  async updateDeviceId(oldAddress: string, newAddress: string) {
+    const fullOldAddress = `${DEVICE_NAME_PREFIX}${oldAddress}`
+    const fullNewAddress = `${DEVICE_NAME_PREFIX}${newAddress}`
+
+    const res = await this.request(`/deviceMgt/devices/${fullOldAddress}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ id: fullNewAddress })
+    })
+
+    if (res.ok) return res
+
+    switch (res.status) {
+      case 404:
+        throw new NotFoundException()
+      default:
+        throw new BadRequestException({
+          status: 'cannot update device',
+          details: res.data
+        })
+    }
+  }
+
   async updateTransferStatus(address: string, status: boolean) {
     const id = `${DEVICE_NAME_PREFIX}${address}`
     const payload = { properties: { keyTransferred: status } }
@@ -83,12 +105,19 @@ export class SupplierService {
       headers: { ...defaultHeaders, ...options.headers }
     } as RequestInit
 
-    const res = await fetch(url, optionsWithDefaults)
+    try {
+      const res = await fetch(url, optionsWithDefaults)
 
-    return {
-      ok: res.ok,
-      status: res.status,
-      data: { ...res, data: res.status === 204 ? {} : await res.json() }
+      return {
+        ok: res.ok,
+        status: res.status,
+        data: { ...res, data: res.status === 204 ? {} : await res.json() }
+      }
+    } catch (e) {
+      throw new BadRequestException({
+        status: 'Failed to reach Supplier API',
+        details: e
+      })
     }
   }
 
