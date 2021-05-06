@@ -126,6 +126,48 @@ describe('keys controller', () => {
     })
   })
 
+  describe('POST /keys/:recipient', () => {
+    let secondDevice = ''
+
+    beforeAll(async () => {
+      const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
+      secondDevice = res.body.address
+    })
+
+    describe('valid request', () => {
+      const validTo = Date.now() + config().key.minDuration + 3_600_000
+
+      it('valid request', async() => {
+        const res = await req()
+          .post('/keys/' + ctx.user)
+          .send({ requests: [{ device: ctx.device, validTo, amount: 2 }]})
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
+      })
+
+      it('valid requests for multiple devices', async () => {
+        const res = await req()
+          .post('/keys/' + ctx.user)
+          .send({ requests: [{ device: ctx.device, validTo, amount: 2 }, { device: secondDevice, validTo, amount: 2 }]})
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
+      })
+    })
+
+    describe('invalid request', () => {
+      it('unauthorized', async () => {
+        await req().post('/keys' + ctx.user).expect(401)
+      })
+  
+      it('invalid token', async () => {
+        await req()
+          .post('/keys' + ctx.user)
+          .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
+          .expect(401)
+      })
+    })
+  })
+
   describe('GET /keys/:assetId', () => {
     let assetId = ''
 

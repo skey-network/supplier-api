@@ -21,7 +21,8 @@ import {
   CreateKeyDto,
   CreateKeyResultResponse,
   CreateKeyResultResponseWithError,
-  Key
+  Key,
+  CreateKeyRequestsDto
 } from './keys.model'
 import { KeysService } from './keys.service'
 
@@ -109,6 +110,39 @@ export class KeysController {
   })
   async create(@Body() createKeyDto: CreateKeyDto) {
     return await this.keysService.create(createKeyDto)
+  }
+
+  //
+  // -------------------------------------------------------
+  // POST /keys/:recipient
+  // -------------------------------------------------------
+  //
+
+  @Post(':recipient')
+  @ApiOperation({
+    summary: 'Generate new keys for a recipient',
+    description:
+      'Generate new keys for multiple devices and transfer them to a blockchain address. Maximum amount of keys created in single request is 80.'
+  })
+  @ApiBearerAuth()
+  @ApiFilledUnauthorizedResponse()
+  @ApiResponse({
+    status: 400,
+    description: 'Errors while creating key',
+    type: CreateKeyResultResponseWithError,
+    isArray: true
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Key generated',
+    type: CreateKeyResultResponse,
+    isArray: true
+  })
+  async createForRecipient(
+    @Param('recipient', AddressValidationPipe) recipient: string,
+    @Body() createKeyRequestsDto: CreateKeyRequestsDto
+  ) {
+    return []
   }
 
   //

@@ -2,46 +2,6 @@ import { IsNotEmpty, IsInt, IsString, IsPositive, Max } from 'class-validator'
 import { IsAddress } from '../validators'
 import { ApiProperty } from '@nestjs/swagger'
 
-export class CreateKeyDto {
-  @IsNotEmpty()
-  @IsString()
-  @IsAddress
-  @ApiProperty({
-    description: 'Recipient Address',
-    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt'
-  })
-  recipient: string
-
-  @IsNotEmpty()
-  @IsString()
-  @IsAddress
-  @ApiProperty({
-    description: 'Device Address',
-    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt'
-  })
-  device: string
-
-  @IsNotEmpty()
-  @IsInt()
-  @IsPositive()
-  @Max(Number.MAX_SAFE_INTEGER)
-  @ApiProperty({
-    description: 'Key expiration date',
-    example: 1619180438000
-  })
-  validTo: number
-
-  @IsNotEmpty()
-  @IsInt()
-  @IsPositive()
-  @Max(80) // max amount of items in list for ride script
-  @ApiProperty({
-    description: 'Amount of keys - max 80',
-    example: 10
-  })
-  amount: number
-}
-
 export interface CreateKeyResult {
   assetId?: string
   transferTx?: string
@@ -161,4 +121,50 @@ export class Key {
     example: 1592861516794
   })
   validTo: number
+}
+
+export class CreateKeyRequestsDto {
+  requests: CreateKeyRequestDto[]
+}
+
+export class CreateKeyRequestDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsAddress
+  @ApiProperty({
+    description: 'Device Address',
+    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt'
+  })
+  device: string
+
+  @IsNotEmpty()
+  @IsInt()
+  @IsPositive()
+  @Max(Number.MAX_SAFE_INTEGER)
+  @ApiProperty({
+    description: 'Key expiration date',
+    example: 1619180438000
+  })
+  validTo: number
+
+  @IsNotEmpty()
+  @IsInt()
+  @IsPositive()
+  @Max(80) // max amount of items in list for ride script
+  @ApiProperty({
+    description: 'Amount of keys - max 80',
+    example: 10
+  })
+  amount: number
+}
+
+export class CreateKeyDto extends CreateKeyRequestDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsAddress
+  @ApiProperty({
+    description: 'Recipient Address',
+    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt'
+  })
+  recipient: string
 }
