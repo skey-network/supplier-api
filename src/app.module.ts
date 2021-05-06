@@ -11,15 +11,15 @@ import { SupplierModule } from './supplier/supplier.module'
 
 @Module({
   imports: [
-    DevicesModule,
-    BlockchainModule,
-    AuthModule,
-    UsersModule,
-    KeysModule,
-    UtilsModule,
-    DatabaseModule,
     AdminsModule,
-    SupplierModule
+    AuthModule,
+    BlockchainModule,
+    DatabaseModule,
+    DevicesModule,
+    KeysModule,
+    SupplierModule,
+    UsersModule,
+    UtilsModule
   ]
 })
 export class AppModule {}

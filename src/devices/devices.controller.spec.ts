@@ -93,6 +93,8 @@ describe('devices controller', () => {
       let seedRegex = /(?:[a-z]{3,}\s){14}[a-z]{3,}/
       expect(encryptedSeed).toEqual(expect.not.stringMatching(seedRegex))
       expect(typeof decrypt(encryptedSeed)).toBe('string')
+      console.log(encryptedSeed)
+      console.log(decrypt(encryptedSeed))
     })
 
     it('unauthorized', async () => {

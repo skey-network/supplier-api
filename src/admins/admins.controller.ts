@@ -17,8 +17,24 @@ import { CreateAdminDto, UpdateAdminDto } from './admins.model'
 import { AdminsService } from './admins.service'
 import config from '../config'
 import { Logger } from '../logger/Logger.service'
+import { Admin } from './admins.entity'
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam
+} from '@nestjs/swagger'
+import {
+  ApiFilledUnauthorizedResponse,
+  ApiFilledForbiddenResponse,
+  ApiFilledNotFoundResponse,
+  ApiFilledCustomErrorResponse
+} from '../common/responses.swagger'
 
 @Controller('admins')
+@ApiTags('admins')
+@ApiBearerAuth()
 @UseGuards(AdminGuard)
 @UseGuards(JwtAuthGuard)
 @Catch(QueryFailedError, EntityNotFoundError)
@@ -27,27 +43,89 @@ export class AdminsController implements OnApplicationBootstrap {
 
   private readonly logger = new Logger(AdminsController.name)
 
+  //
+  // -------------------------------------------------------
+  // GET /admins
+  // -------------------------------------------------------
+  //
+
   @Get()
+  @ApiOperation({ summary: 'Get all admins' })
+  @ApiFilledForbiddenResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiResponse({
+    status: 200,
+    description: 'Returns info about all admins',
+    type: Admin,
+    isArray: true
+  })
   async findAll() {
     return await this.adminsService.findAll()
   }
 
+  //
+  // -------------------------------------------------------
+  // GET /admins/:id
+  // -------------------------------------------------------
+  //
+
   @Get(':id')
+  @ApiOperation({ summary: 'Get admin info' })
+  @ApiFilledForbiddenResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiFilledNotFoundResponse()
+  @ApiResponse({ status: 200, description: 'Returns admin info', type: Admin })
+  @ApiParam({ name: 'id', description: 'ID of admin', example: 123 })
   async findOne(@Param('id') id: string) {
     return await this.adminsService.findOne(id)
   }
 
+  //
+  // -------------------------------------------------------
+  // DELETE /admins/:id
+  // -------------------------------------------------------
+  //
+
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete admin' })
+  @ApiFilledForbiddenResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiFilledNotFoundResponse()
+  @ApiResponse({ status: 200, description: 'Admin deleted' })
+  @ApiParam({ name: 'id', description: 'ID of admin', example: 123 })
   async remove(@Param('id') id: string) {
     return await this.adminsService.remove(id)
   }
 
+  //
+  // -------------------------------------------------------
+  // POST /admins
+  // -------------------------------------------------------
+  //
+
   @Post()
+  @ApiOperation({ summary: 'Create new admin' })
+  @ApiFilledForbiddenResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiFilledCustomErrorResponse()
+  @ApiResponse({ status: 201, description: 'Admin created', type: Admin })
   async create(@Body() createAdminDto: CreateAdminDto) {
     return await this.adminsService.create(createAdminDto)
   }
 
+  //
+  // -------------------------------------------------------
+  // PUT /admins/:id
+  // -------------------------------------------------------
+  //
+
   @Put(':id')
+  @ApiOperation({ summary: 'Update existing admin' })
+  @ApiFilledForbiddenResponse()
+  @ApiFilledUnauthorizedResponse()
+  @ApiFilledCustomErrorResponse()
+  @ApiResponse({ status: 201, description: 'Admin updated', type: Admin })
+  @ApiParam({ name: 'id', description: 'ID of admin', example: 123 })
   async update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
     return await this.adminsService.update(id, updateAdminDto)
   }
