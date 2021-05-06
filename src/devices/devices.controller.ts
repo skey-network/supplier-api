@@ -446,15 +446,27 @@ export class DevicesController {
     })
   }
 
+  //
+  // -------------------------------------------------------
+  // POST /devices/:address/commands/:command
+  // -------------------------------------------------------
+  //
+
   @UseGuards(JwtAuthGuard)
   @Post('connect_existing')
   @ApiOperation({
     summary: 'Connect an existing Device to the blockchain',
-    description: 'Connect an existing Device to the blockchain'
+    description: `
+    Connect an existing LO Device to the blockchain
+    Providing 'address' param will connect the device to an existing blockchain account and not providing it will create a new one.
+    Connecting to a new blockchain account will return encrypted seed of the account.
+    Do not provide 'deviceParams' parameter when connecting to an existing account.
+    See schema of the request body for details.
+    `
   })
   @ApiResponse({
     status: 200,
-    description: 'Device disconnected successfully',
+    description: 'Device connected successfully',
     type: DeviceConnectExistingResponse
   })
   @ApiBearerAuth()
