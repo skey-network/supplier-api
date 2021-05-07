@@ -6,6 +6,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common'
 import * as request from 'supertest'
 import { AppModule } from '../app.module'
 import config from '../config'
+import * as util from 'util'
 
 jest.setTimeout(3600000)
 
@@ -40,23 +41,15 @@ describe('keys controller', () => {
       password: process.env.ADMIN_PASSWORD
     })
     token = tokenRequest.body.access_token
+
+    const deviceRes = await req().post('/devices').set('Authorization', `Bearer ${token}`)
+    ctx.device = deviceRes.body.address
+
+    const userRes = await req().post('/users').set('Authorization', `Bearer ${token}`)
+    ctx.user = userRes.body.address
   })
 
-  describe('prepare', () => {
-    it('create device', async () => {
-      const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
-
-      ctx.device = res.body.address
-    })
-
-    it('create user', async () => {
-      const res = await req().post('/users').set('Authorization', `Bearer ${token}`)
-
-      ctx.user = res.body.address
-    })
-  })
-
-  describe('POST /keys', () => {
+  describe.skip('POST /keys', () => {
     it('valid request', async () => {
       const validTo = Date.now() + config().key.minDuration + 3_600_000
 
@@ -126,7 +119,7 @@ describe('keys controller', () => {
     })
   })
 
-  describe('POST /keys/:recipient', () => {
+  describe.only('POST /keys/multiple/:recipient', () => {
     let secondDevice = ''
 
     beforeAll(async () => {
@@ -142,33 +135,51 @@ describe('keys controller', () => {
           .post('/keys/' + ctx.user)
           .send({ requests: [{ device: ctx.device, validTo, amount: 2 }]})
           .set('Authorization', `Bearer ${token}`)
-          .expect(201)
+        
+        expect(res.status).toEqual(201)
+        expect(res.body.length).toEqual(1)
+        
+        const deviceKeys = res.body[0]
+        expect(deviceKeys.device).toEqual(ctx.device)
+        expect(deviceKeys.keys.length).toEqual(2)
+        deviceKeys.keys.map((deviceKey) => {
+          expect(deviceKey.assetId).toBeDefined()
+          expect(deviceKey.transferTx).toBeDefined()
+          expect(deviceKey.dataTx).toBeDefined()
+          expect(deviceKey.success).toEqual(true)
+        })
       })
 
-      it('valid requests for multiple devices', async () => {
+      it('valid request for multiple devices', async () => {
         const res = await req()
           .post('/keys/' + ctx.user)
-          .send({ requests: [{ device: ctx.device, validTo, amount: 2 }, { device: secondDevice, validTo, amount: 2 }]})
+          .send({ requests: [
+            { device: ctx.device, validTo, amount: 1 },
+            { device: secondDevice, validTo, amount: 1 }
+          ]})
           .set('Authorization', `Bearer ${token}`)
           .expect(201)
+        
+        expect(res.status).toEqual(201)
+        console.log(util.inspect(res.body, { showHidden: false, depth: null }))
       })
     })
 
     describe('invalid request', () => {
       it('unauthorized', async () => {
-        await req().post('/keys' + ctx.user).expect(401)
+        await req().post('/keys/' + ctx.user).expect(401)
       })
   
       it('invalid token', async () => {
         await req()
-          .post('/keys' + ctx.user)
+          .post('/keys/' + ctx.user)
           .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
           .expect(401)
       })
     })
   })
 
-  describe('GET /keys/:assetId', () => {
+  describe.skip('GET /keys/:assetId', () => {
     let assetId = ''
 
     beforeAll(async () => {
@@ -217,7 +228,7 @@ describe('keys controller', () => {
     })
   })
 
-  describe('GET /keys', () => {
+  describe.skip('GET /keys', () => {
     let assetId = ''
 
     beforeAll(async () => {
@@ -253,7 +264,7 @@ describe('keys controller', () => {
     })
   })
 
-  describe('POST /keys/:assetId/transfer/:address', () => {
+  describe.skip('POST /keys/:assetId/transfer/:address', () => {
     let assetId = ''
 
     beforeAll(async () => {
@@ -387,7 +398,7 @@ describe('keys controller', () => {
   //   })
   // })
 
-  describe('DELETE /keys/:assetId', () => {
+  describe.skip('DELETE /keys/:assetId', () => {
     let assetId = ''
 
     beforeAll(async () => {
