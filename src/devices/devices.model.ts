@@ -176,8 +176,8 @@ export class DeviceCommandDto {
 export class DeviceConnectExistingDto {
   @IsString()
   @ApiProperty({
-    description: 'ID of existing Device without prefixes',
-    example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k'
+    description: 'ID of existing Device WITH all prefixes',
+    example: 'urn:lo:nsid:sms:foobar'
   })
   deviceId: string
 

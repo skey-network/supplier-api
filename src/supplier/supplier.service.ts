@@ -54,11 +54,10 @@ export class SupplierService {
     return res
   }
 
-  async updateDeviceId(oldAddress: string, newAddress: string) {
-    const fullOldAddress = `${DEVICE_NAME_PREFIX}${oldAddress}`
+  async updateDeviceId(deviceAddress: string, newAddress: string) {
     const fullNewAddress = `${DEVICE_NAME_PREFIX}${newAddress}`
 
-    const res = await this.request(`/deviceMgt/devices/${fullOldAddress}`, {
+    const res = await this.request(`/deviceMgt/devices/${deviceAddress}`, {
       method: 'PATCH',
       body: JSON.stringify({ id: fullNewAddress })
     })
