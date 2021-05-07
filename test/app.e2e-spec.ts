@@ -105,7 +105,12 @@ describe('app e2e', () => {
     const res = await req()
       .post('/keys')
       .set('Authorization', `Bearer ${ctx.token}`)
-      .send({ device: ctx.device, validTo, amount: 1 })
+      .send({
+        device: ctx.device,
+        validTo,
+        amount: 1,
+        recipient: config().blockchain.dappAddress
+      })
       .expect(201)
     ctx.key = res.body[0].assetId
   })

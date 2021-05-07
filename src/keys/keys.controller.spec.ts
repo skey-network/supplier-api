@@ -74,6 +74,23 @@ describe('keys controller', () => {
       expect(res.body[1].success).toBe(true)
     })
 
+    it('recipient is skipped', async () => {
+      const validTo = Date.now() + config().key.minDuration + 3_600_000
+
+      const res = await req()
+        .post('/keys')
+        .send({ device: ctx.device, validTo, amount: 4 })
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201)
+
+      expect(res.body).toBeInstanceOf(Array)
+      expect(res.body.length).toBe(4)
+      expect(typeof res.body[0].assetId).toBe('string')
+      expect(typeof res.body[0].transferTx).toBe('undefined')
+      expect(typeof res.body[0].dataTx).toBe('string')
+      expect(res.body[1].success).toBe(true)
+    })
+
     it('invalid data', async () => {
       const validTo = Date.now() + config().key.minDuration + 3_600_000
 
