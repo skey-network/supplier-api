@@ -142,7 +142,7 @@ export class CreateKeyRequestDto {
   @IsPositive()
   @Max(Number.MAX_SAFE_INTEGER)
   @ApiProperty({
-    description: 'Key expiration date',
+    description: 'Key expiration date in Epoch miliseconds',
     example: 1619180438000
   })
   validTo: number

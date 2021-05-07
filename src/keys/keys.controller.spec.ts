@@ -7,6 +7,7 @@ import * as request from 'supertest'
 import { AppModule } from '../app.module'
 import config from '../config'
 import * as util from 'util'
+import { equals } from 'class-validator'
 
 jest.setTimeout(3600000)
 
@@ -120,7 +121,15 @@ describe('keys controller', () => {
   })
 
   describe.only('POST /keys/multiple/:recipient', () => {
+    const validTo = Date.now() + config().key.minDuration + 3_600_000
     let secondDevice = ''
+
+    const assertValidDeviceKey = (deviceKey) => {
+      expect(deviceKey.assetId).toBeDefined()
+      expect(deviceKey.transferTx).toBeDefined()
+      expect(deviceKey.dataTx).toBeDefined()
+      expect(deviceKey.success).toEqual(true)
+    }
 
     beforeAll(async () => {
       const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
@@ -128,8 +137,6 @@ describe('keys controller', () => {
     })
 
     describe('valid request', () => {
-      const validTo = Date.now() + config().key.minDuration + 3_600_000
-
       it('valid request', async() => {
         const res = await req()
           .post('/keys/' + ctx.user)
@@ -143,10 +150,7 @@ describe('keys controller', () => {
         expect(deviceKeys.device).toEqual(ctx.device)
         expect(deviceKeys.keys.length).toEqual(2)
         deviceKeys.keys.map((deviceKey) => {
-          expect(deviceKey.assetId).toBeDefined()
-          expect(deviceKey.transferTx).toBeDefined()
-          expect(deviceKey.dataTx).toBeDefined()
-          expect(deviceKey.success).toEqual(true)
+          assertValidDeviceKey(deviceKey)
         })
       })
 
@@ -161,11 +165,19 @@ describe('keys controller', () => {
           .expect(201)
         
         expect(res.status).toEqual(201)
-        console.log(util.inspect(res.body, { showHidden: false, depth: null }))
+
+        const devices = res.body.map((deviceKeys) => { return deviceKeys.device })
+        expect(devices).toEqual([ctx.device, secondDevice])
+
+        res.body.map((deviceKeys) => {
+          expect(deviceKeys.keys.length).toEqual(1)
+          const deviceKey = deviceKeys.keys[0]
+          assertValidDeviceKey(deviceKey)
+        })
       })
     })
 
-    describe('invalid request', () => {
+    describe.only('invalid request', () => {
       it('unauthorized', async () => {
         await req().post('/keys/' + ctx.user).expect(401)
       })
@@ -176,6 +188,48 @@ describe('keys controller', () => {
           .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
           .expect(401)
       })
+
+      it('device is an empty string', async () => {
+        const res = await req()
+          .post('/keys/' + ctx.user)
+          .send({ requests: [{ device: '', validTo, amount: 1 }]})
+          .set('Authorization', `Bearer ${token}`)
+        
+        console.log(util.inspect(res.body, { showHidden: false, depth: null }))
+      })
+
+      it('no device provided', async () => {
+        const res = await req()
+          .post('/keys/' + ctx.user)
+          .send({ requests: [{ validTo, amount: 1 }]})
+          .set('Authorization', `Bearer ${token}`)
+
+        console.log(util.inspect(res.body, { showHidden: false, depth: null }))
+      })
+
+      it.only('negative amount of keys', async() => {
+        const res = await req()
+          .post('/keys/' + ctx.user)
+          .send({ requests: [{ device: ctx.device, validTo, amount: 1000 }]})
+          .set('Authorization', `Bearer ${token}`)
+
+        console.log(util.inspect(res.body, { showHidden: false, depth: null }))
+      })
+
+      it('no amount of keys', async() => {
+        const res = await req()
+          .post('/keys/' + ctx.user)
+          .send({ requests: [{ device: ctx.device, validTo }]})
+          .set('Authorization', `Bearer ${token}`)
+
+        console.log(util.inspect(res.body, { showHidden: false, depth: null }))
+      })
+
+      it.todo('amount of keys exceeds the limit')
+      it.todo('amount of keys is not a number')
+      it.todo('validTo is in the past')
+      it.todo('validTo is not provided')
+      it.todo('validTo is too late')
     })
   })
 
