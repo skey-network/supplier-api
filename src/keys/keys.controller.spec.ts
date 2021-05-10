@@ -187,15 +187,15 @@ describe('keys controller', () => {
 
         expect(res.status).toEqual(201)
 
-        const devices = res.body.map((deviceKeys) => {
-          return deviceKeys.device
-        })
-        expect(devices).toEqual([ctx.device, secondDevice])
+        expect(
+          res.body.map((deviceKeys) => {
+            return deviceKeys.device
+          })
+        ).toEqual([ctx.device, secondDevice])
 
         res.body.map((deviceKeys) => {
           expect(deviceKeys.keys.length).toEqual(1)
-          const deviceKey = deviceKeys.keys[0]
-          assertValidDeviceKey(deviceKey)
+          assertValidDeviceKey(deviceKeys.keys[0])
         })
       })
 
@@ -212,16 +212,15 @@ describe('keys controller', () => {
           .expect(201)
 
         expect(res.status).toEqual(201)
-
-        const devices = res.body.map((deviceKeys) => {
-          return deviceKeys.device
-        })
-        expect(devices).toEqual([ctx.device, ctx.device])
+        expect(
+          res.body.map((deviceKeys) => {
+            return deviceKeys.device
+          })
+        ).toEqual([ctx.device, ctx.device])
 
         res.body.map((deviceKeys) => {
           expect(deviceKeys.keys.length).toEqual(1)
-          const deviceKey = deviceKeys.keys[0]
-          assertValidDeviceKey(deviceKey)
+          assertValidDeviceKey(deviceKeys.keys[0])
         })
       })
 
@@ -234,9 +233,10 @@ describe('keys controller', () => {
 
         expect(res.body).toBeInstanceOf(Array)
         expect(res.body.length).toBe(1)
-        expect(typeof res.body[0].keys[0].assetId).toBe('string')
-        expect(typeof res.body[0].keys[0].transferTx).toBe('undefined')
-        expect(typeof res.body[0].keys[0].dataTx).toBe('string')
+        const keyResponse = res.body[0].keys[0]
+        expect(typeof keyResponse.assetId).toBe('string')
+        expect(typeof keyResponse.transferTx).toBe('undefined')
+        expect(typeof keyResponse.dataTx).toBe('string')
         expect(res.body[0].keys[1].success).toBe(true)
       })
     })
@@ -253,63 +253,66 @@ describe('keys controller', () => {
           .expect(401)
       })
 
-      it('device is an empty string', async () => {
-        await req()
+      describe('device', () => {
+        const testCases = [
+          {
+            toString: () => "is an empty string",
+            device: ''
+          },
+          {
+            toString: () => "not provided",
+            device: null
+          },
+          {
+            toString: () => "is invalid",
+            device: "foobar"
+          }
+        ]
+
+        it.each(testCases)("%s", async (testCase) => {
+          await req()
           .post('/keys/multi')
-          .send({ requests: [{ recipient: ctx.user, device: '', validTo, amount: 1 }] })
+          .send({ requests: [{ recipient: ctx.user, device: testCase.device, validTo, amount: 1 }] })
           .set('Authorization', `Bearer ${token}`)
           .expect(400)
+        })
       })
 
-      it('no device provided', async () => {
-        await req()
-          .post('/keys/multi')
-          .send({ requests: [{ recipient: ctx.user, validTo, amount: 1 }] })
-          .set('Authorization', `Bearer ${token}`)
-          .expect(400)
-      })
+      describe('amount', () => {
+        const testCases = [
+          {
+            toString: () => "is negative",
+            amount: -1
+          },
+          {
+            toString: () => "equals 0",
+            amount: 0
+          },
+          {
+            toString: () => "exceeds the limit",
+            amount: 101
+          },
+          {
+            toString: () => "is null",
+            amount: null
+          },
+          {
+            toString: () => "is not a number",
+            amount: "12"
+          },
+          {
+            toString: () => "is undefined",
+            amount: undefined
+          }
+        ]
 
-      it('negative amount of keys', async () => {
-        await req()
+        it.each(testCases)("%s", async (testCase) => {
+          await req()
           .post('/keys/multi')
-          .send({
-            requests: [{ recipient: ctx.user, device: ctx.device, validTo, amount: -1 }]
-          })
+          .send({ requests: [{ recipient: ctx.user, device: ctx.device, validTo, amount: testCase.amount }] })
           .set('Authorization', `Bearer ${token}`)
           .expect(400)
-      })
-
-      it('no amount of keys', async () => {
-        await req()
-          .post('/keys/multi')
-          .send({ requests: [{ recipient: ctx.user, device: ctx.device, validTo }] })
-          .set('Authorization', `Bearer ${token}`)
-          .expect(400)
-      })
-
-      it('amount of keys exceeds the limit', async () => {
-        await req()
-          .post('/keys/multi')
-          .send({
-            requests: [
-              { recipient: ctx.user, device: ctx.device, validTo, amount: 50 },
-              { recipient: ctx.user, device: secondDevice, validTo, amount: 51 }
-            ]
-          })
-          .set('Authorization', `Bearer ${token}`)
-          .expect(400)
-      })
-
-      it('amount of keys is not a number', async () => {
-        await req()
-          .post('/keys/multi')
-          .send({
-            requests: [
-              { recipient: ctx.user, device: ctx.device, validTo, amount: 'foobar' }
-            ]
-          })
-          .set('Authorization', `Bearer ${token}`)
-          .expect(400)
+        })
       })
 
       describe('validTo', () => {
@@ -328,23 +331,21 @@ describe('keys controller', () => {
           }
         ]
 
-        testCases.map((testCase) => {
-          it(testCase.toString(), async () => {
-            await req()
-              .post('/keys/multi')
-              .send({
-                requests: [
-                  {
-                    recipient: ctx.user,
-                    device: ctx.device,
-                    validTo: testCase.invalidTo,
-                    amount: 1
-                  }
-                ]
-              })
-              .set('Authorization', `Bearer ${token}`)
-              .expect(400)
-          })
+        it.each(testCases)('%s', async (testCase) => {
+          await req()
+            .post('/keys/multi')
+            .send({
+              requests: [
+                {
+                  recipient: ctx.user,
+                  device: ctx.device,
+                  validTo: testCase.invalidTo,
+                  amount: 1
+                }
+              ]
+            })
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
         })
       })
     })
