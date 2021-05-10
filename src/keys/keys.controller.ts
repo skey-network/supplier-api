@@ -114,7 +114,7 @@ export class KeysController {
     return await this.keysService.create(createKeyDto)
   }
 
-   //
+  //
   // -------------------------------------------------------
   // POST /keys/multi
   // -------------------------------------------------------
@@ -140,9 +140,7 @@ export class KeysController {
     description: 'Keys generated',
     type: CreateKeyForMultipleDevicesResponse
   })
-  async createForMultipleDevices(
-    @Body() createKeyRequestsDto: CreateKeyRequestsDto
-  ) {
+  async createForMultipleDevices(@Body() createKeyRequestsDto: CreateKeyRequestsDto) {
     return await this.keysService.createForMultipleDevices(createKeyRequestsDto)
   }
 

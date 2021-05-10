@@ -1,7 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainReadService } from '../blockchain/blockchain.read.service'
-import { CreateAndTransferKeyDto, CreateKeyDto, CreateKeyResult, CreateKeyRequestsDto } from './keys.model'
+import {
+  CreateAndTransferKeyDto,
+  CreateKeyDto,
+  CreateKeyResult,
+  CreateKeyRequestsDto
+} from './keys.model'
 import config from '../config'
 import { SupplierService } from '../supplier/supplier.service'
 
@@ -115,13 +120,14 @@ export class KeysService {
     this.validateKeyLimit(
       requestsDto.requests
         .map((e) => e.amount)
-        .reduce((prevValue, currValue) => { return prevValue + currValue })
+        .reduce((prevValue, currValue) => {
+          return prevValue + currValue
+        })
     )
 
     // create the keys
     return await Promise.all(
       requestsDto.requests.map(async (dto) => {
-
         return {
           device: dto.device,
           keys: await this.create(dto)
@@ -189,7 +195,7 @@ export class KeysService {
       }
     }
 
-    return { 
+    return {
       assetId: issueTx.data,
       transferTx: transferTx.data,
       success: true
