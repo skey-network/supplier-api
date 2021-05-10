@@ -1,16 +1,17 @@
-import { IsNotEmpty, IsInt, IsString, IsPositive, Max } from 'class-validator'
+import { IsNotEmpty, IsInt, IsString, IsPositive, Max, IsOptional } from 'class-validator'
 import { IsAddress } from '../validators'
 import { ApiProperty } from '@nestjs/swagger'
 
 export class CreateKeyDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @IsAddress
   @ApiProperty({
     description: 'Recipient Address',
-    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt'
+    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt',
+    required: false
   })
-  recipient: string
+  recipient?: string
 
   @IsNotEmpty()
   @IsString()

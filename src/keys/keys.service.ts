@@ -41,7 +41,7 @@ export class KeysService {
 
       if (!issueTx.success) return { success: false, error: issueTx.data }
 
-      if (dto.recipient === config().blockchain.dappAddress) {
+      if (dto.recipient === config().blockchain.dappAddress || !dto.recipient) {
         return {
           assetId: issueTx.data,
           success: true

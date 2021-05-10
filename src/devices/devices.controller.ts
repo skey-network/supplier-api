@@ -23,7 +23,6 @@ import {
 } from './devices.model'
 import { DevicesService } from './devices.service'
 import { DevicesCommandService } from './command.service'
-import { Logger } from '../logger/Logger.service'
 import { ConnectionDetailsResponse, DeviceData } from './devices.model'
 
 import {
