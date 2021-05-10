@@ -73,12 +73,12 @@ describe('device-command e2e', () => {
     })
 
     it('unauthorized', async () => {
-      await req().post('/devices/aaa/command').expect(401)
+      await req().post('/devices/aaa/commands/command').expect(401)
     })
 
     it('invalid token', async () => {
       await req()
-        .post('/devices/aaa/command')
+        .post('/devices/aaa/commands/command')
         .set('Authorization', 'Bearer aaa')
         .expect(401)
     })
@@ -134,17 +134,19 @@ describe('device-command e2e', () => {
 
       it('invokes script', async () => {
         const res = await req()
-          .post(`/devices/${ctx.device.address}/command`)
+          .post(`/devices/${ctx.device.address}/commands/open`)
           .set('Authorization', `Bearer ${ctx.token}`)
           .send({
             action: 'open',
             senderAddress: ctx.org.address,
-            keyAssetId: ctx.key.assetId
+            keyAssetId: ctx.key.assetId,
+            keyOwnerAddress: ctx.org.address
           })
           .expect(201)
 
-        expect(res.body.type).toBe('invoke_script')
+        expect(res.body.script).toBe('deviceActionAs')
         expect(res.body.txHash).toBeDefined()
+        expect(res.body.waitForTx).toBe(true)
       })
     })
 
@@ -198,17 +200,19 @@ describe('device-command e2e', () => {
 
       it('invokes script', async () => {
         const res = await req()
-          .post(`/devices/${ctx.device.address}/command`)
+          .post(`/devices/${ctx.device.address}/commands/open`)
           .set('Authorization', `Bearer ${ctx.token}`)
           .send({
             action: 'open',
             senderAddress: ctx.org.address,
-            keyAssetId: ctx.key.assetId
+            keyAssetId: ctx.key.assetId,
+            keyOwnerAddress: ctx.org.address
           })
           .expect(201)
 
-        expect(res.body.type).toBe('invoke_script')
+        expect(res.body.script).toBe('deviceActionAs')
         expect(res.body.txHash).toBeDefined()
+        expect(res.body.waitForTx).toBe(true)
       })
     })
   })
