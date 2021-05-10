@@ -127,11 +127,11 @@ export class Key {
 export class CreateKeyRequestsDto {
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateKeyRequestDto)
-  requests: CreateKeyRequestDto[]
+  @Type(() => CreateKeyDto)
+  requests: CreateKeyDto[]
 }
 
-export class CreateKeyRequestDto {
+export class CreateKeyDto {
   @IsNotEmpty()
   @IsString()
   @IsAddress
@@ -160,9 +160,7 @@ export class CreateKeyRequestDto {
     example: 10
   })
   amount: number
-}
 
-export class CreateKeyDto extends CreateKeyRequestDto {
   @IsOptional()
   @IsString()
   @IsAddress

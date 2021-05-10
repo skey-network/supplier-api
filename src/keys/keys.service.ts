@@ -107,7 +107,7 @@ export class KeysService {
     }))
   }
 
-  async createForMultipleDevices(recipient: string, requestsDto: CreateKeyRequestsDto) {
+  async createForMultipleDevices(requestsDto: CreateKeyRequestsDto) {
     // validate timestamps
     requestsDto.requests.map((el) => this.validateTimestamp(el.validTo))
 
@@ -120,8 +120,7 @@ export class KeysService {
 
     // create the keys
     return await Promise.all(
-      requestsDto.requests.map(async (request) => {
-        const dto: CreateKeyDto = { ...request, recipient }
+      requestsDto.requests.map(async (dto) => {
 
         return {
           device: dto.device,
