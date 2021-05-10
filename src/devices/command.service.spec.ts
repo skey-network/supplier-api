@@ -39,8 +39,8 @@ describe('DevicesCommandService', () => {
   describe('issuer is not dapp && dapp is key owner', () => {
     beforeAll(async () => {
       await Promise.all([
-        lib.transfer(ctx.device.address, 2, ctx.dapp.seed),
-        lib.transfer(ctx.otherDapp.address, 2, ctx.dapp.seed)
+        lib.transfer(ctx.device.address, 0.1, ctx.dapp.seed),
+        lib.transfer(ctx.otherDapp.address, 0.1, ctx.dapp.seed)
       ])
 
       ctx.key.assetId = await lib.generateKey(
@@ -90,9 +90,9 @@ describe('DevicesCommandService', () => {
       ctx.org = lib.createAccount()
 
       await Promise.all([
-        lib.transfer(ctx.device.address, 2, ctx.dapp.seed),
-        lib.transfer(ctx.otherDapp.address, 2, ctx.dapp.seed),
-        lib.transfer(ctx.org.address, 2, ctx.dapp.seed)
+        lib.transfer(ctx.device.address, 0.1, ctx.dapp.seed),
+        lib.transfer(ctx.otherDapp.address, 0.1, ctx.dapp.seed),
+        lib.transfer(ctx.org.address, 0.1, ctx.dapp.seed)
       ])
 
       ctx.key.assetId = await lib.generateKey(

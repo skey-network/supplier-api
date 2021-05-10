@@ -31,7 +31,6 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiProperty,
   ApiParam
 } from '@nestjs/swagger'
 import {
@@ -124,8 +123,8 @@ export class KeysController {
   @Post()
   @ApiOperation({
     summary: 'Generate new keys',
-    description:
-      'Generate new keys and transfer them to a blockchain address. Maximum amount of keys created in single request is 80.'
+    description: `Generate new keys and transfer them to a blockchain address. Maximum amount of keys created in single request is 80.
+      If recipient address is not given, the created key will stay on dapp address.`
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
