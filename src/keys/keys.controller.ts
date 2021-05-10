@@ -22,7 +22,9 @@ import {
   CreateKeyResultResponse,
   CreateKeyResultResponseWithError,
   Key,
-  CreateKeyRequestsDto
+  CreateKeyRequestsDto,
+  CreateKeyForMultipleDevicesResponse,
+  CreateKeyForMultipleDevicesResponseWithError
 } from './keys.model'
 import { KeysService } from './keys.service'
 
@@ -31,7 +33,8 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiParam
+  ApiParam,
+  ApiBody
 } from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
@@ -119,23 +122,23 @@ export class KeysController {
 
   @Post('multi')
   @ApiOperation({
-    summary: 'Generate new keys for a recipient',
+    summary: 'Generate new keys for multiple devices',
     description:
-      'Generate new keys for multiple devices and transfer them to a blockchain address. Maximum amount of keys created in single request is 80.'
+      'Generate new keys for multiple devices and optionally transfer them to a blockchain address. Maximum amount of keys created in single request is 80.'
   })
+  @ApiBody({ type: CreateKeyRequestsDto })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
   @ApiResponse({
-    status: 400,
+    status: 201,
     description: 'Errors while creating keys',
-    type: CreateKeyResultResponseWithError,
+    type: CreateKeyForMultipleDevicesResponseWithError,
     isArray: true
   })
   @ApiResponse({
     status: 201,
     description: 'Keys generated',
-    type: CreateKeyResultResponse,
-    isArray: true
+    type: CreateKeyForMultipleDevicesResponse
   })
   async createForMultipleDevices(
     @Body() createKeyRequestsDto: CreateKeyRequestsDto

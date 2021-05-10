@@ -55,6 +55,30 @@ export class CreateKeyResultResponseWithError extends CreateKeyResultResponse {
   error?: string
 }
 
+export class CreateKeyForMultipleDevicesResponse {
+  @ApiProperty({
+    description: 'Device Address',
+    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt'
+  })
+  device: string
+
+  @ApiProperty({
+    description: 'Array of generated keys',
+    type: CreateKeyResultResponse,
+    isArray: true
+  })
+  keys: CreateKeyResultResponse[]
+}
+
+export class CreateKeyForMultipleDevicesResponseWithError extends CreateKeyForMultipleDevicesResponse {
+  @ApiProperty({
+    description: 'Array of errors',
+    type: CreateKeyResultResponseWithError,
+    isArray: true
+  })
+  keys: CreateKeyResultResponseWithError[]
+}
+
 export class CreateAndTransferKeyDto {
   @IsNotEmpty()
   @IsString()
@@ -124,13 +148,6 @@ export class Key {
   validTo: number
 }
 
-export class CreateKeyRequestsDto {
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateKeyDto)
-  requests: CreateKeyDto[]
-}
-
 export class CreateKeyDto {
   @IsNotEmpty()
   @IsString()
@@ -170,4 +187,16 @@ export class CreateKeyDto {
     required: false
   })
   recipient?: string
+}
+
+export class CreateKeyRequestsDto {
+  @ApiProperty({
+    description: 'Array of requests',
+    type: CreateKeyDto,
+    isArray: true
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateKeyDto)
+  requests: CreateKeyDto[]
 }
