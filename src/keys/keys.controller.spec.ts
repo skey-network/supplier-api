@@ -271,10 +271,33 @@ describe('keys controller', () => {
 
         it.each(testCases)("%s", async (testCase) => {
           await req()
-          .post('/keys/multi')
-          .send({ requests: [{ recipient: ctx.user, device: testCase.device, validTo, amount: 1 }] })
-          .set('Authorization', `Bearer ${token}`)
-          .expect(400)
+            .post('/keys/multi')
+            .send({ requests: [{ recipient: ctx.user, device: testCase.device, validTo, amount: 1 }] })
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
+        })
+      })
+
+      describe('recipient', () => {
+        const testCases = [
+          {
+            toString: () => "is an empty string",
+            recipient: ''
+          },
+          {
+            toString: () => "is invalid",
+            recipient: "foobar"
+          }
+        ]
+
+        it.each(testCases)("%s", async (testCase) => {
+          const params = { requests: [{ recipient: testCase.recipient, device: ctx.device, validTo, amount: 1 }] }
+          console.log(util.inspect(params, { showHidden: false, depth: null }))
+          await req()
+            .post('/keys/multi')
+            .send(params)
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
         })
       })
 
