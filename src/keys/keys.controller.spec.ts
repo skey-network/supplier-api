@@ -50,7 +50,7 @@ describe('keys controller', () => {
     ctx.user = userRes.body.address
   })
 
-  describe.skip('POST /keys', () => {
+  describe('POST /keys', () => {
     it('valid request', async () => {
       const validTo = Date.now() + config().key.minDuration + 3_600_000
 
@@ -120,7 +120,7 @@ describe('keys controller', () => {
     })
   })
 
-  describe.only('POST /keys/multiple/:recipient', () => {
+  describe('POST /keys/multiple/:recipient', () => {
     const validTo = Date.now() + config().key.minDuration + 3_600_000
     let secondDevice = ''
 
@@ -175,9 +175,31 @@ describe('keys controller', () => {
           assertValidDeviceKey(deviceKey)
         })
       })
+
+      it('valid request - multiple requests for a single device', async () => {
+        const res = await req()
+          .post('/keys/' + ctx.user)
+          .send({ requests: [
+            { device: ctx.device, validTo, amount: 1 },
+            { device: ctx.device, validTo, amount: 1 }
+          ]})
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
+        
+        expect(res.status).toEqual(201)
+
+        const devices = res.body.map((deviceKeys) => { return deviceKeys.device })
+        expect(devices).toEqual([ctx.device, ctx.device])
+
+        res.body.map((deviceKeys) => {
+          expect(deviceKeys.keys.length).toEqual(1)
+          const deviceKey = deviceKeys.keys[0]
+          assertValidDeviceKey(deviceKey)
+        })
+      })
     })
 
-    describe.only('invalid request', () => {
+    describe('invalid request', () => {
       it('unauthorized', async () => {
         await req().post('/keys/' + ctx.user).expect(401)
       })
@@ -190,50 +212,86 @@ describe('keys controller', () => {
       })
 
       it('device is an empty string', async () => {
-        const res = await req()
+        await req()
           .post('/keys/' + ctx.user)
           .send({ requests: [{ device: '', validTo, amount: 1 }]})
           .set('Authorization', `Bearer ${token}`)
-        
-        console.log(util.inspect(res.body, { showHidden: false, depth: null }))
+          .expect(400)
       })
 
       it('no device provided', async () => {
-        const res = await req()
+        await req()
           .post('/keys/' + ctx.user)
           .send({ requests: [{ validTo, amount: 1 }]})
           .set('Authorization', `Bearer ${token}`)
-
-        console.log(util.inspect(res.body, { showHidden: false, depth: null }))
+          .expect(400)
       })
 
-      it.only('negative amount of keys', async() => {
-        const res = await req()
+      it('negative amount of keys', async() => {
+        await req()
           .post('/keys/' + ctx.user)
-          .send({ requests: [{ device: ctx.device, validTo, amount: 1000 }]})
+          .send({ requests: [{ device: ctx.device, validTo, amount: -1 }]})
           .set('Authorization', `Bearer ${token}`)
-
-        console.log(util.inspect(res.body, { showHidden: false, depth: null }))
+          .expect(400)
       })
 
       it('no amount of keys', async() => {
-        const res = await req()
+        await req()
           .post('/keys/' + ctx.user)
           .send({ requests: [{ device: ctx.device, validTo }]})
           .set('Authorization', `Bearer ${token}`)
-
-        console.log(util.inspect(res.body, { showHidden: false, depth: null }))
+          .expect(400)
       })
 
-      it.todo('amount of keys exceeds the limit')
-      it.todo('amount of keys is not a number')
-      it.todo('validTo is in the past')
-      it.todo('validTo is not provided')
-      it.todo('validTo is too late')
+      it('amount of keys exceeds the limit', async() => {
+        await req()
+          .post('/keys/' + ctx.user)
+          .send({ requests: [
+            { device: ctx.device, validTo, amount: 50 },
+            { device: secondDevice, validTo, amount: 51 }
+          ]})
+          .set('Authorization', `Bearer ${token}`)
+          .expect(400)
+      })
+
+      it('amount of keys is not a number', async() => {
+        await req()
+          .post('/keys/' + ctx.user)
+          .send({ requests: [{ device: ctx.device, validTo, amount: 'foobar' }]})
+          .set('Authorization', `Bearer ${token}`)
+          .expect(400)
+      })
+
+      describe('validTo', () => {
+        const testCases = [
+          {
+            toString: () => "is in the past",
+            invalidTo: Date.now() - 1_000
+          },
+          {
+            toString: () => "is not provided",
+            invalidTo: null
+          },
+          {
+            toString: () => "is too late",
+            invalidTo: Date.now() + config().key.minDuration - 1_000
+          }
+        ]
+
+        testCases.map((testCase) => {
+          it(testCase.toString(), async() => {
+            await req()
+            .post('/keys/' + ctx.user)
+            .send({ requests: [{ device: ctx.device, validTo: testCase.invalidTo, amount: 1 }]})
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
+          })
+        })
+      })
     })
   })
 
-  describe.skip('GET /keys/:assetId', () => {
+  describe('GET /keys/:assetId', () => {
     let assetId = ''
 
     beforeAll(async () => {
@@ -282,7 +340,7 @@ describe('keys controller', () => {
     })
   })
 
-  describe.skip('GET /keys', () => {
+  describe('GET /keys', () => {
     let assetId = ''
 
     beforeAll(async () => {
@@ -318,7 +376,7 @@ describe('keys controller', () => {
     })
   })
 
-  describe.skip('POST /keys/:assetId/transfer/:address', () => {
+  describe('POST /keys/:assetId/transfer/:address', () => {
     let assetId = ''
 
     beforeAll(async () => {
@@ -452,7 +510,7 @@ describe('keys controller', () => {
   //   })
   // })
 
-  describe.skip('DELETE /keys/:assetId', () => {
+  describe('DELETE /keys/:assetId', () => {
     let assetId = ''
 
     beforeAll(async () => {

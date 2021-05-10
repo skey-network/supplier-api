@@ -1,6 +1,7 @@
-import { IsNotEmpty, IsInt, IsString, IsPositive, Max } from 'class-validator'
+import { IsNotEmpty, IsInt, IsString, IsPositive, Max, IsArray, ValidateNested } from 'class-validator'
 import { IsAddress } from '../validators'
 import { ApiProperty } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 
 export interface CreateKeyResult {
   assetId?: string
@@ -124,6 +125,9 @@ export class Key {
 }
 
 export class CreateKeyRequestsDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateKeyRequestDto)
   requests: CreateKeyRequestDto[]
 }
 

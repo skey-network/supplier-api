@@ -2,7 +2,6 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 import { CreateAndTransferKeyDto, CreateKeyDto, CreateKeyResult, CreateKeyRequestsDto } from './keys.model'
-import { validate } from 'class-validator'
 import config from '../config'
 import { SupplierService } from '../supplier/supplier.service'
 
@@ -119,25 +118,13 @@ export class KeysService {
         .reduce((prevValue, currValue) => { return prevValue + currValue })
     )
 
+    // create the keys
     return await Promise.all(
       requestsDto.requests.map(async (request) => {
         const dto: CreateKeyDto = { ...request, recipient }
 
-        console.log(dto)
-
-        validate(dto).then(errors => {
-          if(errors.length > 0) {
-            console.log('errors: ' + errors)
-            throw new BadRequestException(errors)
-          } else {
-            console.log('no errors')
-          }
-        })
-
-        console.log('boo')
-  
         return {
-          device: request.device,
+          device: dto.device,
           keys: await this.create(dto)
         }
       })
