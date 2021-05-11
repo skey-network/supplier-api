@@ -370,7 +370,7 @@ describe('devices controller', () => {
     }
 
     let device = ''
-    const dummyId = 'foobar'
+    const dummyId = `${DEVICE_NAME_PREFIX}foobar`
 
     beforeAll(async () => {
       const deviceRes = await req()

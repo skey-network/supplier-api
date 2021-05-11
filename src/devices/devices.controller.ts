@@ -461,6 +461,8 @@ export class DevicesController {
     Connecting to a new blockchain account will return encrypted seed of the account.
     Do not provide 'deviceParams' parameter when connecting to an existing account.
     See schema of the request body for details.
+    NOTE: Successfull operation will change the ID of LO Device to a following format:
+    urn:lo:nsid:sms:{blockchainAddress}
     `
   })
   @ApiResponse({
