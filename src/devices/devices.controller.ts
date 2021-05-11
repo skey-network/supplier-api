@@ -282,8 +282,8 @@ export class DevicesController {
   @UseGuards(JwtAuthGuard)
   @Get(':address/connection')
   @ApiOperation({
-    summary: 'Get details of provider connection',
-    description: 'Get details of provider connection'
+    summary: 'Get details of supplier connection',
+    description: 'Get details of supplier connection'
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
@@ -312,7 +312,7 @@ export class DevicesController {
   @UseGuards(JwtAuthGuard)
   @Post(':address/connect')
   @ApiOperation({
-    summary: 'Connect device to provider',
+    summary: 'Connect device to supplier',
     description: 'Connect device to Orange Live Object'
   })
   @ApiBearerAuth()
@@ -345,7 +345,7 @@ export class DevicesController {
   @UseGuards(JwtAuthGuard)
   @Delete(':address/disconnect')
   @ApiOperation({
-    summary: 'Disconnect device from provider',
+    summary: 'Disconnect device from supplier',
     description: 'Disconnect device from Orange Live Object'
   })
   @ApiBearerAuth()
