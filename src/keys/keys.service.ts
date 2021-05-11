@@ -1,7 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainReadService } from '../blockchain/blockchain.read.service'
-import { CreateAndTransferKeyDto, CreateKeyDto, CreateKeyResult } from './keys.model'
+import {
+  CreateAndTransferKeyDto,
+  CreateKeyDto,
+  CreateKeyResult,
+  CreateKeyRequestsDto
+} from './keys.model'
 import config from '../config'
 import { SupplierService } from '../supplier/supplier.service'
 
@@ -34,41 +39,8 @@ export class KeysService {
   async create(createKeyDto: CreateKeyDto): Promise<CreateKeyResult[]> {
     this.validateTimestamp(createKeyDto.validTo)
 
-    const createKey = async (dto: CreateKeyDto) => {
-      const issueTx = await this.handleError(() =>
-        this.blockchainWriteService.generateKey(dto.device, dto.validTo)
-      )
-
-      if (!issueTx.success) return { success: false, error: issueTx.data }
-
-      if (dto.recipient === config().blockchain.dappAddress || !dto.recipient) {
-        return {
-          assetId: issueTx.data,
-          success: true
-        }
-      }
-
-      const transferTx = await this.handleError(() =>
-        this.blockchainWriteService.transfer(dto.recipient, issueTx.data)
-      )
-
-      if (!transferTx.success) {
-        return {
-          assetId: issueTx.data,
-          success: false,
-          error: transferTx.data
-        }
-      }
-
-      return {
-        assetId: issueTx.data,
-        transferTx: transferTx.data,
-        success: true
-      }
-    }
-
     const keys = await Promise.all(
-      [...Array(createKeyDto.amount)].map(() => createKey(createKeyDto))
+      [...Array(createKeyDto.amount)].map(() => this.createKey(createKeyDto))
     )
 
     const assetIds = keys.filter((key) => key.assetId).map((key) => key.assetId)
@@ -140,6 +112,30 @@ export class KeysService {
     }))
   }
 
+  async createForMultipleDevices(requestsDto: CreateKeyRequestsDto) {
+    // validate timestamps
+    requestsDto.requests.map((el) => this.validateTimestamp(el.validTo))
+
+    // validate key limit
+    this.validateKeyLimit(
+      requestsDto.requests
+        .map((e) => e.amount)
+        .reduce((prevValue, currValue) => {
+          return prevValue + currValue
+        })
+    )
+
+    // create the keys
+    return await Promise.all(
+      requestsDto.requests.map(async (dto) => {
+        return {
+          device: dto.device,
+          keys: await this.create(dto)
+        }
+      })
+    )
+  }
+
   private async handleError<T>(func: () => Promise<T>) {
     try {
       return { success: true, data: await func() }
@@ -170,6 +166,39 @@ export class KeysService {
 
     if (Date.now() + minDuration >= timestamp) {
       throw new BadRequestException([`validTo should be greater than ${minValue}`])
+    }
+  }
+
+  private async createKey(dto: CreateKeyDto) {
+    const issueTx = await this.handleError(() =>
+      this.blockchainWriteService.generateKey(dto.device, dto.validTo)
+    )
+
+    if (!issueTx.success) return { success: false, error: issueTx.data }
+
+    if (dto.recipient === config().blockchain.dappAddress || !dto.recipient) {
+      return {
+        assetId: issueTx.data,
+        success: true
+      }
+    }
+
+    const transferTx = await this.handleError(() =>
+      this.blockchainWriteService.transfer(dto.recipient, issueTx.data)
+    )
+
+    if (!transferTx.success) {
+      return {
+        assetId: issueTx.data,
+        success: false,
+        error: transferTx.data
+      }
+    }
+
+    return {
+      assetId: issueTx.data,
+      transferTx: transferTx.data,
+      success: true
     }
   }
 }

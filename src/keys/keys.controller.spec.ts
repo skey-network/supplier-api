@@ -6,6 +6,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common'
 import * as request from 'supertest'
 import { AppModule } from '../app.module'
 import config from '../config'
+import * as util from 'util'
+import { equals } from 'class-validator'
 
 jest.setTimeout(3600000)
 
@@ -40,20 +42,12 @@ describe('keys controller', () => {
       password: process.env.ADMIN_PASSWORD
     })
     token = tokenRequest.body.access_token
-  })
 
-  describe('prepare', () => {
-    it('create device', async () => {
-      const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
+    const deviceRes = await req().post('/devices').set('Authorization', `Bearer ${token}`)
+    ctx.device = deviceRes.body.address
 
-      ctx.device = res.body.address
-    })
-
-    it('create user', async () => {
-      const res = await req().post('/users').set('Authorization', `Bearer ${token}`)
-
-      ctx.user = res.body.address
-    })
+    const userRes = await req().post('/users').set('Authorization', `Bearer ${token}`)
+    ctx.user = userRes.body.address
   })
 
   describe('POST /keys', () => {
@@ -140,6 +134,243 @@ describe('keys controller', () => {
         .post('/keys')
         .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
         .expect(401)
+    })
+  })
+
+  describe('POST /keys/multi', () => {
+    const validTo = Date.now() + config().key.minDuration + 3_600_000
+    let secondDevice = ''
+
+    const assertValidDeviceKey = (deviceKey) => {
+      expect(deviceKey.assetId).toBeDefined()
+      expect(deviceKey.transferTx).toBeDefined()
+      expect(deviceKey.dataTx).toBeDefined()
+      expect(deviceKey.success).toEqual(true)
+    }
+
+    beforeAll(async () => {
+      const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
+      secondDevice = res.body.address
+    })
+
+    describe('valid request', () => {
+      it('valid request', async () => {
+        const res = await req()
+          .post('/keys/multi')
+          .send({
+            requests: [{ recipient: ctx.user, device: ctx.device, validTo, amount: 2 }]
+          })
+          .set('Authorization', `Bearer ${token}`)
+
+        expect(res.status).toEqual(201)
+        expect(res.body.length).toEqual(1)
+
+        const deviceKeys = res.body[0]
+        expect(deviceKeys.device).toEqual(ctx.device)
+        expect(deviceKeys.keys.length).toEqual(2)
+        deviceKeys.keys.map((deviceKey) => {
+          assertValidDeviceKey(deviceKey)
+        })
+      })
+
+      it('valid request for multiple devices', async () => {
+        const res = await req()
+          .post('/keys/multi')
+          .send({
+            requests: [
+              { recipient: ctx.user, device: ctx.device, validTo, amount: 1 },
+              { recipient: ctx.user, device: secondDevice, validTo, amount: 1 }
+            ]
+          })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
+
+        expect(res.status).toEqual(201)
+
+        expect(
+          res.body.map((deviceKeys) => {
+            return deviceKeys.device
+          })
+        ).toEqual([ctx.device, secondDevice])
+
+        res.body.map((deviceKeys) => {
+          expect(deviceKeys.keys.length).toEqual(1)
+          assertValidDeviceKey(deviceKeys.keys[0])
+        })
+      })
+
+      it('valid request - multiple requests for a single device', async () => {
+        const res = await req()
+          .post('/keys/multi')
+          .send({
+            requests: [
+              { recipient: ctx.user, device: ctx.device, validTo, amount: 1 },
+              { recipient: ctx.user, device: ctx.device, validTo, amount: 1 }
+            ]
+          })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
+
+        expect(res.status).toEqual(201)
+        expect(
+          res.body.map((deviceKeys) => {
+            return deviceKeys.device
+          })
+        ).toEqual([ctx.device, ctx.device])
+
+        res.body.map((deviceKeys) => {
+          expect(deviceKeys.keys.length).toEqual(1)
+          assertValidDeviceKey(deviceKeys.keys[0])
+        })
+      })
+
+      it('recipient is skipped', async () => {
+        const res = await req()
+          .post('/keys/multi')
+          .send({ requests: [{ device: ctx.device, validTo, amount: 4 }] })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
+
+        expect(res.body).toBeInstanceOf(Array)
+        expect(res.body.length).toBe(1)
+        const keyResponse = res.body[0].keys[0]
+        expect(typeof keyResponse.assetId).toBe('string')
+        expect(typeof keyResponse.transferTx).toBe('undefined')
+        expect(typeof keyResponse.dataTx).toBe('string')
+        expect(res.body[0].keys[1].success).toBe(true)
+      })
+    })
+
+    describe('invalid request', () => {
+      it('unauthorized', async () => {
+        await req().post('/keys/multi').expect(401)
+      })
+
+      it('invalid token', async () => {
+        await req()
+          .post('/keys/multi')
+          .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
+          .expect(401)
+      })
+
+      describe('device', () => {
+        const testCases = [
+          {
+            toString: () => "is an empty string",
+            device: ''
+          },
+          {
+            toString: () => "not provided",
+            device: null
+          },
+          {
+            toString: () => "is invalid",
+            device: "foobar"
+          }
+        ]
+
+        it.each(testCases)("%s", async (testCase) => {
+          await req()
+            .post('/keys/multi')
+            .send({ requests: [{ recipient: ctx.user, device: testCase.device, validTo, amount: 1 }] })
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
+        })
+      })
+
+      describe('recipient', () => {
+        const testCases = [
+          {
+            toString: () => "is an empty string",
+            recipient: ''
+          },
+          {
+            toString: () => "is invalid",
+            recipient: "foobar"
+          }
+        ]
+
+        it.each(testCases)("%s", async (testCase) => {
+          const params = { requests: [{ recipient: testCase.recipient, device: ctx.device, validTo, amount: 1 }] }
+          console.log(util.inspect(params, { showHidden: false, depth: null }))
+          await req()
+            .post('/keys/multi')
+            .send(params)
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
+        })
+      })
+
+      describe('amount', () => {
+        const testCases = [
+          {
+            toString: () => "is negative",
+            amount: -1
+          },
+          {
+            toString: () => "equals 0",
+            amount: 0
+          },
+          {
+            toString: () => "exceeds the limit",
+            amount: 101
+          },
+          {
+            toString: () => "is null",
+            amount: null
+          },
+          {
+            toString: () => "is not a number",
+            amount: "12"
+          },
+          {
+            toString: () => "is undefined",
+            amount: undefined
+          }
+        ]
+
+        it.each(testCases)("%s", async (testCase) => {
+          await req()
+          .post('/keys/multi')
+          .send({ requests: [{ recipient: ctx.user, device: ctx.device, validTo, amount: testCase.amount }] })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(400)
+        })
+      })
+
+      describe('validTo', () => {
+        const testCases = [
+          {
+            toString: () => 'is in the past',
+            invalidTo: Date.now() - 1_000
+          },
+          {
+            toString: () => 'is not provided',
+            invalidTo: null
+          },
+          {
+            toString: () => 'is too late',
+            invalidTo: Date.now() + config().key.minDuration - 1_000
+          }
+        ]
+
+        it.each(testCases)('%s', async (testCase) => {
+          await req()
+            .post('/keys/multi')
+            .send({
+              requests: [
+                {
+                  recipient: ctx.user,
+                  device: ctx.device,
+                  validTo: testCase.invalidTo,
+                  amount: 1
+                }
+              ]
+            })
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
+        })
+      })
     })
   })
 

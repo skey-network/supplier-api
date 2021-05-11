@@ -1,47 +1,16 @@
-import { IsNotEmpty, IsInt, IsString, IsPositive, Max, IsOptional } from 'class-validator'
+import {
+  IsNotEmpty,
+  IsInt,
+  IsString,
+  IsPositive,
+  Max,
+  IsArray,
+  ValidateNested,
+  IsOptional
+} from 'class-validator'
 import { IsAddress } from '../validators'
 import { ApiProperty } from '@nestjs/swagger'
-
-export class CreateKeyDto {
-  @IsOptional()
-  @IsString()
-  @IsAddress
-  @ApiProperty({
-    description: 'Recipient Address',
-    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt',
-    required: false
-  })
-  recipient?: string
-
-  @IsNotEmpty()
-  @IsString()
-  @IsAddress
-  @ApiProperty({
-    description: 'Device Address',
-    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt'
-  })
-  device: string
-
-  @IsNotEmpty()
-  @IsInt()
-  @IsPositive()
-  @Max(Number.MAX_SAFE_INTEGER)
-  @ApiProperty({
-    description: 'Key expiration date',
-    example: 1619180438000
-  })
-  validTo: number
-
-  @IsNotEmpty()
-  @IsInt()
-  @IsPositive()
-  @Max(80) // max amount of items in list for ride script
-  @ApiProperty({
-    description: 'Amount of keys - max 80',
-    example: 10
-  })
-  amount: number
-}
+import { Type } from 'class-transformer'
 
 export interface CreateKeyResult {
   assetId?: string
@@ -93,6 +62,30 @@ export class CreateKeyResultResponseWithError extends CreateKeyResultResponse {
     required: false
   })
   error?: string
+}
+
+export class CreateKeyForMultipleDevicesResponse {
+  @ApiProperty({
+    description: 'Device Address',
+    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt'
+  })
+  device: string
+
+  @ApiProperty({
+    description: 'Array of generated keys',
+    type: CreateKeyResultResponse,
+    isArray: true
+  })
+  keys: CreateKeyResultResponse[]
+}
+
+export class CreateKeyForMultipleDevicesResponseWithError extends CreateKeyForMultipleDevicesResponse {
+  @ApiProperty({
+    description: 'Array of errors',
+    type: CreateKeyResultResponseWithError,
+    isArray: true
+  })
+  keys: CreateKeyResultResponseWithError[]
 }
 
 export class CreateAndTransferKeyDto {
@@ -162,4 +155,57 @@ export class Key {
     example: 1592861516794
   })
   validTo: number
+}
+
+export class CreateKeyDto {
+  @IsNotEmpty()
+  @IsString()
+  @IsAddress
+  @ApiProperty({
+    description: 'Device Address',
+    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt'
+  })
+  device: string
+
+  @IsNotEmpty()
+  @IsInt()
+  @IsPositive()
+  @Max(Number.MAX_SAFE_INTEGER)
+  @ApiProperty({
+    description: 'Key expiration date in Epoch miliseconds',
+    example: 1619180438000
+  })
+  validTo: number
+
+  @IsNotEmpty()
+  @IsInt()
+  @IsPositive()
+  @Max(80) // max amount of items in list for ride script
+  @ApiProperty({
+    description: 'Amount of keys - max 80',
+    example: 10
+  })
+  amount: number
+
+  @IsOptional()
+  @IsString()
+  @IsAddress
+  @ApiProperty({
+    description: 'Recipient Address',
+    example: '3M2TC9skx4CuV2pwfCHwxDY9JPAAGA9sNkt',
+    required: false
+  })
+  recipient?: string
+}
+
+export class CreateKeyRequestsDto {
+  @ApiProperty({
+    description: 'Array of requests',
+    type: CreateKeyDto,
+    isArray: true
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateKeyDto)
+  requests: CreateKeyDto[]
 }
