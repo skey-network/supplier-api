@@ -8,6 +8,7 @@ import { AppModule } from '../app.module'
 import config from '../config'
 import * as util from 'util'
 import { equals } from 'class-validator'
+import * as Crypto from '@waves/ts-lib-crypto'
 
 jest.setTimeout(3600000)
 
@@ -287,12 +288,15 @@ describe('keys controller', () => {
           {
             toString: () => "is invalid",
             recipient: "foobar"
+          },
+          {
+            toString: () => "is blockchain address, but an invalid one",
+            recipient: Crypto.address('foobar', 'X')
           }
-        ]
+        ] 
 
         it.each(testCases)("%s", async (testCase) => {
           const params = { requests: [{ recipient: testCase.recipient, device: ctx.device, validTo, amount: 1 }] }
-          console.log(util.inspect(params, { showHidden: false, depth: null }))
           await req()
             .post('/keys/multi')
             .send(params)
