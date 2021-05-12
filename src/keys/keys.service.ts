@@ -139,9 +139,9 @@ export class KeysService {
     // We should then return an error.
     // That's why we iterate over result to check if any keys were created.
     if (this.anyCreatedKeys(keyResponses)) {
-      return keyResponses;
+      return keyResponses
     } else {
-      throw new BadRequestException(['No keys have been created']);
+      throw new BadRequestException(['No keys have been created'])
     }
   }
 
@@ -211,20 +211,22 @@ export class KeysService {
     }
   }
 
-  private anyCreatedKeys(keyResponses: { device: string, keys: CreateKeyResult[] }[]) {
-    let validKeys = false;
+  private anyCreatedKeys(keyResponses: { device: string; keys: CreateKeyResult[] }[]) {
+    let validKeys = false
 
     keyResponses.forEach((keyResponse) => {
       keyResponse.keys.forEach((key) => {
-        if(key.success) {
-          validKeys = true;
-          return;
+        if (key.success) {
+          validKeys = true
+          return
         }
       })
 
-      if (validKeys) { return; }
+      if (validKeys) {
+        return
+      }
     })
 
-    return validKeys;
+    return validKeys
   }
 }

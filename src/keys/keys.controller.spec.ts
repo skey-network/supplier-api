@@ -257,23 +257,27 @@ describe('keys controller', () => {
       describe('device', () => {
         const testCases = [
           {
-            toString: () => "is an empty string",
+            toString: () => 'is an empty string',
             device: ''
           },
           {
-            toString: () => "not provided",
+            toString: () => 'not provided',
             device: null
           },
           {
-            toString: () => "is invalid",
-            device: "foobar"
+            toString: () => 'is invalid',
+            device: 'foobar'
           }
         ]
 
-        it.each(testCases)("%s", async (testCase) => {
+        it.each(testCases)('%s', async (testCase) => {
           await req()
             .post('/keys/multi')
-            .send({ requests: [{ recipient: ctx.user, device: testCase.device, validTo, amount: 1 }] })
+            .send({
+              requests: [
+                { recipient: ctx.user, device: testCase.device, validTo, amount: 1 }
+              ]
+            })
             .set('Authorization', `Bearer ${token}`)
             .expect(400)
         })
@@ -282,21 +286,25 @@ describe('keys controller', () => {
       describe('recipient', () => {
         const testCases = [
           {
-            toString: () => "is an empty string",
+            toString: () => 'is an empty string',
             recipient: ''
           },
           {
-            toString: () => "is invalid",
-            recipient: "foobar"
+            toString: () => 'is invalid',
+            recipient: 'foobar'
           },
           {
-            toString: () => "is blockchain address, but an invalid one",
+            toString: () => 'is blockchain address, but an invalid one',
             recipient: Crypto.address('foobar', 'X')
           }
-        ] 
+        ]
 
-        it.each(testCases)("%s", async (testCase) => {
-          const params = { requests: [{ recipient: testCase.recipient, device: ctx.device, validTo, amount: 1 }] }
+        it.each(testCases)('%s', async (testCase) => {
+          const params = {
+            requests: [
+              { recipient: testCase.recipient, device: ctx.device, validTo, amount: 1 }
+            ]
+          }
           await req()
             .post('/keys/multi')
             .send(params)
@@ -308,37 +316,46 @@ describe('keys controller', () => {
       describe('amount', () => {
         const testCases = [
           {
-            toString: () => "is negative",
+            toString: () => 'is negative',
             amount: -1
           },
           {
-            toString: () => "equals 0",
+            toString: () => 'equals 0',
             amount: 0
           },
           {
-            toString: () => "exceeds the limit",
+            toString: () => 'exceeds the limit',
             amount: 81
           },
           {
-            toString: () => "is null",
+            toString: () => 'is null',
             amount: null
           },
           {
-            toString: () => "is not a number",
-            amount: "12"
+            toString: () => 'is not a number',
+            amount: '12'
           },
           {
-            toString: () => "is undefined",
+            toString: () => 'is undefined',
             amount: undefined
           }
         ]
 
-        it.each(testCases)("%s", async (testCase) => {
+        it.each(testCases)('%s', async (testCase) => {
           await req()
-          .post('/keys/multi')
-          .send({ requests: [{ recipient: ctx.user, device: ctx.device, validTo, amount: testCase.amount }] })
-          .set('Authorization', `Bearer ${token}`)
-          .expect(400)
+            .post('/keys/multi')
+            .send({
+              requests: [
+                {
+                  recipient: ctx.user,
+                  device: ctx.device,
+                  validTo,
+                  amount: testCase.amount
+                }
+              ]
+            })
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
         })
       })
 
