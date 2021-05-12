@@ -24,7 +24,8 @@ import {
   Key,
   CreateKeyRequestsDto,
   CreateKeyForMultipleDevicesResponse,
-  CreateKeyForMultipleDevicesResponseWithError
+  CreateKeyForMultipleDevicesResponseWithError,
+  ApiSupplierTagsQuery
 } from './keys.model'
 import { KeysService } from './keys.service'
 
@@ -34,7 +35,6 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
-  ApiQuery,
   ApiBody
 } from '@nestjs/swagger'
 import {
@@ -95,7 +95,8 @@ export class KeysController {
   @ApiOperation({
     summary: 'Generate new keys',
     description: `Generate new keys and transfer them to a blockchain address. Maximum amount of keys created in single request is 80.
-      If recipient address is not given, the created key will stay on dapp address.`
+      If recipient address is not given, the created key will stay on dapp address.\n\n
+      This endpoint uses callback that sends request to supplier. It sends assetId and device address.`
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
@@ -111,13 +112,7 @@ export class KeysController {
     type: CreateKeyResultResponse,
     isArray: true
   })
-  @ApiQuery({
-    name: 'tags',
-    isArray: true,
-    example: 'tags=tag1&tags=tag2',
-    required: false,
-    description: 'Tags for supplier'
-  })
+  @ApiSupplierTagsQuery
   async create(@Body() createKeyDto: CreateKeyDto, @Query('tags') tags?: string[]) {
     return await this.keysService.create(createKeyDto, tags)
   }
@@ -186,7 +181,8 @@ export class KeysController {
   @Put(':assetId/transfer/:address')
   @ApiOperation({
     summary: 'Transfer key to address',
-    description: 'Transfer key to address'
+    description: `Transfer key to address.\n\n
+    This endpoint uses callback that sends request to supplier. It sends assetId and device address.`
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
@@ -207,11 +203,13 @@ export class KeysController {
     description: 'Address to transfer key to',
     example: '3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud'
   })
+  @ApiSupplierTagsQuery
   async transfer(
     @Param('assetId', AssetIdValidationPipe) assetId: string,
-    @Param('address', AddressValidationPipe) address: string
+    @Param('address', AddressValidationPipe) address: string,
+    @Query('tags') tags?: string[]
   ) {
-    return await this.keysService.transfer(assetId, address)
+    return await this.keysService.transfer(assetId, address, tags)
   }
 
   //
