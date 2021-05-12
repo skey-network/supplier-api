@@ -162,7 +162,7 @@ export class KeysService {
   }
 
   private validateKeyLimit(amount: number) {
-    const maxAmount = 100
+    const maxAmount = 80
 
     if (amount > maxAmount) {
       throw new BadRequestException([`amount cannot exceed ${maxAmount}`])

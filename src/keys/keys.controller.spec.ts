@@ -317,7 +317,7 @@ describe('keys controller', () => {
           },
           {
             toString: () => "exceeds the limit",
-            amount: 101
+            amount: 81
           },
           {
             toString: () => "is null",

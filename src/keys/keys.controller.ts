@@ -246,7 +246,7 @@ export class KeysController {
   @ApiOperation({
     summary: 'Generate and transfer keys',
     description:
-      'Generate keys for device and transfer to user. The maximum amount is 100.',
+      'Generate keys for device and transfer to user. The maximum amount is 80.',
     deprecated: true
   })
   @ApiBearerAuth()
