@@ -149,7 +149,6 @@ export class DevicesService {
   }
 
   async connection(address: string) {
-    await this.deviceExists(address)
     const res = await this.supplierService.connectionInfo(address)
     return { status: 'connection details', details: res.data }
   }

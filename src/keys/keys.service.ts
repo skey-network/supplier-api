@@ -36,7 +36,7 @@ export class KeysService {
     return keys
   }
 
-  async create(createKeyDto: CreateKeyDto): Promise<CreateKeyResult[]> {
+  async create(createKeyDto: CreateKeyDto, tags?: string[]): Promise<CreateKeyResult[]> {
     this.validateTimestamp(createKeyDto.validTo)
 
     const keys = await Promise.all(
@@ -48,6 +48,8 @@ export class KeysService {
     const dataTx = await this.handleError(() =>
       this.blockchainWriteService.addNKeysToDevice(assetIds, createKeyDto.device)
     )
+
+    await this.supplierService.onCreateKeys(createKeyDto, assetIds, tags)
 
     return keys.map((key) => {
       if (dataTx.success) {

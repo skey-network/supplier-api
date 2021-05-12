@@ -34,6 +34,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
   ApiBody
 } from '@nestjs/swagger'
 import {
@@ -110,8 +111,15 @@ export class KeysController {
     type: CreateKeyResultResponse,
     isArray: true
   })
-  async create(@Body() createKeyDto: CreateKeyDto) {
-    return await this.keysService.create(createKeyDto)
+  @ApiQuery({
+    name: 'tags',
+    isArray: true,
+    example: 'tags=tag1&tags=tag2',
+    required: false,
+    description: 'Tags for supplier'
+  })
+  async create(@Body() createKeyDto: CreateKeyDto, @Query('tags') tags?: string[]) {
+    return await this.keysService.create(createKeyDto, tags)
   }
 
   //
