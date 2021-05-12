@@ -126,7 +126,7 @@ export class KeysService {
     )
 
     // create the keys
-    return await Promise.all(
+    const keyResponses = await Promise.all(
       requestsDto.requests.map(async (dto) => {
         return {
           device: dto.device,
@@ -134,6 +134,15 @@ export class KeysService {
         }
       })
     )
+
+    // In some cases no keys might be created(like no funds on dApp).
+    // We should then return an error.
+    // That's why we iterate over result to check if any keys were created.
+    if (this.anyCreatedKeys(keyResponses)) {
+      return keyResponses
+    } else {
+      throw new BadRequestException(['No keys have been created'])
+    }
   }
 
   private async handleError<T>(func: () => Promise<T>) {
@@ -153,7 +162,7 @@ export class KeysService {
   }
 
   private validateKeyLimit(amount: number) {
-    const maxAmount = 100
+    const maxAmount = 80
 
     if (amount > maxAmount) {
       throw new BadRequestException([`amount cannot exceed ${maxAmount}`])
@@ -200,5 +209,24 @@ export class KeysService {
       transferTx: transferTx.data,
       success: true
     }
+  }
+
+  private anyCreatedKeys(keyResponses: { device: string; keys: CreateKeyResult[] }[]) {
+    let validKeys = false
+
+    keyResponses.forEach((keyResponse) => {
+      keyResponse.keys.forEach((key) => {
+        if (key.success) {
+          validKeys = true
+          return
+        }
+      })
+
+      if (validKeys) {
+        return
+      }
+    })
+
+    return validKeys
   }
 }
