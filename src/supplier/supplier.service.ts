@@ -1,13 +1,61 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException
+} from '@nestjs/common'
 import { ConnectionData } from './supplier.interfaces'
 import config from '../config'
 import fetch, { RequestInit } from 'node-fetch'
+import { CreateKeyDto } from 'src/keys/keys.model'
 
 const DEVICE_NAME_PREFIX = 'urn:lo:nsid:sms:'
 const env = config().supplier
 
 @Injectable()
 export class SupplierService {
+  private logger = new Logger(SupplierService.name)
+
+  async onCreateKeys(createKeyDto: CreateKeyDto, assetIds: string[], tags?: string[]) {
+    const path = `/data/streams/${createKeyDto.device}`
+
+    const createPayload = (assetId: string) => ({
+      metadata: { source: createKeyDto.device, encoding: 'string' },
+      model: 'key',
+      value: {
+        assetId,
+        validTo: createKeyDto.validTo,
+        action: createKeyDto.recipient ? 'transfer' : 'activation',
+        recipient: createKeyDto.recipient
+      },
+      timestamp: new Date().toISOString(),
+      tags: tags ?? []
+    })
+
+    await Promise.all(
+      assetIds.map(async (assetId) => {
+        try {
+          const res = await this.request(path, {
+            method: 'POST',
+            body: JSON.stringify(createPayload(assetId))
+          })
+
+          if (res.status !== 202) {
+            this.logger.error(`Cannot send Create Key message to supplier`)
+            this.logger.error(res.data.data)
+
+            return
+          }
+
+          this.logger.log(`Sent message to supplier ${assetId}`)
+        } catch (err) {
+          this.logger.error(`Cannot send Create Key message to supplier`)
+          this.logger.error(err)
+        }
+      })
+    )
+  }
+
   async connectDevice(connectionData: ConnectionData, secretKey: string) {
     const payload = this.createDevicePayload(connectionData, secretKey)
 
@@ -91,7 +139,7 @@ export class SupplierService {
     }
   }
 
-  private async request(path: string, options?: RequestInit) {
+  async request(path: string, options?: RequestInit) {
     const url = `${env.url}${path}`
 
     const defaultHeaders = {
@@ -110,7 +158,10 @@ export class SupplierService {
       return {
         ok: res.ok,
         status: res.status,
-        data: { ...res, data: res.status === 204 ? {} : await res.json() }
+        data: {
+          ...res,
+          data: res.status === 204 || res.status === 202 ? {} : await res.json()
+        }
       }
     } catch (e) {
       throw new BadRequestException({

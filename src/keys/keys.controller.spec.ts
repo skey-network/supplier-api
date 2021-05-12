@@ -6,8 +6,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common'
 import * as request from 'supertest'
 import { AppModule } from '../app.module'
 import config from '../config'
-import * as util from 'util'
-import { equals } from 'class-validator'
+import { SupplierService } from '../supplier/supplier.service'
 import * as Crypto from '@waves/ts-lib-crypto'
 
 jest.setTimeout(3600000)
@@ -20,6 +19,7 @@ describe('keys controller', () => {
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
   let token = ''
+  let moduleFixture: TestingModule
 
   const ctx = {
     device: '',
@@ -27,7 +27,7 @@ describe('keys controller', () => {
   }
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -67,6 +67,30 @@ describe('keys controller', () => {
       expect(typeof res.body[0].transferTx).toBe('string')
       expect(typeof res.body[0].dataTx).toBe('string')
       expect(res.body[1].success).toBe(true)
+    })
+
+    it('calls supplier method', async () => {
+      const service = moduleFixture.get<SupplierService>(SupplierService)
+      const spy = jest.spyOn(service, 'onCreateKeys').mockResolvedValue(null)
+
+      const validTo = Date.now() + config().key.minDuration + 3_600_000
+
+      await req()
+        .post('/keys?tags=t1&tags=t2')
+        .send({ device: ctx.device, validTo, amount: 2, recipient: ctx.user })
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201)
+
+      const [createKeyDto, assetIds, tags] = spy.mock.calls[0]
+
+      expect(createKeyDto).toEqual({
+        device: ctx.device,
+        validTo,
+        amount: 2,
+        recipient: ctx.user
+      })
+      expect(assetIds.length).toBe(2)
+      expect(tags).toEqual(['t1', 't2'])
     })
 
     it('recipient is skipped', async () => {
