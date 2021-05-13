@@ -9,7 +9,7 @@ import {
   IsOptional
 } from 'class-validator'
 import { IsAddress } from '../validators'
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, ApiQuery } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 
 export interface CreateKeyResult {
@@ -209,3 +209,11 @@ export class CreateKeyRequestsDto {
   @Type(() => CreateKeyDto)
   requests: CreateKeyDto[]
 }
+
+export const ApiSupplierTagsQuery = ApiQuery({
+  name: 'tags',
+  isArray: true,
+  example: 'tags=tag1&tags=tag2',
+  required: false,
+  description: 'Tags for supplier'
+})

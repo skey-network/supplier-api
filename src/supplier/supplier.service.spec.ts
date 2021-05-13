@@ -58,9 +58,14 @@ describe('SupplierService', () => {
 
       expect(path).toBe(args.expectedPath)
       expect(options.method).toBe('POST')
-      expect({ ...JSON.parse(options.body), timestamp: undefined }).toEqual(
+
+      const parsed = JSON.parse(options.body)
+
+      expect({ ...parsed, value: { ...parsed.value, timestamp: undefined } }).toEqual(
         args.expectedPayload
       )
+
+      expect(parsed.value.timestamp).toBeDefined()
     })
   })
 })

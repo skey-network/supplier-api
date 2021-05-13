@@ -26,9 +26,9 @@ export class SupplierService {
         assetId,
         validTo: createKeyDto.validTo,
         action: createKeyDto.recipient ? 'transfer' : 'activation',
-        recipient: createKeyDto.recipient
+        recipient: createKeyDto.recipient,
+        timestamp: Date.now()
       },
-      timestamp: new Date().toISOString(),
       tags: tags ?? []
     })
 
