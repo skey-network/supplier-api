@@ -504,19 +504,17 @@ describe('keys controller', () => {
     })
   })
 
-  describe('POST /keys/:assetId/transfer/:address', () => {
+  describe('PUT /keys/:assetId/transfer/:address', () => {
+    const validTo = Date.now() + config().key.minDuration + 3_600_000
     let assetId = ''
 
-    beforeAll(async () => {
-      const validTo = Date.now() + config().key.minDuration + 3_600_000
-
+    beforeEach(async () => {
       const res = await req()
         .post('/keys')
         .send({
           device: ctx.device,
           validTo,
-          amount: 1,
-          recipient: config().blockchain.dappAddress
+          amount: 1
         })
         .set('Authorization', `Bearer ${token}`)
 
@@ -530,6 +528,30 @@ describe('keys controller', () => {
         .expect(200)
 
       expect(typeof res.body.txHash).toBe('string')
+    })
+
+    it('calls supplier method', async () => {
+      const service = moduleFixture.get<SupplierService>(SupplierService)
+      const spy = jest.spyOn(service, 'onCreateKeys').mockResolvedValue(null)
+
+      jest.clearAllMocks()
+
+      const res = await req()
+        .put(`/keys/${assetId}/transfer/${ctx.user}?tags=t1&tags=t2`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
+
+      const [createKeyDto, assetIds, tags] = spy.mock.calls[0]
+
+      expect(createKeyDto).toEqual({
+        device: ctx.device,
+        validTo,
+        amount: 1,
+        recipient: ctx.user
+      })
+
+      expect(assetIds).toEqual([assetId])
+      expect(tags).toEqual(['t1', 't2'])
     })
 
     it('unauthorized', async () => {

@@ -49,7 +49,8 @@ export class KeysService {
       this.blockchainWriteService.addNKeysToDevice(assetIds, createKeyDto.device)
     )
 
-    await this.supplierService.onCreateKeys(createKeyDto, assetIds, tags)
+    // Do not wait for supplier response
+    this.supplierService.onCreateKeys(createKeyDto, assetIds, tags)
 
     return keys.map((key) => {
       if (dataTx.success) {
@@ -74,8 +75,24 @@ export class KeysService {
     }
   }
 
-  async transfer(assetId: string, address: string) {
-    const txHash = await this.blockchainWriteService.transfer(address, assetId)
+  async transfer(assetId: string, address: string, tags?: string[]) {
+    const [{ device, validTo }, txHash] = await Promise.all([
+      this.show(assetId),
+      this.blockchainWriteService.transfer(address, assetId)
+    ])
+
+    // Do not wait for supplier response
+    this.supplierService.onCreateKeys(
+      {
+        device,
+        validTo,
+        amount: 1,
+        recipient: address
+      },
+      [assetId],
+      tags
+    )
+
     return { txHash }
   }
 
