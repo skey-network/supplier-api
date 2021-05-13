@@ -95,7 +95,8 @@ export class KeysController {
   @ApiOperation({
     summary: 'Generate new keys',
     description: `Generate new keys and transfer them to a blockchain address. Maximum amount of keys created in single request is 80.
-      If recipient address is not given, the created key will stay on dapp address.`
+      If recipient address is not given, the created key will stay on dapp address. Otherwise the key is sent to recipient address\n\n
+      This endpoint uses callback that sends request to supplier. It sends assetId and device address.`
   })
   @ApiBearerAuth()
   @ApiFilledUnauthorizedResponse()
