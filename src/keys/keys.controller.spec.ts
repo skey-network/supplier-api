@@ -541,8 +541,6 @@ describe('keys controller', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200)
 
-      console.log(spy.mock.calls)
-
       const [createKeyDto, assetIds, tags] = spy.mock.calls[0]
 
       expect(createKeyDto).toEqual({
