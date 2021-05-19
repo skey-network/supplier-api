@@ -4,7 +4,6 @@ configure()
 import { HttpAdapterHost, NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { readFileSync } from 'fs'
 import { ValidationPipe } from '@nestjs/common'
 import { LoggerInterceptor } from './logger/logger.interceptor'
 import config from './config'

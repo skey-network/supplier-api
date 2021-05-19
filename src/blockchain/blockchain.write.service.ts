@@ -174,6 +174,22 @@ export class BlockchainWriteService {
     return await this.broadcast(tx)
   }
 
+  // Burn key with organisation dapp script
+  async burnKeyOnOrganisation(organisation: string, key: string) {
+    const params: Transactions.IInvokeScriptParams = {
+      dApp: organisation,
+      call: {
+        function: 'removeKey',
+        args: [{ type: 'string', value: key }]
+      },
+      fee: 9 * 10 ** 5,
+      chainId
+    }
+
+    const tx = Transactions.invokeScript(params, seed)
+    return await this.broadcast(tx)
+  }
+
   // Interact with device via key, ex open
   async interactWithDevice(action: string, key: string, seed: string) {
     const params: Transactions.IInvokeScriptParams = {
@@ -203,7 +219,7 @@ export class BlockchainWriteService {
     })
   }
 
-  private async broadcast(payload: Transactions.TTx) {
+  async broadcast(payload: Transactions.TTx) {
     try {
       const tx = await Transactions.broadcast(payload, nodeUrl)
       await Transactions.waitForTx(tx.id, { apiBase: nodeUrl })

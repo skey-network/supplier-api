@@ -1,0 +1,43 @@
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
+import { getInstance } from 'skey-lib'
+import config from '../config'
+
+const { chainId, nodeUrl, dappAddress } = config().blockchain
+
+@Injectable()
+export class OrganisationsService {
+  constructor(private readonly blockchainWriteService: BlockchainWriteService) {}
+
+  get lib() {
+    return getInstance({ nodeUrl, chainId })
+  }
+
+  async removeKey(organisationAddress: string, keyAssetId: string) {
+    const [key, organisationEntries] = await Promise.all([
+      this.lib.fetchKey(keyAssetId),
+      this.lib.fetchDataWithRegex(`org_${organisationAddress}`, dappAddress)
+    ])
+
+    this.handleNotFound(key, organisationEntries)
+
+    const { device } = this.lib.extractValuesFromKey(key?.description)
+
+    const txHashes = await Promise.all([
+      this.blockchainWriteService.burnKeyOnOrganisation(organisationAddress, keyAssetId),
+      this.blockchainWriteService.removeKeyFromDevice(keyAssetId, device)
+    ])
+
+    return { txHashes }
+  }
+
+  handleNotFound(key: any, entries: Entry[]) {
+    if (!entries.length) {
+      throw new NotFoundException('organisation not found')
+    }
+
+    if (key?.issuer !== dappAddress) {
+      throw new NotFoundException('key not found')
+    }
+  }
+}
