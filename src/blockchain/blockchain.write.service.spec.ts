@@ -4,8 +4,10 @@ configure()
 import { Test, TestingModule } from '@nestjs/testing'
 import { BlockchainWriteService } from './blockchain.write.service'
 import * as Crypto from '@waves/ts-lib-crypto'
+import * as Transactions from '@waves/waves-transactions'
 import config from '../config'
 import { readFileSync } from 'fs'
+import { TRANSACTION_TYPE } from '@waves/waves-transactions/dist/transactions'
 
 jest.setTimeout(3600000)
 
@@ -85,5 +87,26 @@ describe('blockchainWriteService', () => {
   it('removeKeyFromDevice', async () => {
     const txHash = await service.removeKeyFromDevice(ctx.assetId2, ctx.device.address)
     expect(typeof txHash).toBe('string')
+  })
+
+  describe('burnKey', () => {
+    it('constructs correct tx', async () => {
+      const { chainId } = config().blockchain
+
+      const spy = jest.spyOn(service, 'broadcast').mockResolvedValue('hash')
+
+      const org = '3PEfcM3MkYCQAvMknZanC8mM3x9ENvMKpTy'
+      const asset = '85u7QmR14gPEGXCNe27D2KPUo6US78Hy8ub2hEnU4fRL'
+
+      await service.burnKeyOnOrganisation(org, asset)
+
+      const result = spy.mock.calls[0][0] as Transactions.IInvokeScriptTransaction
+
+      expect(result.type).toBe(TRANSACTION_TYPE.INVOKE_SCRIPT)
+      expect(result.chainId).toBe(chainId.charCodeAt(0))
+      expect(result.call).toBeDefined()
+      expect(result.dApp).toBe(org)
+      expect(result.proofs.length).toBe(1)
+    })
   })
 })
