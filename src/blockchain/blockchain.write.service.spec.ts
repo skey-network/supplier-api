@@ -7,6 +7,7 @@ import * as Crypto from '@waves/ts-lib-crypto'
 import * as Transactions from '@waves/waves-transactions'
 import config from '../config'
 import { readFileSync } from 'fs'
+import { BadRequestException } from '@nestjs/common'
 import { TRANSACTION_TYPE } from '@waves/waves-transactions/dist/transactions'
 
 jest.setTimeout(3600000)
@@ -15,6 +16,10 @@ const generateAccount = () => {
   const chainId = config().blockchain.chainId
   const seed = Crypto.randomSeed()
   return { seed, address: Crypto.address(seed, chainId) }
+}
+
+const generateAlias = () => {
+  return("testalias_" + Math.random().toString(36).substring(8))
 }
 
 describe('blockchainWriteService', () => {
@@ -86,6 +91,21 @@ describe('blockchainWriteService', () => {
 
   it('removeKeyFromDevice', async () => {
     const txHash = await service.removeKeyFromDevice(ctx.assetId2, ctx.device.address)
+    expect(typeof txHash).toBe('string')
+  })
+
+
+  it('setAlias', async () => {
+      const account = generateAccount()
+      await service.faucet(account.address, 500000)
+      const alias = generateAlias()
+      const txHash = await service.setAlias(alias, account.seed)
+      expect(typeof txHash).toBe('string')
+  })
+
+  it('setDAppAlias', async () => {
+    const alias = generateAlias()
+    const txHash = await service.setDAppAlias(alias)
     expect(typeof txHash).toBe('string')
   })
 

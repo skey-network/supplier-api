@@ -78,6 +78,15 @@ export class BlockchainReadService {
     return all
   }
 
+  async fetchAliases(address: string) {
+    const res = await this.request(`/alias/by-address/${address}`)
+    return res;
+  }
+
+  async fetchDAppAliases() {
+    return await this.fetchAliases(dappAddress);
+  }
+
   private async request(path: string) {
     try {
       const res = await fetch(`${nodeUrl}${path}`)

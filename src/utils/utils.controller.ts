@@ -50,7 +50,8 @@ export class UtilsController {
   @Post('setup')
   @ApiOperation({
     summary: 'Set dApp data',
-    description: 'Set dApp name, description and script template'
+    description: `Set dApp name, description, script template and alias. \n
+    NOTE: Aliases are PERMANENT and CANNOT BE REMOVED FROM THE BLOCKCHAIN NOR TRANSFERRED TO A DIFFERENT ADDRESS!`
   })
   @ApiBearerAuth()
   @ApiFilledCustomErrorResponse()

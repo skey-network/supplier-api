@@ -24,6 +24,10 @@ describe('app e2e', () => {
     key: ''
   }
 
+  const randomString = () => {
+    return(Math.random().toString(36).substring(6))
+  }
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule]
@@ -54,7 +58,8 @@ describe('app e2e', () => {
       .send({
         setScript: true,
         name: 'test name',
-        description: 'test description'
+        description: 'test description',
+        alias: 'test_' + randomString()
       })
       .set('Authorization', `Bearer ${ctx.token}`)
       .expect(201)

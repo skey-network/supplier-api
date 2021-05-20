@@ -20,6 +20,10 @@ const randomAddress = () => {
   return Crypto.address(Crypto.randomSeed(), chainId)
 }
 
+const randomString = () => {
+  return(Math.random().toString(36).substring(10))
+}
+
 describe('utils controller', () => {
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
@@ -99,13 +103,14 @@ describe('utils controller', () => {
         .send({
           setScript: true,
           name: 'dApp',
-          description: 'General Kenobi'
+          description: 'General Kenobi',
+          alias: 'dapp_' + randomString()
         })
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
 
       expect(res.body).toBeInstanceOf(Array)
-      expect(res.body.length).toBe(3)
+      expect(res.body.length).toBe(4)
       expect(typeof res.body[0].action).toBe('string')
       expect(typeof res.body[0].txHash).toBe('string')
     })
@@ -134,7 +139,7 @@ describe('utils controller', () => {
     it('valid returned data', async () => {
       const res = await req().get('/utils/status').set('Authorization', `Bearer ${token}`)
 
-      const { address, script, name, description, nodeUrl, chainId } = res.body
+      const { address, script, name, description, nodeUrl, chainId, aliases } = res.body
 
       expect(address).toEqual(config().blockchain.dappAddress)
       expect(script).toEqual(true)
@@ -142,6 +147,7 @@ describe('utils controller', () => {
       expect(description).toEqual('General Kenobi')
       expect(nodeUrl).toEqual(config().blockchain.nodeUrl)
       expect(chainId).toEqual(config().blockchain.chainId)
+      expect(aliases.length).toBeGreaterThan(0)
     })
 
     it('returns blank data if not present', async () => {

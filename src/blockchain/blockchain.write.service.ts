@@ -209,6 +209,22 @@ export class BlockchainWriteService {
     return await this.broadcast(tx)
   }
 
+  // Set an alias to dApp
+  async setAlias(alias: string, seed: string) {
+    const params: Transactions.IAliasParams = {
+      alias: alias,
+      chainId,
+      fee: 5 * feeMultiplier
+    }
+
+    const tx = Transactions.alias(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  async setDAppAlias(alias: string) {
+    return await this.setAlias(alias, seed);
+  }
+
   private parseEntries(entries: Entry[]): IInvokeScriptCallStringArgument[] {
     return entries.map((entry) => {
       const type = typeof entry.value === 'number' ? 'int' : 'string'
