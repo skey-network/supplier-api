@@ -7,6 +7,17 @@ import config from '../config'
 import { BlockchainWriteService } from './blockchain.write.service'
 import * as Transactions from '@waves/waves-transactions'
 
+const { chainId } = config().blockchain
+const feeMultiplier = 10 ** 5
+
+const generateAlias = (): string => {
+  return("testalias_" + Math.random().toString(36).substring(7))
+}
+
+const fullAlias = (alias: string) => {
+  return(`alias:${chainId}:${alias}`)
+}
+
 jest.setTimeout(3600000)
 
 describe('BlockchainReadService', () => {
@@ -91,5 +102,26 @@ describe('BlockchainReadService', () => {
     const result = await service.fetchAllNFTs(account.address, 2)
 
     expect(result.map((item) => item.assetId).sort()).toEqual(keys.sort())
+  })
+
+  it('fetchAliases', async() => {
+    const account = service.generateAccount()
+    await writeService.faucet(account.address, 5 * feeMultiplier)
+
+    const alias = generateAlias()
+    await writeService.setAlias(alias, account.seed)
+
+    const result = await service.fetchAliases(account.address)
+    expect(result.length).toEqual(1)
+    expect(result[0]).toEqual(fullAlias(alias))
+  })
+
+  it('fetchDAppAliases', async () => {
+    const alias = generateAlias()
+    await writeService.setDAppAlias(alias)
+    const result = await service.fetchDAppAliases()
+
+    expect(result.length).toBeGreaterThan(0)
+    expect(result).toEqual(expect.arrayContaining([fullAlias(alias)]))
   })
 })

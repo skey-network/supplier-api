@@ -49,6 +49,12 @@ export class UtilsService {
       steps.push({ action: 'setDescription', txHash })
     }
 
+    if(setupDto.alias) {
+      const txHash = await this.blockchainWriteService.setDAppAlias(setupDto.alias)
+
+      steps.push({ action: 'setAlias', txHash })
+    }
+
     return steps
   }
 
@@ -68,11 +74,12 @@ export class UtilsService {
       }
     }
 
-    const [script, data] = await Promise.all([
+    const [script, data, aliases] = await Promise.all([
       this.blockchainReadService.fetchScript(),
-      getData()
+      getData(),
+      this.blockchainReadService.fetchDAppAliases()
     ])
 
-    return { address: dappAddress, script: !!script, ...data, nodeUrl, chainId }
+    return { address: dappAddress, script: !!script, ...data, nodeUrl, chainId, aliases }
   }
 }

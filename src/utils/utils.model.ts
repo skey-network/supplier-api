@@ -6,7 +6,8 @@ import {
   IsBoolean,
   IsOptional,
   IsPositive,
-  IsInt
+  IsInt,
+  Matches
 } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
 
@@ -57,6 +58,16 @@ export class SetupDto {
     required: false
   })
   description?: string
+
+  @IsOptional()
+  @IsString()
+  @Matches(/[a-z0-9\.\-\@\_]{4,30}/)
+  @ApiProperty({
+    description: 'Alias of the dApp on the blockchain.',
+    example: 'dapp_rbb',
+    required: false
+  })
+  alias?: string
 }
 
 export interface SetupAction {
@@ -123,4 +134,14 @@ export class Status implements StatusResponse {
     example: 'R'
   })
   chainId: string
+
+  @ApiProperty({
+    description: 'Aliases of the dApp',
+    isArray: true,
+    example: [
+      'alias:R:foobar',
+      'alias:R:dapp@rbb'
+    ]
+  })
+  aliases: string[]
 }
