@@ -46,9 +46,9 @@ export class DevicesService {
     await this.blockchainWriteService.setScript(script, seed)
 
     const promises = [
-      // save device in dApp data storage
+      // save device in supplier data storage
       this.blockchainWriteService.insertData([
-        { key: this.deviceKey(address), value: false }
+        { key: this.deviceKey(address), value: 'active' }
       ])
     ]
 
@@ -89,7 +89,7 @@ export class DevicesService {
       ownerDapp: dappAddress,
       address,
       balance,
-      connected
+      connected: connected === 'active'
     }
   }
 
@@ -156,7 +156,7 @@ export class DevicesService {
   async deviceMessage(message: DeviceMessageDto) {
     this.logger.log('Received new message')
 
-    const SOURCE_PREFIX = 'urn:lo:nsid:sms:'
+    const SOURCE_PREFIX = 'urn:lo:nsid:blockchain:'
 
     const address = message.source.replace(SOURCE_PREFIX, '')
     this.logger.log(`Address is ${address}`)
@@ -233,16 +233,37 @@ export class DevicesService {
   }
 
   private entriesForNewDevice = (payload: CreateDeviceDto) => {
-    const entries = Object.entries(payload).map(([key, value]) => ({
-      value: typeof value === 'number' ? value.toString() : value,
-      key
-    }))
+    const entries = this.objectToBlockchainEntries(payload)
 
     const dappEntries = [
-      { key: 'dapp', value: config().blockchain.dappAddress },
-      { key: 'owner', value: config().blockchain.dappAddress }
+      { key: 'supplier', value: config().blockchain.dappAddress },
+      { key: 'owner', value: config().blockchain.dappAddress },
+      { key: 'version', value: config().device.schemaVersion },
+      { key: 'active', value: true },
+      { key: 'connected', value: true },
+      { key: 'visible', value: true }
     ]
 
     return [...entries, ...dappEntries]
+  }
+
+  private objectToBlockchainEntries = (entries: any): { key: string; value: any }[] => {
+    return Object.entries(entries).map(([key, value]) => {
+      return {
+        key,
+        value: this.blockchainValue(value)
+      }
+    })
+  }
+
+  private blockchainValue(value: any) {
+    switch (typeof value) {
+      case 'object':
+        return JSON.stringify(value)
+      case 'number':
+        return value.toString()
+      default:
+        return value
+    }
   }
 }

@@ -21,7 +21,7 @@ const randomAddress = () => {
 }
 
 const randomString = () => {
-  return(Math.random().toString(36).substring(10))
+  return Math.random().toString(36).substring(10)
 }
 
 describe('utils controller', () => {

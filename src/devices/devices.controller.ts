@@ -462,7 +462,7 @@ export class DevicesController {
     Do not provide 'deviceParams' parameter when connecting to an existing account.
     See schema of the request body for details.
     NOTE: Successfull operation will change the ID of LO Device to a following format:
-    urn:lo:nsid:sms:{blockchainAddress}
+    urn:lo:nsid:blockchain:{blockchainAddress}
     `
   })
   @ApiResponse({

@@ -20,6 +20,9 @@ export default () => ({
     nodeUrl: process.env.BLOCKCHAIN_NODE_URL,
     chainId: process.env.BLOCKCHAIN_CHAIN_ID
   },
+  device: {
+    schemaVersion: process.env.DEVICE_SCHEMA_VERSION
+  },
   supplier: {
     apiKey: process.env.SUPPLIER_API_KEY,
     url: process.env.SUPPLIER_URL

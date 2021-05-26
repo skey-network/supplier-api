@@ -83,6 +83,9 @@ npm test
 - **ENCRYPTION_IV** - Initial vector used to encrypt account seeds while creating blockchain accounts.
   **Example value** - `0d8fa75738410842`
 
+- **DEVICE_SCHEMA_VERSION** - Version of device address schema(it's saved on the blockchain)
+  **Example value** `1.0`
+
 ## Seed phrase encryption
 
 When this API creates a new blockchain account, it's seeds are encrypted with AES using `crypto-js`:

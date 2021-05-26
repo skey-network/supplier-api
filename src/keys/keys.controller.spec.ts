@@ -44,7 +44,12 @@ describe('keys controller', () => {
     })
     token = tokenRequest.body.access_token
 
-    const deviceRes = await req().post('/devices').set('Authorization', `Bearer ${token}`)
+    const deviceRes = await req()
+      .post('/devices')
+      .send({
+        name: 'testDevice'
+      })
+      .set('Authorization', `Bearer ${token}`)
     ctx.device = deviceRes.body.address
 
     const userRes = await req().post('/users').set('Authorization', `Bearer ${token}`)
@@ -174,7 +179,12 @@ describe('keys controller', () => {
     }
 
     beforeAll(async () => {
-      const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
+      const res = await req()
+        .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
+        .set('Authorization', `Bearer ${token}`)
       secondDevice = res.body.address
     })
 
