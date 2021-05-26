@@ -8,6 +8,11 @@ import {
 } from 'class-validator'
 import { ApiProperty } from '@nestjs/swagger'
 
+export type DeviceTypeStatic = 'car barrier' | 'human barrier' | 'elevator'
+export type DeviceTypeNormal = 'human' | 'mobile' | 'other'
+
+export type DeviceType = DeviceTypeNormal | DeviceTypeStatic
+
 export class CreateConnectionDto {
   @IsNotEmpty()
   @IsString()
@@ -42,15 +47,154 @@ export class CreateConnectionDto {
   iccid: string
 }
 
-export class CreateDeviceDto {
+export class PhysicalAddressDto {
   @IsString()
   @IsOptional()
   @ApiProperty({
-    description: 'Device name',
-    example: 'Example device',
+    description: 'Address',
+    example: 'Test Str 123',
     required: false
   })
-  name?: string
+  addressLine1?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Address',
+    example: '2nd floor, room #234',
+    required: false
+  })
+  addressLine2?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'City name',
+    example: 'Test City',
+    required: false
+  })
+  city?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Post Code',
+    example: '11-111',
+    required: false
+  })
+  postcode?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'State name or code',
+    example: 'AZ',
+    required: false
+  })
+  state?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Country name or code',
+    example: 'USA',
+    required: false
+  })
+  country?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Room number',
+    example: '234',
+    required: false
+  })
+  number?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Floor number',
+    example: '2',
+    required: false
+  })
+  floor?: string
+}
+
+export class DeviceDetailsDto {
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: `Device type. Accepted values: ['car barrier', 'human barrier', 'elevator', 'human', 'mobile', 'other']`,
+    example: 'mobile',
+    required: false
+  })
+  deviceType?: DeviceType
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Device model.',
+    example: 'TR-808',
+    required: false
+  })
+  deviceModel?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Any additional description of the device',
+    example: 'Lorem ipsum dolor sit amet',
+    required: false
+  })
+  additionalDescription?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Asset URL',
+    example: 'https://loremflickr.com/800/600',
+    required: false
+  })
+  assetUrl?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'Place for an URL of company, institution or something else',
+    example: 'https://google.com',
+    required: false
+  })
+  url?: string
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: 'You can leave any contact info here',
+    example: 'test@example.com, 123-456-789',
+    required: false
+  })
+  contactInfo?: string
+
+  @IsOptional()
+  @ApiProperty({
+    // TODO add description when a bug will be fixed
+    // Nested attributes from third level downward will not work
+    // correctly with 'description' attribute
+    // https://github.com/nestjs/swagger/issues/724
+    type: PhysicalAddressDto,
+    required: false
+  })
+  physicalAddress?: PhysicalAddressDto
+}
+
+export class CreateDeviceDto {
+  @IsString()
+  @ApiProperty({
+    description: 'Device name',
+    example: 'Example device'
+  })
+  name: string
 
   @IsString()
   @IsOptional()
@@ -89,22 +233,13 @@ export class CreateDeviceDto {
   alt?: number
 
   @IsString()
-  @IsOptional()
   @ApiProperty({
     description: 'Device type',
-    example: 'Example device type',
+    example: 'device',
+    default: 'device',
     required: false
   })
-  type?: string
-
-  @IsBoolean()
-  @IsOptional()
-  @ApiProperty({
-    description: 'Is device connected',
-    example: true,
-    required: false
-  })
-  connected?: boolean
+  type: string = 'device'
 
   @IsPositive()
   @IsOptional()
@@ -114,6 +249,32 @@ export class CreateDeviceDto {
     required: false
   })
   price?: number
+
+  @IsOptional()
+  @ApiProperty({
+    // Nested attributes from third level downward will not work
+    // correctly with 'description' attribute
+    // https://github.com/nestjs/swagger/issues/724
+
+    // description: 'Additional information about this device',
+    required: false,
+    type: DeviceDetailsDto
+  })
+  details?: DeviceDetailsDto
+
+  @IsOptional()
+  @ApiProperty({
+    description: 'custom fields',
+    required: false,
+    example: {
+      foo: 'bar',
+      bar: true,
+      baz: 10
+    }
+  })
+  custom?: {
+    [key: string]: any
+  }
 }
 
 export interface EditDeviceDto {
@@ -152,7 +313,7 @@ export class DeviceMessageDto {
   @IsString()
   @ApiProperty({
     description: 'device id',
-    example: 'urn:lo:nsid:sms:3P2pTpQhGbZrJXATKr75A1uZjeTrb4PHMYf'
+    example: 'urn:lo:nsid:blockchain:3P2pTpQhGbZrJXATKr75A1uZjeTrb4PHMYf'
   })
   source: string
 }
@@ -177,7 +338,7 @@ export class DeviceConnectExistingDto {
   @IsString()
   @ApiProperty({
     description: 'ID of existing Device WITH all prefixes',
-    example: 'urn:lo:nsid:sms:foobar'
+    example: 'urn:lo:nsid:blockchain:foobar'
   })
   deviceId: string
 

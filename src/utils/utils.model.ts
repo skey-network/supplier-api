@@ -138,10 +138,7 @@ export class Status implements StatusResponse {
   @ApiProperty({
     description: 'Aliases of the dApp',
     isArray: true,
-    example: [
-      'alias:R:foobar',
-      'alias:R:dapp@rbb'
-    ]
+    example: ['alias:R:foobar', 'alias:R:dapp@rbb']
   })
   aliases: string[]
 }

@@ -49,7 +49,7 @@ export class UtilsService {
       steps.push({ action: 'setDescription', txHash })
     }
 
-    if(setupDto.alias) {
+    if (setupDto.alias) {
       const txHash = await this.blockchainWriteService.setDAppAlias(setupDto.alias)
 
       steps.push({ action: 'setAlias', txHash })

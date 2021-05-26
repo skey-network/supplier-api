@@ -76,7 +76,7 @@ describe('Organisations e2e', () => {
       lib.insertData([{ key: `org_${ctx.organisation.address}`, value: 'active' }], seed),
       lib.insertData(
         [
-          { key: 'dapp', value: dappAddress },
+          { key: 'supplier', value: dappAddress },
           { key: 'owner', value: dappAddress },
           { key: `key_${ctx.keyAssetId}`, value: 'active' }
         ],

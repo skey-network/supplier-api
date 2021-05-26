@@ -11,11 +11,11 @@ const { chainId } = config().blockchain
 const feeMultiplier = 10 ** 5
 
 const generateAlias = (): string => {
-  return("testalias_" + Math.random().toString(36).substring(7))
+  return 'testalias_' + Math.random().toString(36).substring(7)
 }
 
 const fullAlias = (alias: string) => {
-  return(`alias:${chainId}:${alias}`)
+  return `alias:${chainId}:${alias}`
 }
 
 jest.setTimeout(3600000)
@@ -104,7 +104,7 @@ describe('BlockchainReadService', () => {
     expect(result.map((item) => item.assetId).sort()).toEqual(keys.sort())
   })
 
-  it('fetchAliases', async() => {
+  it('fetchAliases', async () => {
     const account = service.generateAccount()
     await writeService.faucet(account.address, 5 * feeMultiplier)
 

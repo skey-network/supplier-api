@@ -80,11 +80,11 @@ export class BlockchainReadService {
 
   async fetchAliases(address: string) {
     const res = await this.request(`/alias/by-address/${address}`)
-    return res;
+    return res
   }
 
   async fetchDAppAliases() {
-    return await this.fetchAliases(dappAddress);
+    return await this.fetchAliases(dappAddress)
   }
 
   private async request(path: string) {

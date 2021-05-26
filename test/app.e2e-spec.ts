@@ -25,7 +25,7 @@ describe('app e2e', () => {
   }
 
   const randomString = () => {
-    return(Math.random().toString(36).substring(6))
+    return Math.random().toString(36).substring(6)
   }
 
   beforeAll(async () => {
@@ -68,6 +68,9 @@ describe('app e2e', () => {
   it('POST /devices', async () => {
     const res = await req()
       .post('/devices')
+      .send({
+        name: 'testDevice'
+      })
       .set('Authorization', `Bearer ${ctx.token}`)
       .expect(201)
     ctx.device = res.body.address

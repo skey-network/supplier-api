@@ -9,7 +9,7 @@ import config from '../config'
 import fetch, { RequestInit } from 'node-fetch'
 import { CreateKeyDto } from 'src/keys/keys.model'
 
-const DEVICE_NAME_PREFIX = 'urn:lo:nsid:sms:'
+const DEVICE_NAME_PREFIX = 'urn:lo:nsid:blockchain:'
 const env = config().supplier
 
 @Injectable()

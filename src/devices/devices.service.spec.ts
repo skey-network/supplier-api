@@ -68,7 +68,7 @@ describe('devices service', () => {
       const message = {
         timestamp: '2021-03-19T10:06:34Z',
         payload: '',
-        source: `urn:lo:nsid:sms:${address}`
+        source: `urn:lo:nsid:blockchain:${address}`
       }
 
       const { txHash } = await service.deviceMessage(message)
@@ -82,7 +82,7 @@ describe('devices service', () => {
       const message = {
         timestamp: '2021-03-19T10:06:34Z',
         payload: '',
-        source: `urn:lo:nsid:sms:${address}`
+        source: `urn:lo:nsid:blockchain:${address}`
       }
 
       const obj = await service.deviceMessage(message)

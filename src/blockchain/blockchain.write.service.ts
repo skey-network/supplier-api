@@ -3,6 +3,8 @@ import * as Transactions from '@waves/waves-transactions'
 import { IInvokeScriptCallStringArgument } from '@waves/waves-transactions/dist/transactions'
 import { Logger } from '../logger/Logger.service'
 import config from '../config'
+import { BlockchainReadService } from './blockchain.read.service'
+import * as Crypto from '@waves/ts-lib-crypto'
 
 const { nodeUrl, seed, chainId, dappAddress } = config().blockchain
 const feeMultiplier = 10 ** 5
@@ -15,6 +17,7 @@ interface Entry {
 @Injectable()
 export class BlockchainWriteService {
   private logger = new Logger(BlockchainWriteService.name)
+  private blockchainReadService = new BlockchainReadService()
 
   // save data in dApp data storage
   async insertData(data: Entry[], accountSeed = seed) {
@@ -26,6 +29,32 @@ export class BlockchainWriteService {
 
     const tx = Transactions.data(params, accountSeed)
     return await this.broadcast(tx)
+  }
+
+  // change name of a key in key/value storage
+  async renameDataKey(oldKey: string, newKey: string, accountSeed = seed) {
+    // read data from blockchain
+    const oldValue = await this.blockchainReadService.readData(
+      oldKey,
+      Crypto.address(accountSeed, chainId)
+    )
+
+    if (!oldValue) {
+      throw new Error(`No data found in key '${oldKey}'. Maybe a spelling error?`)
+    }
+
+    // create the transaction
+    const replaceParams = {
+      data: [
+        { key: oldKey, value: null },
+        { key: newKey, value: oldValue }
+      ],
+      fee: 5 * feeMultiplier,
+      chainId
+    }
+
+    const rTx = Transactions.data(replaceParams, accountSeed)
+    return await this.broadcast(rTx)
   }
 
   // generate NFT key for device
@@ -222,7 +251,7 @@ export class BlockchainWriteService {
   }
 
   async setDAppAlias(alias: string) {
-    return await this.setAlias(alias, seed);
+    return await this.setAlias(alias, seed)
   }
 
   private parseEntries(entries: Entry[]): IInvokeScriptCallStringArgument[] {

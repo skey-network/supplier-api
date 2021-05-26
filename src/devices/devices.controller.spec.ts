@@ -13,7 +13,7 @@ import fetchMock from 'jest-fetch-mock'
 jest.setTimeout(3600000)
 
 const SUPPLIER_URL = config().supplier.url
-const DEVICE_NAME_PREFIX = 'urn:lo:nsid:sms:'
+const DEVICE_NAME_PREFIX = 'urn:lo:nsid:blockchain:'
 const BLOCKCHAIN_NODE_URL = config().blockchain.nodeUrl
 
 // ===============================================
@@ -50,6 +50,9 @@ describe('devices controller', () => {
     beforeAll(async () => {
       const res = await req()
         .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
 
@@ -59,7 +62,7 @@ describe('devices controller', () => {
     it('valid request', async () => {
       const payload = {
         timestamp: '',
-        source: `urn:lo:nsid:sms:${device}`,
+        source: `urn:lo:nsid:blockchain:${device}`,
         payload: 'Lat:25.11 Lon:65.678'
       }
 
@@ -77,6 +80,9 @@ describe('devices controller', () => {
     it('valid request', async () => {
       const res = await req()
         .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
 
@@ -89,6 +95,9 @@ describe('devices controller', () => {
     it('seed is encrypted', async () => {
       const res = await req()
         .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
 
@@ -96,8 +105,39 @@ describe('devices controller', () => {
       let seedRegex = /(?:[a-z]{3,}\s){14}[a-z]{3,}/
       expect(encryptedSeed).toEqual(expect.not.stringMatching(seedRegex))
       expect(typeof decrypt(encryptedSeed)).toBe('string')
-      console.log(encryptedSeed)
-      console.log(decrypt(encryptedSeed))
+    })
+
+    it('support for details and custom fields', async () => {
+      const res = await req()
+        .post('/devices')
+        .send({
+          name: 'testDevice',
+          details: {
+            physicalAddress: {
+              addressLine1: 'Test Street 21',
+              city: 'Test City',
+              postcode: '11-111',
+              country: 'TST'
+            },
+            deviceType: 'mobile'
+          },
+          custom: {
+            foo: 'bar',
+            bar: 'baz',
+            baz: 9,
+            qux: true,
+            fizz: {
+              buzz: 15
+            }
+          }
+        })
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201)
+
+      const { encryptedSeed } = res.body
+      let seedRegex = /(?:[a-z]{3,}\s){14}[a-z]{3,}/
+      expect(encryptedSeed).toEqual(expect.not.stringMatching(seedRegex))
+      expect(typeof decrypt(encryptedSeed)).toBe('string')
     })
 
     it('unauthorized', async () => {
@@ -114,7 +154,12 @@ describe('devices controller', () => {
 
   describe('GET /devices', () => {
     beforeAll(async () => {
-      await req().post('/devices').set('Authorization', `Bearer ${token}`)
+      await req()
+        .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
+        .set('Authorization', `Bearer ${token}`)
     })
 
     it('valid request', async () => {
@@ -144,7 +189,12 @@ describe('devices controller', () => {
     let device = ''
 
     beforeAll(async () => {
-      const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
+      const res = await req()
+        .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
+        .set('Authorization', `Bearer ${token}`)
       device = res.body.address
     })
 
@@ -159,7 +209,7 @@ describe('devices controller', () => {
       expect(typeof res.body.address).toBe('string')
       expect(typeof res.body.balance).toBe('number')
       expect(res.body.balance).toBeGreaterThanOrEqual(0)
-      expect(res.body.connected).toBe(false)
+      expect(res.body.connected).toBe(true)
     })
 
     it('unauthorized', async () => {
@@ -196,7 +246,12 @@ describe('devices controller', () => {
     let device = ''
 
     beforeAll(async () => {
-      const res = await req().post('/devices').set('Authorization', `Bearer ${token}`)
+      const res = await req()
+        .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
+        .set('Authorization', `Bearer ${token}`)
       device = res.body.address
     })
 
@@ -257,6 +312,9 @@ describe('devices controller', () => {
 
       const deviceRes = await req()
         .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
         .set('Authorization', `Bearer ${token}`)
       device = deviceRes.body.address
 
@@ -304,11 +362,18 @@ describe('devices controller', () => {
 
       const deviceRes = await req()
         .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
         .set('Authorization', `Bearer ${token}`)
+        .expect(201)
       device = deviceRes.body.address
 
       const fakeDeviceRes = await req()
         .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
         .set('Authorization', `Bearer ${token}`)
       fakeDevice = fakeDeviceRes.body.address
 
@@ -329,7 +394,6 @@ describe('devices controller', () => {
         .post(`/devices/${device}/keys/${assetId}`)
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
-
       expect(typeof res.body.txHash).toBe('string')
     })
 
@@ -354,7 +418,7 @@ describe('devices controller', () => {
           id: 'E89AE',
           path: '/france/paris'
         },
-        id: `urn:lo:nsid:sms:${device}`,
+        id: `urn:lo:nsid:blockchain:${device}`,
         name: 'sensor #12',
         properties: {
           manufacturer: 'MyDeviceMaker, Inc.',
@@ -375,6 +439,9 @@ describe('devices controller', () => {
     beforeAll(async () => {
       const deviceRes = await req()
         .post('/devices')
+        .send({
+          name: 'testDevice'
+        })
         .set('Authorization', `Bearer ${token}`)
       device = deviceRes.body.address
     })
