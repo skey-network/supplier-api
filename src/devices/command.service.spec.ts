@@ -3,6 +3,7 @@ configure()
 
 import { Test, TestingModule } from '@nestjs/testing'
 import { DevicesCommandService } from './command.service'
+import { IInvokeScriptTransaction, invokeScript } from '@waves/waves-transactions'
 import { getInstance } from 'skey-lib'
 import config from '../config'
 import { readFileSync } from 'fs'
@@ -23,6 +24,7 @@ describe('DevicesCommandService', () => {
     otherDapp: lib.createAccount(),
     device: lib.createAccount(),
     org: lib.createAccount(),
+    user: lib.createAccount(),
     key: {
       assetId: ''
     }
@@ -59,7 +61,7 @@ describe('DevicesCommandService', () => {
         lib.insertData(
           [
             { key: `key_${ctx.key.assetId}`, value: 'active' },
-            { key: 'dapp', value: ctx.otherDapp.address },
+            { key: 'supplier', value: ctx.otherDapp.address },
             { key: 'owner', value: ctx.otherDapp.address }
           ],
           ctx.device.seed
@@ -114,7 +116,7 @@ describe('DevicesCommandService', () => {
         lib.insertData(
           [
             { key: `key_${ctx.key.assetId}`, value: 'active' },
-            { key: 'dapp', value: ctx.otherDapp.address },
+            { key: 'supplier', value: ctx.otherDapp.address },
             { key: 'owner', value: ctx.otherDapp.address }
           ],
           ctx.device.seed
@@ -139,6 +141,164 @@ describe('DevicesCommandService', () => {
 
       expect(result.script).toBe('deviceActionAs')
       expect(result.txHash).toBeDefined()
+    })
+  })
+
+  describe('validateTransaction', () => {
+    let invokeTx: IInvokeScriptTransaction
+
+    beforeAll(async () => {
+      await Promise.all([lib.transfer(ctx.user.address, 0.1, ctx.dapp.seed)])
+
+      ctx.key.assetId = await lib.generateKey(
+        ctx.device.address,
+        99999999999999,
+        ctx.dapp.seed
+      )
+
+      await Promise.all([
+        lib.insertData(
+          [
+            { key: `device_${ctx.device.address}`, value: 'active' },
+            { key: `key_${ctx.key.assetId}`, value: 'active' }
+          ],
+          ctx.dapp.seed
+        ),
+        lib.transferKey(ctx.user.address, ctx.key.assetId, ctx.dapp.seed)
+      ])
+
+      // Have to wait for the next block
+
+      await lib.waitForNBlocks(1)
+    })
+
+    const buildTransaction = (seed: string, assetId: string) => {
+      return invokeScript(
+        {
+          dApp: ctx.dapp.address,
+          call: {
+            function: 'deviceActionWithKey',
+            args: [
+              { type: 'string', value: assetId },
+              { type: 'string', value: 'open' }
+            ]
+          },
+          chainId,
+          version: 1
+        },
+        seed
+      )
+    }
+
+    beforeEach(() => {
+      invokeTx = buildTransaction(ctx.user.seed, ctx.key.assetId)
+    })
+
+    it('validates transaction correctly', async () => {
+      expect(
+        await service.validateTransaction(ctx.device.address, ctx.key.assetId, invokeTx)
+      ).toEqual({ verified: true })
+    })
+
+    it('transaction is invalid', async () => {
+      invokeTx.proofs = []
+
+      const result = await service.validateTransaction(
+        ctx.device.address,
+        ctx.key.assetId,
+        invokeTx
+      )
+
+      expect(result.verified).toEqual(false)
+      expect(result.error).toBeDefined()
+    })
+
+    it('key is not whitelisted in supplier', async () => {
+      await lib.insertData(
+        [{ key: `key_${ctx.key.assetId}`, value: null }],
+        ctx.dapp.seed
+      )
+
+      try {
+        const result = await service.validateTransaction(
+          ctx.device.address,
+          ctx.key.assetId,
+          invokeTx
+        )
+
+        expect(result.verified).toEqual(false)
+        expect(result.error).toEqual('key is not whitelisted in supplier')
+      } finally {
+        await lib.insertData(
+          [{ key: `key_${ctx.key.assetId}`, value: 'active' }],
+          ctx.dapp.seed
+        )
+      }
+    })
+
+    it('address is not key owner', async () => {
+      const testAccount = lib.createAccount()
+      const result = await service.validateTransaction(
+        ctx.device.address,
+        ctx.key.assetId,
+        buildTransaction(testAccount.seed, ctx.key.assetId)
+      )
+
+      expect(result.verified).toEqual(false)
+      expect(result.error).toEqual('address is not key owner')
+    })
+
+    it('key has expired', async () => {
+      const expiredKey = await lib.generateKey(
+        ctx.device.address,
+        Date.now() - 1,
+        ctx.dapp.seed
+      )
+
+      await Promise.all([
+        lib.insertData([{ key: `key_${expiredKey}`, value: 'active' }], ctx.dapp.seed),
+        lib.transferKey(ctx.user.address, expiredKey, ctx.dapp.seed)
+      ])
+
+      // Have to wait for the next block
+
+      await lib.waitForNBlocks(1)
+
+      const result = await service.validateTransaction(
+        ctx.device.address,
+        expiredKey,
+        buildTransaction(ctx.user.seed, expiredKey)
+      )
+
+      expect(result.verified).toEqual(false)
+      expect(result.error).toEqual('key is invalid')
+    })
+
+    it('key belongs to a different device', async () => {
+      const fakeDevice = lib.createAccount()
+      const invalidKey = await lib.generateKey(
+        fakeDevice.address,
+        Date.now() - 1,
+        ctx.dapp.seed
+      )
+
+      await Promise.all([
+        lib.insertData([{ key: `key_${invalidKey}`, value: 'active' }], ctx.dapp.seed),
+        lib.transferKey(ctx.user.address, invalidKey, ctx.dapp.seed)
+      ])
+
+      // Have to wait for the next block
+
+      await lib.waitForNBlocks(1)
+
+      const result = await service.validateTransaction(
+        ctx.device.address,
+        invalidKey,
+        buildTransaction(ctx.user.seed, invalidKey)
+      )
+
+      expect(result.verified).toEqual(false)
+      expect(result.error).toEqual('key is invalid')
     })
   })
 })

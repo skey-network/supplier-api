@@ -9,12 +9,19 @@ import config from '../config'
 import * as Crypto from '@waves/ts-lib-crypto'
 import { decrypt } from '../common/aes-encryption'
 import fetchMock from 'jest-fetch-mock'
+import { getInstance } from 'skey-lib'
+import { invokeScript } from '@waves/waves-transactions'
 
 jest.setTimeout(3600000)
 
 const SUPPLIER_URL = config().supplier.url
 const DEVICE_NAME_PREFIX = 'urn:lo:nsid:blockchain:'
 const BLOCKCHAIN_NODE_URL = config().blockchain.nodeUrl
+const BLOCKCHAIN_CHAIN_ID = config().blockchain.chainId
+const lib = getInstance({
+  nodeUrl: BLOCKCHAIN_NODE_URL,
+  chainId: BLOCKCHAIN_CHAIN_ID
+})
 
 // ===============================================
 // Make sure you have enough tokens before testing
@@ -406,6 +413,121 @@ describe('devices controller', () => {
         .post(`/devices/${device}/keys/${assetId}`)
         .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
         .expect(401)
+    })
+  })
+
+  describe('POST /devices/:address/validate_transaction/:assetId', () => {
+    let device = ''
+    const ctx = {
+      dapp: {
+        address: config().blockchain.dappAddress,
+        seed: config().blockchain.seed
+      },
+      user: lib.createAccount(),
+      key: {
+        assetId: ''
+      }
+    }
+
+    beforeAll(async () => {
+      const deviceRes = await req()
+        .post('/devices')
+        .send({
+          name: 'anotherDevice'
+        })
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201)
+
+      expect(deviceRes.status).toEqual(201)
+
+      device = deviceRes.body.address
+
+      await lib.transfer(ctx.user.address, 0.1, ctx.dapp.seed)
+
+      ctx.key.assetId = await lib.generateKey(device, 99999999999999, ctx.dapp.seed)
+
+      await Promise.all([
+        lib.insertData(
+          [
+            { key: `device_${device}`, value: 'active' },
+            { key: `key_${ctx.key.assetId}`, value: 'active' }
+          ],
+          ctx.dapp.seed
+        ),
+        lib.transferKey(ctx.user.address, ctx.key.assetId, ctx.dapp.seed)
+      ])
+
+      // Have to wait for the next block
+
+      await lib.waitForNBlocks(1)
+    })
+
+    const buildTransaction = (seed: string, assetId: string) => {
+      return invokeScript(
+        {
+          dApp: ctx.dapp.address,
+          call: {
+            function: 'deviceActionWithKey',
+            args: [
+              { type: 'string', value: assetId },
+              { type: 'string', value: 'open' }
+            ]
+          },
+          chainId: BLOCKCHAIN_CHAIN_ID,
+          version: 1
+        },
+        seed
+      )
+    }
+
+    it('valid request', async () => {
+      const res = await req()
+        .post(`/devices/${device}/validate_transaction/${ctx.key.assetId}`)
+        .send(buildTransaction(ctx.user.seed, ctx.key.assetId))
+        .set('Authorization', `Bearer ${token}`)
+      // .expect(201)
+
+      console.log(res.body)
+
+      expect(res.body).toEqual({ verified: true })
+    })
+
+    it('invalid transaction', async () => {
+      const transaction = buildTransaction(ctx.user.seed, ctx.key.assetId)
+      transaction.proofs = []
+      const res = await req()
+        .post(`/devices/${device}/validate_transaction/${ctx.key.assetId}`)
+        .send(transaction)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(400)
+
+      expect(res.body).toEqual({
+        verified: false,
+        error: 'Transaction not verified'
+      })
+    })
+
+    it('unauthorized', async () => {
+      await req()
+        .post(`/devices/${device}/validate_transaction/${ctx.key.assetId}`)
+        .send(buildTransaction(ctx.user.seed, ctx.key.assetId))
+        .expect(401)
+    })
+
+    it('device does not exist', async () => {
+      await req()
+        .post(`/devices/foobar/validate_transaction/${ctx.key.assetId}`)
+        .send(buildTransaction(ctx.user.seed, ctx.key.assetId))
+        .set('Authorization', `Bearer ${token}`)
+        .expect(404)
+    })
+
+    it('asset does not exist', async () => {
+      await req()
+        .post(`/devices/${device}/validate_transaction/foobar`)
+        .send(buildTransaction(ctx.user.seed, ctx.key.assetId))
+        .set('Authorization', `Bearer ${token}`)
+        .expect(404)
     })
   })
 
