@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import config from '../config'
 import { DeviceCommandPayload, DeviceCommandResponse } from './devices.model'
 import { getInstance } from 'skey-lib'
+import { IInvokeScriptTransaction, verify } from '@waves/waves-transactions'
+import { publicKeyToAddress } from '../common/crypto-helpers'
 
 const { nodeUrl, chainId, dappAddress, seed: dappSeed } = config().blockchain
 
@@ -12,6 +14,55 @@ export class DevicesCommandService {
   async deviceCommand(payload: DeviceCommandPayload): Promise<DeviceCommandResponse> {
     const key = await this.lib.fetchKey(payload.keyAssetId)
     return await this.interactWithDevice(payload, key.issuer)
+  }
+
+  async validateTransaction(
+    deviceAddress: string,
+    assetId: string,
+    txParams: IInvokeScriptTransaction
+  ) {
+    try {
+      await this.lib.fetchDevice(deviceAddress)
+    } catch (e) {
+      throw new NotFoundException('device not found')
+    }
+
+    // Change chain ID to correct one
+    txParams.chainId = chainId.charCodeAt(0)
+
+    // Validate transaction
+
+    try {
+      const result = verify(txParams)
+      if (!result) {
+        return { verified: false, error: 'Transaction not verified' }
+      }
+    } catch (e) {
+      return { verified: false, error: e }
+    }
+
+    // Validate if user can interact with the device
+
+    const interactionParams = {
+      deviceAddress: deviceAddress,
+      command: txParams.call.function,
+      waitForTx: false,
+      keyOwnerAddress: publicKeyToAddress(
+        txParams.senderPublicKey,
+        config().blockchain.chainId
+      ),
+      keyAssetId: assetId
+    }
+
+    const [keyVerified, error] = await this.canInteractDirectly(interactionParams)
+
+    if (!keyVerified) {
+      return { verified: false, error }
+    }
+
+    // TODO: Enqueue the transaction
+
+    return { verified: true }
   }
 
   private async interactWithDevice(
@@ -50,52 +101,61 @@ export class DevicesCommandService {
     )
   }
 
-  // private async canInteractDirectly(
-  //   payload: DeviceCommandPayload
-  // ): Promise<[boolean, string | undefined]> {
-  //   const [keyIsWhitelisted, addressOwnsKey, dappIsWhitelisted] = await Promise.all([
-  //     this.keyIsWhitelisted(payload.keyAssetId, payload.deviceAddress),
-  //     this.addressOwnsKey(payload.keyAssetId, payload.keyOwnerAddress),
-  //     this.dappIsWhitelisted(payload.keyOwnerAddress)
-  //   ])
+  async canInteractDirectly(
+    payload: DeviceCommandPayload
+  ): Promise<[boolean, string | undefined]> {
+    // Things to check:
 
-  //   let error: string | undefined
+    // keyOwnerAddres acutally has the key
+    // the key is valid
+    // the key is whitelisted in the device
 
-  //   if (!keyIsWhitelisted) {
-  //     error = 'key is not whitelisted in device'
-  //   }
-  //   if (!addressOwnsKey) {
-  //     error = 'address is not key owner'
-  //   }
-  //   if (!dappIsWhitelisted) {
-  //     error = 'dapp is not whitelisted in given address'
-  //   }
+    const [keyIsWhitelisted, addressOwnsKey, keyIsValid] = await Promise.all([
+      this.keyIsWhitelisted(payload.keyAssetId, dappAddress),
+      this.addressOwnsKey(payload.keyAssetId, payload.keyOwnerAddress),
+      this.keyIsValid(payload.keyAssetId, payload.deviceAddress)
+    ])
 
-  //   const result = addressOwnsKey && keyIsWhitelisted && dappIsWhitelisted
+    let error: string | undefined
 
-  //   return [result, error]
-  // }
+    if (!keyIsWhitelisted) {
+      error = 'key is not whitelisted in supplier'
+    } else if (!addressOwnsKey) {
+      error = 'address is not key owner'
+    } else if (!keyIsValid) {
+      error = 'key is invalid'
+    }
 
-  // private async keyIsWhitelisted(assetId: string, address: string) {
-  //   const whitelist = (await this.lib.fetchKeyWhitelist(address))
-  //     .filter((item) => item.status === 'active')
-  //     .map((item) => item.assetId)
+    const result = addressOwnsKey && keyIsWhitelisted && keyIsValid
 
-  //   return whitelist.includes(assetId)
-  // }
+    return [result, error]
+  }
 
-  // private async addressOwnsKey(assetId: string, address: string) {
-  //   const height = await this.lib.fetchHeight()
-  //   const owner = await this.lib.fetchKeyOwner(assetId, height - 1)
+  private async keyIsWhitelisted(assetId: string, address: string) {
+    const whitelist = (await this.lib.fetchKeyWhitelist(address))
+      .filter((item) => item.status === 'active')
+      .map((item) => item.assetId)
 
-  //   return owner === address
-  // }
+    return whitelist.includes(assetId)
+  }
 
-  // private async dappIsWhitelisted(address: string) {
-  //   const whitelist = (await this.lib.fetchDataWithRegex('user_.{35}', address))
-  //     .filter((item) => item.value === 'active')
-  //     .map((item) => item.key.replace('user_', ''))
+  private async addressOwnsKey(assetId: string, address: string) {
+    const height = await this.lib.fetchHeight()
+    const owner = await this.lib.fetchKeyOwner(assetId, height - 1)
 
-  //   return whitelist.includes(dappAddress)
-  // }
+    return owner === address
+  }
+
+  private async keyIsValid(assetId: string, deviceAddress: string): Promise<boolean> {
+    // Validate timestamp of key
+    try {
+      const keyDetails = await this.lib.fetchKey(assetId)
+
+      const [descDeviceAddress, timestamp] = keyDetails.description.split('_')
+
+      return descDeviceAddress === deviceAddress && timestamp >= Date.now().toString()
+    } catch (e) {
+      throw new NotFoundException('key not found')
+    }
+  }
 }

@@ -7,7 +7,8 @@ import {
   Delete,
   Body,
   Put,
-  Query
+  Query,
+  BadRequestException
 } from '@nestjs/common'
 import { AddressValidationPipe, AssetIdValidationPipe } from '../validators'
 import { JwtAuthGuard } from '../auth/jwt.guard'
@@ -38,8 +39,10 @@ import {
   ApiFilledNotFoundResponse,
   ApiFilledCustomErrorResponse,
   TransactionResponse,
-  BlockchainAddress
+  BlockchainAddress,
+  ApiValidateTransactionBody
 } from '../common/responses.swagger'
+import { IInvokeScriptTransaction } from '@waves/waves-transactions'
 
 @ApiTags('devices')
 @Controller('devices')
@@ -476,5 +479,79 @@ export class DevicesController {
   @ApiFilledCustomErrorResponse()
   async connectExisting(@Body() deviceConnectExistingDto: DeviceConnectExistingDto) {
     return await this.devicesService.connectExisting(deviceConnectExistingDto)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':address/validate_transaction/:assetId')
+  @ApiOperation({
+    summary: 'Validate a transaction and broadcast it later',
+    description: `
+    This endpoint validates if sent transaction is correctly signed
+    and - if it's valid - it is being saved to be broadcasted later.
+    Use this endpoint when you want to send an action directly to IoT,
+    which has to be also saved in the blockchain.
+    Actions are being saved only if they are valid.
+    Endpoint accepts only InvokeScript transactions.
+    To create transactions, use a library called waves-transactions.
+    `
+  })
+  @ApiParam({
+    name: 'address',
+    description: 'Device address',
+    example: '3NBRJyj3RVj5wqz2i3z5KHqg88JcZQ8sr5k'
+  })
+  @ApiParam({
+    name: 'assetId',
+    description: 'ID of the key',
+    example: 'R6NF7LuXKDrXS2jqvbMa4QAQFVvD89Z6e6TFjM2gHah'
+  })
+  @ApiValidateTransactionBody()
+  @ApiResponse({
+    status: 201,
+    description: 'Transaction is valid and it has been saved to be broadcasted later.',
+    schema: {
+      example: {
+        verified: true
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Example error',
+    schema: {
+      example: {
+        verified: false,
+        error: 'Transaction not verified'
+      }
+    }
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Device not found',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'device not found',
+        error: 'not found'
+      }
+    }
+  })
+  @ApiBearerAuth()
+  async validateTransaction(
+    @Param('address') deviceAddress: string,
+    @Param('assetId') assetId: string,
+    @Body() txParams: IInvokeScriptTransaction
+  ) {
+    const res = await this.devicesCommandService.validateTransaction(
+      deviceAddress,
+      assetId,
+      txParams
+    )
+
+    if (res.verified) {
+      return res
+    } else {
+      throw new BadRequestException(res)
+    }
   }
 }
