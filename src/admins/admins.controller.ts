@@ -124,7 +124,7 @@ export class AdminsController implements OnApplicationBootstrap {
   @ApiFilledForbiddenResponse()
   @ApiFilledUnauthorizedResponse()
   @ApiFilledCustomErrorResponse()
-  @ApiResponse({ status: 201, description: 'Admin updated', type: Admin })
+  @ApiResponse({ status: 200, description: 'Admin updated', type: Admin })
   @ApiParam({ name: 'id', description: 'ID of admin', example: 123 })
   async update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
     return await this.adminsService.update(id, updateAdminDto)

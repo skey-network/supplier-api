@@ -62,10 +62,10 @@ npm test
 - **BLOCKCHAIN_CHAIN_ID** - Blockchain chain id. For example testnet is 'T'  
   **Example value** - `T`
 
-- **SUPPLIER_URL** - Supplier API url  
+- **SUPPLIER_URL** - IoT platform API url  
   **Example value** - `https://liveobjects.Supplier-business.com/api/v1`
 
-- **SUPPLIER_API_KEY** - Supplier API key  
+- **SUPPLIER_API_KEY** - IoT platform API key  
   **Example value** - `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 - **FAUCET_DEVICE** - Amount of tokens to transfer when creating new device  
