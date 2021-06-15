@@ -4,11 +4,9 @@ configure()
 import { Test, TestingModule } from '@nestjs/testing'
 import { OrganisationsService } from './organisations.service'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
-import * as Transactions from '@waves/waves-transactions'
 import config from '../config'
-import { TRANSACTION_TYPE } from '@waves/waves-transactions/dist/transactions'
 
-const { dappAddress, chainId } = config().blockchain
+const { dappAddress } = config().blockchain
 
 describe('OrganisationsService', () => {
   let service: OrganisationsService

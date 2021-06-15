@@ -32,7 +32,8 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
-  ApiBody
+  ApiBody,
+  ApiQuery
 } from '@nestjs/swagger'
 import {
   ApiFilledUnauthorizedResponse,
@@ -417,7 +418,7 @@ export class DevicesController {
     description: 'Name of the command to execute',
     example: 'open'
   })
-  @ApiParam({
+  @ApiQuery({
     name: 'waitForTx',
     description: 'Send true to wait for response from the blockchain',
     example: 'true'
