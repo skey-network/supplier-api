@@ -167,9 +167,9 @@ export class DevicesService {
     }
 
     const { lat, lng } = this.parseLocation(message.payload)
-    this.logger.log(`${lat}, ${lng}`)
-
     if (!lat && !lng) return {}
+
+    this.logger.log(`Location is ${lat}, ${lng}`)
 
     const txHash = await this.blockchainWriteService.updateDeviceData(address, [
       { key: 'lat', value: lat },
