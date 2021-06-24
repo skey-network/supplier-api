@@ -43,13 +43,13 @@ export class DevicesService {
 
     // set device script
     const script = await this.blockchainCompilerService.fetchScript('device')
-    await this.blockchainWriteService.setScript(script, seed)
 
     const promises = [
       // save device in supplier data storage
       this.blockchainWriteService.insertData([
         { key: this.deviceKey(address), value: 'active' }
-      ])
+      ]),
+      this.blockchainWriteService.setScript(script, seed)
     ]
 
     if (createDeviceDto) {
