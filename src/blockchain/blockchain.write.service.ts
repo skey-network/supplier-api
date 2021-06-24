@@ -23,7 +23,7 @@ export class BlockchainWriteService {
   async insertData(data: Entry[], accountSeed = seed) {
     const params: Transactions.IDataParams = {
       data: data,
-      fee: 5 * feeMultiplier,
+      fee: 9 * feeMultiplier,
       chainId
     }
 
