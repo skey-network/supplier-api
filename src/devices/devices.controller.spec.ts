@@ -96,8 +96,6 @@ describe('devices controller', () => {
         .post('/devices')
         .send({
           name: 'testDevice',
-          active: true,
-          connected: true,
           details: {
             physicalAddress: {
               addressLine1: 'Test Street 21',
@@ -145,35 +143,35 @@ describe('devices controller', () => {
             name: null
           },
           response: ['name must be a string']
-        },
-        {
-          toString: () => 'connected is empty',
-          params: {
-            connected: null
-          },
-          response: ['connected must be a boolean value', 'connected should not be empty']
-        },
-        {
-          toString: () => 'active is empty',
-          params: {
-            active: null
-          },
-          response: ['active must be a boolean value', 'active should not be empty']
-        },
-        {
-          toString: () => 'connected is not a boolean',
-          params: {
-            connected: 'true'
-          },
-          response: ['connected must be a boolean value']
-        },
-        {
-          toString: () => 'active is not a boolean',
-          params: {
-            active: 'true'
-          },
-          response: ['active must be a boolean value']
         }
+        // {
+        //   toString: () => 'connected is empty',
+        //   params: {
+        //     connected: null
+        //   },
+        //   response: ['connected must be a boolean value', 'connected should not be empty']
+        // },
+        // {
+        //   toString: () => 'active is empty',
+        //   params: {
+        //     active: null
+        //   },
+        //   response: ['active must be a boolean value', 'active should not be empty']
+        // },
+        // {
+        //   toString: () => 'connected is not a boolean',
+        //   params: {
+        //     connected: 'true'
+        //   },
+        //   response: ['connected must be a boolean value']
+        // },
+        // {
+        //   toString: () => 'active is not a boolean',
+        //   params: {
+        //     active: 'true'
+        //   },
+        //   response: ['active must be a boolean value']
+        // }
       ]
 
       test.each(testCases)('%s', async ({ params, response }) => {
