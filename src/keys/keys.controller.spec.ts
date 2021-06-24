@@ -8,6 +8,7 @@ import { AppModule } from '../app.module'
 import config from '../config'
 import { SupplierService } from '../supplier/supplier.service'
 import * as Crypto from '@waves/ts-lib-crypto'
+import { createTestDevice } from '../common/spec-helpers'
 
 jest.setTimeout(3600000)
 
@@ -44,13 +45,7 @@ describe('keys controller', () => {
     })
     token = tokenRequest.body.access_token
 
-    const deviceRes = await req()
-      .post('/devices')
-      .send({
-        name: 'testDevice'
-      })
-      .set('Authorization', `Bearer ${token}`)
-    ctx.device = deviceRes.body.address
+    ctx.device = (await createTestDevice(req, token)).address
 
     const userRes = await req().post('/users').set('Authorization', `Bearer ${token}`)
     ctx.user = userRes.body.address
@@ -179,13 +174,7 @@ describe('keys controller', () => {
     }
 
     beforeAll(async () => {
-      const res = await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-      secondDevice = res.body.address
+      secondDevice = (await createTestDevice(req, token)).address
     })
 
     describe('valid request', () => {

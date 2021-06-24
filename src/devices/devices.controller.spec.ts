@@ -11,6 +11,7 @@ import { decrypt } from '../common/aes-encryption'
 import fetchMock from 'jest-fetch-mock'
 import { getInstance } from 'skey-lib'
 import { invokeScript } from '@waves/waves-transactions'
+import { createTestDevice } from '../common/spec-helpers'
 
 jest.setTimeout(3600000)
 
@@ -55,15 +56,7 @@ describe('devices controller', () => {
     let device = ''
 
     beforeAll(async () => {
-      const res = await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(201)
-
-      device = res.body.address
+      device = (await createTestDevice(req, token)).address
     })
 
     it('valid request', async () => {
@@ -85,30 +78,14 @@ describe('devices controller', () => {
 
   describe('POST /devices', () => {
     it('valid request', async () => {
-      const res = await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(201)
-
-      const { address, encryptedSeed } = res.body
+      const { address, encryptedSeed } = await createTestDevice(req, token)
 
       expect(typeof address).toBe('string')
       expect(typeof encryptedSeed).toBe('string')
     })
 
     it('seed is encrypted', async () => {
-      const res = await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(201)
-
-      const { encryptedSeed } = res.body
+      const { encryptedSeed } = await createTestDevice(req, token)
       let seedRegex = /(?:[a-z]{3,}\s){14}[a-z]{3,}/
       expect(encryptedSeed).toEqual(expect.not.stringMatching(seedRegex))
       expect(typeof decrypt(encryptedSeed)).toBe('string')
@@ -119,6 +96,8 @@ describe('devices controller', () => {
         .post('/devices')
         .send({
           name: 'testDevice',
+          active: true,
+          connected: true,
           details: {
             physicalAddress: {
               addressLine1: 'Test Street 21',
@@ -157,18 +136,64 @@ describe('devices controller', () => {
         .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
         .expect(401)
     })
+
+    describe('validation errors', () => {
+      const testCases = [
+        {
+          toString: () => 'name is empty',
+          params: {
+            name: null
+          },
+          response: ['name must be a string']
+        },
+        {
+          toString: () => 'connected is empty',
+          params: {
+            connected: null
+          },
+          response: ['connected must be a boolean value', 'connected should not be empty']
+        },
+        {
+          toString: () => 'active is empty',
+          params: {
+            active: null
+          },
+          response: ['active must be a boolean value', 'active should not be empty']
+        },
+        {
+          toString: () => 'connected is not a boolean',
+          params: {
+            connected: 'true'
+          },
+          response: ['connected must be a boolean value']
+        },
+        {
+          toString: () => 'active is not a boolean',
+          params: {
+            active: 'true'
+          },
+          response: ['active must be a boolean value']
+        }
+      ]
+
+      test.each(testCases)('%s', async ({ params, response }) => {
+        const res = await req()
+          .post('/devices')
+          .send({
+            name: 'testDevice',
+            active: true,
+            connected: true,
+            ...params
+          })
+          .set('Authorization', `Bearer ${token}`)
+
+        expect(res.status).toEqual(400)
+        expect(res.body.message).toEqual(response)
+      })
+    })
   })
 
   describe('GET /devices', () => {
-    beforeAll(async () => {
-      await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-    })
-
     it('valid request', async () => {
       const res = await req()
         .get('/devices')
@@ -196,13 +221,7 @@ describe('devices controller', () => {
     let device = ''
 
     beforeAll(async () => {
-      const res = await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-      device = res.body.address
+      device = (await createTestDevice(req, token)).address
     })
 
     it('valid request', async () => {
@@ -253,13 +272,7 @@ describe('devices controller', () => {
     let device = ''
 
     beforeAll(async () => {
-      const res = await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-      device = res.body.address
+      device = (await createTestDevice(req, token)).address
     })
 
     it('valid request', async () => {
@@ -317,13 +330,7 @@ describe('devices controller', () => {
       req = () => request(app.getHttpServer())
       const validTo = Date.now() + config().key.minDuration + 3_600_000
 
-      const deviceRes = await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-      device = deviceRes.body.address
+      device = (await createTestDevice(req, token)).address
 
       const res = await req()
         .post('/keys')
@@ -368,21 +375,8 @@ describe('devices controller', () => {
       const validTo = Date.now() + config().key.minDuration + 3_600_000
 
       const deviceRes = await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(201)
-      device = deviceRes.body.address
-
-      const fakeDeviceRes = await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-      fakeDevice = fakeDeviceRes.body.address
+      device = (await createTestDevice(req, token)).address
+      fakeDevice = (await createTestDevice(req, token)).address
 
       const res = await req()
         .post('/keys')
@@ -430,17 +424,7 @@ describe('devices controller', () => {
     }
 
     beforeAll(async () => {
-      const deviceRes = await req()
-        .post('/devices')
-        .send({
-          name: 'anotherDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(201)
-
-      expect(deviceRes.status).toEqual(201)
-
-      device = deviceRes.body.address
+      device = (await createTestDevice(req, token)).address
 
       await lib.transfer(ctx.user.address, 0.1, ctx.dapp.seed)
 
@@ -559,13 +543,7 @@ describe('devices controller', () => {
     const dummyId = `${DEVICE_NAME_PREFIX}foobar`
 
     beforeAll(async () => {
-      const deviceRes = await req()
-        .post('/devices')
-        .send({
-          name: 'testDevice'
-        })
-        .set('Authorization', `Bearer ${token}`)
-      device = deviceRes.body.address
+      device = (await createTestDevice(req, token)).address
     })
 
     beforeEach(async () => {
