@@ -7,9 +7,7 @@ export const createTestDevice = async (
   const res = await req()
     .post('/devices')
     .send({
-      name: 'testDevice',
-      active: true,
-      connected: true
+      name: 'testDevice'
     })
     .set('Authorization', `Bearer ${token}`)
     .expect(201)
