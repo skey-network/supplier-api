@@ -239,8 +239,6 @@ export class DevicesService {
       { key: 'supplier', value: config().blockchain.dappAddress },
       { key: 'owner', value: config().blockchain.dappAddress },
       { key: 'version', value: config().device.schemaVersion },
-      { key: 'active', value: true },
-      { key: 'connected', value: true },
       { key: 'visible', value: true }
     ]
 
