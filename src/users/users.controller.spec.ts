@@ -14,12 +14,13 @@ jest.setTimeout(3600000)
 // ===============================================
 
 describe('users controller', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
   let token = ''
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -35,6 +36,11 @@ describe('users controller', () => {
       password: process.env.ADMIN_PASSWORD
     })
     token = tokenRequest.body.access_token
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
   })
 
   describe('POST /users', () => {

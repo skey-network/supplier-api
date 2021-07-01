@@ -51,6 +51,11 @@ describe('keys controller', () => {
     ctx.user = userRes.body.address
   })
 
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
+  })
+
   describe('POST /keys', () => {
     it('valid request', async () => {
       const validTo = Date.now() + config().key.minDuration + 3_600_000

@@ -16,6 +16,7 @@ jest.setTimeout(3600000)
 // ===============================================
 
 describe('device-command e2e', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
 
@@ -39,7 +40,7 @@ describe('device-command e2e', () => {
   }
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -49,6 +50,11 @@ describe('device-command e2e', () => {
     await app.init()
 
     req = () => request(app.getHttpServer())
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
   })
 
   describe('POST /devices/:address/command', () => {

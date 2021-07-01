@@ -21,16 +21,21 @@ const fullAlias = (alias: string) => {
 jest.setTimeout(3600000)
 
 describe('BlockchainReadService', () => {
+  let moduleFixture: TestingModule
   let service: BlockchainReadService
   let writeService: BlockchainWriteService
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    moduleFixture = await Test.createTestingModule({
       providers: [BlockchainReadService, BlockchainWriteService]
     }).compile()
 
-    service = module.get<BlockchainReadService>(BlockchainReadService)
-    writeService = module.get<BlockchainWriteService>(BlockchainWriteService)
+    service = moduleFixture.get<BlockchainReadService>(BlockchainReadService)
+    writeService = moduleFixture.get<BlockchainWriteService>(BlockchainWriteService)
+  })
+
+  afterAll(async () => {
+    await moduleFixture.close()
   })
 
   it('should be defined', () => {

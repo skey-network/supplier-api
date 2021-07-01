@@ -25,13 +25,14 @@ const randomString = () => {
 }
 
 describe('utils controller', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
   let token = ''
   let blockchainWriteService: BlockchainWriteService
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -47,6 +48,11 @@ describe('utils controller', () => {
       password: process.env.ADMIN_PASSWORD
     })
     token = tokenRequest.body.access_token
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
   })
 
   describe('POST /utils/faucet', () => {

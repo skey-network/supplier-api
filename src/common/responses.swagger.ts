@@ -123,7 +123,7 @@ export const ApiValidateTransactionBody = () =>
             { type: 'string', value: 'R6NF7LuXKDrXS2jqvbMa4QAQFVvD89Z6e6TFjM2gHah' },
             { type: 'string', value: 'open' }
           ],
-          function: 'deviceActionWithKey'
+          function: 'deviceAction'
         },
         payment: [],
         fee: 500000,
