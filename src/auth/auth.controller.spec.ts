@@ -14,11 +14,12 @@ jest.setTimeout(3600000)
 // ===============================================
 
 describe('auth controller', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -28,6 +29,11 @@ describe('auth controller', () => {
     await app.init()
 
     req = () => request(app.getHttpServer())
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
   })
 
   describe('POST /auth/login', () => {

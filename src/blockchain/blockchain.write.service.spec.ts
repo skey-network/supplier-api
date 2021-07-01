@@ -21,7 +21,10 @@ const generateAlias = () => {
   return 'testalias_' + Math.random().toString(36).substring(8)
 }
 
+const { nodeUrl } = config().blockchain
+
 describe('blockchainWriteService', () => {
+  let moduleFixture: TestingModule
   let service: BlockchainWriteService
 
   const ctx = {
@@ -33,15 +36,13 @@ describe('blockchainWriteService', () => {
     assetId2: ''
   }
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    moduleFixture = await Test.createTestingModule({
       providers: [BlockchainWriteService]
     }).compile()
 
-    service = module.get<BlockchainWriteService>(BlockchainWriteService)
-  })
+    service = moduleFixture.get<BlockchainWriteService>(BlockchainWriteService)
 
-  it('prepare for next tests', async () => {
     const { dappAddress } = config().blockchain
     const script = readFileSync('./assets/device.base64').toString()
     ctx.device = generateAccount()
@@ -56,6 +57,14 @@ describe('blockchainWriteService', () => {
       ],
       ctx.device.seed
     )
+  })
+
+  afterAll(async () => {
+    await moduleFixture.close()
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
   })
 
   it('updateDeviceData', async () => {
@@ -107,6 +116,19 @@ describe('blockchainWriteService', () => {
     expect(typeof txHash).toBe('string')
   })
 
+  describe('renameDataKey', () => {
+    it('changes key name of key/value storage', async () => {
+      await service.insertData([{ key: 'foo', value: 'bar' }], ctx.device.seed)
+      const res = await service.renameDataKey('foo', 'baz', ctx.device.seed)
+
+      expect(res.match(/.{44}/)).not.toBe(null)
+    })
+
+    it('throws an error when there is no value in key', async () => {
+      await expect(service.renameDataKey('baz', 'qux')).rejects.toBeDefined()
+    })
+  })
+
   describe('burnKey', () => {
     it('constructs correct tx', async () => {
       const { chainId } = config().blockchain
@@ -125,19 +147,6 @@ describe('blockchainWriteService', () => {
       expect(result.call).toBeDefined()
       expect(result.dApp).toBe(org)
       expect(result.proofs.length).toBe(1)
-    })
-  })
-
-  describe('renameDataKey', () => {
-    it('changes key name of key/value storage', async () => {
-      await service.insertData([{ key: 'foo', value: 'bar' }], ctx.device.seed)
-      const res = await service.renameDataKey('foo', 'baz', ctx.device.seed)
-
-      expect(res.match(/.{44}/)).not.toBe(null)
-    })
-
-    it('throws an error when there is no value in key', async () => {
-      await expect(service.renameDataKey('baz', 'qux')).rejects.toBeDefined()
     })
   })
 })

@@ -397,6 +397,7 @@ export interface DeviceCommandPayload {
   command: string
   waitForTx: boolean
   keyOwnerAddress: string
+  callerAddress?: string
   keyAssetId: string
 }
 

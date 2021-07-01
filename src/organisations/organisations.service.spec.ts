@@ -9,16 +9,22 @@ import config from '../config'
 const { dappAddress } = config().blockchain
 
 describe('OrganisationsService', () => {
+  let moduleFixture: TestingModule
   let service: OrganisationsService
   let blockchainWriteService: BlockchainWriteService
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    moduleFixture = await Test.createTestingModule({
       providers: [OrganisationsService, BlockchainWriteService]
     }).compile()
 
-    service = module.get<OrganisationsService>(OrganisationsService)
-    blockchainWriteService = module.get<BlockchainWriteService>(BlockchainWriteService)
+    service = moduleFixture.get<OrganisationsService>(OrganisationsService)
+    blockchainWriteService =
+      moduleFixture.get<BlockchainWriteService>(BlockchainWriteService)
+  })
+
+  afterAll(async () => {
+    await moduleFixture.close()
   })
 
   it('should be defined', () => {

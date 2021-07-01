@@ -487,13 +487,18 @@ export class DevicesController {
   @ApiOperation({
     summary: 'Validate a transaction and broadcast it later',
     description: `
-    This endpoint validates if sent transaction is correctly signed
-    and - if it's valid - it is being saved to be broadcasted later.
     Use this endpoint when you want to send an action directly to IoT,
     which has to be also saved in the blockchain.
-    Actions are being saved only if they are valid.
+    This endpoint accepts transactions.
+    It validates if sent transaction is correctly signed
+    and - if it's valid - it is saved to be broadcasted later.
+    Transactions are being saved only if they are valid.
     Endpoint accepts only InvokeScript transactions.
-    To create transactions, use a library called waves-transactions.
+    Supported scripts to invoke are:
+    - deviceAction(key: string, action: string)
+    - deviceActionAs(key: string, action: string, keyOwner: string)
+    Any other scripts will be rejected.
+    To create transactions, you can use a library called waves-transactions.
     `
   })
   @ApiParam({

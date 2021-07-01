@@ -10,8 +10,9 @@ import * as Crypto from '@waves/ts-lib-crypto'
 import { decrypt } from '../common/aes-encryption'
 import fetchMock from 'jest-fetch-mock'
 import { getInstance } from 'skey-lib'
-import { invokeScript } from '@waves/waves-transactions'
+import { invokeScript, transfer } from '@waves/waves-transactions'
 import { createTestDevice } from '../common/spec-helpers'
+import { WVS } from 'skey-lib/dist/src/write'
 
 jest.setTimeout(3600000)
 
@@ -29,12 +30,13 @@ const lib = getInstance({
 // ===============================================
 
 describe('devices controller', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
   let token = ''
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -50,6 +52,11 @@ describe('devices controller', () => {
       password: process.env.ADMIN_PASSWORD
     })
     token = tokenRequest.body.access_token
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
   })
 
   describe('POST /devices/device_message', () => {
@@ -410,7 +417,9 @@ describe('devices controller', () => {
 
   describe('POST /devices/:address/validate_transaction/:assetId', () => {
     let device = ''
+    let deviceSeed = ''
     const ctx = {
+      org: lib.createAccount(),
       dapp: {
         address: config().blockchain.dappAddress,
         seed: config().blockchain.seed
@@ -421,95 +430,280 @@ describe('devices controller', () => {
       }
     }
 
-    beforeAll(async () => {
-      device = (await createTestDevice(req, token)).address
+    describe('deviceAction', () => {
+      beforeAll(async () => {
+        const res = await createTestDevice(req, token)
+        device = res.address
+        deviceSeed = decrypt(res.encryptedSeed)
 
-      await lib.transfer(ctx.user.address, 0.1, ctx.dapp.seed)
+        await lib.transfer(ctx.user.address, 0.1, ctx.dapp.seed)
 
-      ctx.key.assetId = await lib.generateKey(device, 99999999999999, ctx.dapp.seed)
+        ctx.key.assetId = await lib.generateKey(device, 99999999999999, ctx.dapp.seed)
 
-      await Promise.all([
-        lib.insertData(
-          [
-            { key: `device_${device}`, value: 'active' },
-            { key: `key_${ctx.key.assetId}`, value: 'active' }
-          ],
-          ctx.dapp.seed
-        ),
-        lib.transferKey(ctx.user.address, ctx.key.assetId, ctx.dapp.seed)
-      ])
+        await Promise.all([
+          lib.insertData([{ key: `device_${device}`, value: 'active' }], ctx.dapp.seed),
+          lib.insertData(
+            [{ key: `key_${ctx.key.assetId}`, value: 'active' }],
+            deviceSeed
+          ),
+          lib.transferKey(ctx.user.address, ctx.key.assetId, ctx.dapp.seed)
+        ])
 
-      // Have to wait for the next block
+        // Have to wait for the next block
 
-      await lib.waitForNBlocks(1)
-    })
+        await lib.waitForNBlocks(1)
+      })
 
-    const buildTransaction = (seed: string, assetId: string) => {
-      return invokeScript(
-        {
-          dApp: ctx.dapp.address,
-          call: {
-            function: 'deviceActionWithKey',
-            args: [
-              { type: 'string', value: assetId },
-              { type: 'string', value: 'open' }
-            ]
+      const buildTransaction = (seed: string, assetId: string) => {
+        return invokeScript(
+          {
+            dApp: ctx.dapp.address,
+            call: {
+              function: 'deviceAction',
+              args: [
+                { type: 'string', value: assetId },
+                { type: 'string', value: 'open' }
+              ]
+            },
+            chainId: BLOCKCHAIN_CHAIN_ID,
+            version: 1
           },
-          chainId: BLOCKCHAIN_CHAIN_ID,
-          version: 1
-        },
-        seed
-      )
-    }
+          seed
+        )
+      }
 
-    it('valid request', async () => {
-      const res = await req()
-        .post(`/devices/${device}/validate_transaction/${ctx.key.assetId}`)
-        .send(buildTransaction(ctx.user.seed, ctx.key.assetId))
-        .set('Authorization', `Bearer ${token}`)
-      // .expect(201)
+      it('valid request', async () => {
+        const res = await req()
+          .post(`/devices/${device}/validate_transaction/${ctx.key.assetId}`)
+          .send(buildTransaction(ctx.user.seed, ctx.key.assetId))
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
 
-      console.log(res.body)
+        expect(res.body).toEqual({ verified: true })
+      })
 
-      expect(res.body).toEqual({ verified: true })
-    })
+      describe('invalid requests', () => {
+        const testCases = [
+          {
+            toString: () => 'invalid transaction',
+            device: () => device,
+            assetId: () => ctx.key.assetId,
+            params: () => {
+              const transaction = buildTransaction(ctx.user.seed, ctx.key.assetId)
+              transaction.proofs = []
+              return transaction
+            },
+            httpCode: 400,
+            error: 'Transaction not verified'
+          },
+          {
+            toString: () => 'invalid type of transaction',
+            device: () => device,
+            assetId: () => ctx.key.assetId,
+            params: () =>
+              transfer(
+                { recipient: ctx.dapp.address, amount: 0.01 * WVS },
+                ctx.user.seed
+              ),
+            httpCode: 400,
+            error:
+              'Invalid transaction type. Only InvokeScript transactions are supported.'
+          },
+          {
+            toString: () => 'not a transaction',
+            device: () => device,
+            assetId: () => ctx.key.assetId,
+            params: () => ({ foo: 'bar', baz: 'qux' }),
+            httpCode: 400,
+            error: 'No transaction found'
+          },
+          {
+            toString: () => 'device does not exist',
+            device: () => 'foobar',
+            assetId: () => ctx.key.assetId,
+            params: () => buildTransaction(ctx.user.seed, ctx.key.assetId),
+            httpCode: 404
+          },
+          {
+            toString: () => 'asset does not exist',
+            device: () => device,
+            assetId: () => 'foobar',
+            params: () => buildTransaction(ctx.user.seed, ctx.key.assetId),
+            httpCode: 404
+          }
+        ]
 
-    it('invalid transaction', async () => {
-      const transaction = buildTransaction(ctx.user.seed, ctx.key.assetId)
-      transaction.proofs = []
-      const res = await req()
-        .post(`/devices/${device}/validate_transaction/${ctx.key.assetId}`)
-        .send(transaction)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(400)
+        it.each(testCases)('%s', async ({ device, assetId, params, httpCode, error }) => {
+          const res = await req()
+            .post(`/devices/${device()}/validate_transaction/${assetId()}`)
+            .send(params())
+            .set('Authorization', `Bearer ${token}`)
+            .expect(httpCode)
 
-      expect(res.body).toEqual({
-        verified: false,
-        error: 'Transaction not verified'
+          if (error) {
+            expect(res.body).toEqual({
+              verified: false,
+              error: error
+            })
+          }
+        })
+      })
+
+      it('unauthorized', async () => {
+        await req()
+          .post(`/devices/${device}/validate_transaction/${ctx.key.assetId}`)
+          .send(buildTransaction(ctx.user.seed, ctx.key.assetId))
+          .expect(401)
       })
     })
 
-    it('unauthorized', async () => {
-      await req()
-        .post(`/devices/${device}/validate_transaction/${ctx.key.assetId}`)
-        .send(buildTransaction(ctx.user.seed, ctx.key.assetId))
-        .expect(401)
-    })
+    describe('deviceActionAs', () => {
+      beforeAll(async () => {
+        const res = await createTestDevice(req, token)
+        device = res.address
+        deviceSeed = decrypt(res.encryptedSeed)
 
-    it('device does not exist', async () => {
-      await req()
-        .post(`/devices/foobar/validate_transaction/${ctx.key.assetId}`)
-        .send(buildTransaction(ctx.user.seed, ctx.key.assetId))
-        .set('Authorization', `Bearer ${token}`)
-        .expect(404)
-    })
+        await Promise.all([
+          lib.transfer(ctx.user.address, 0.1, ctx.dapp.seed),
+          lib.transfer(ctx.org.address, 0.1, ctx.dapp.seed)
+        ])
 
-    it('asset does not exist', async () => {
-      await req()
-        .post(`/devices/${device}/validate_transaction/foobar`)
-        .send(buildTransaction(ctx.user.seed, ctx.key.assetId))
-        .set('Authorization', `Bearer ${token}`)
-        .expect(404)
+        ctx.key.assetId = await lib.generateKey(device, 99999999999999, ctx.dapp.seed)
+
+        await Promise.all([
+          lib.insertData(
+            [
+              { key: `device_${device}`, value: 'active' },
+              { key: `org_${ctx.org.address}`, value: 'active' }
+            ],
+            ctx.dapp.seed
+          ),
+          lib.insertData(
+            [{ key: `key_${ctx.key.assetId}`, value: 'active' }],
+            deviceSeed
+          ),
+          lib.transferKey(ctx.org.address, ctx.key.assetId, ctx.dapp.seed),
+          lib.insertData(
+            [{ key: `user_${ctx.user.address}`, value: 'active' }],
+            ctx.org.seed
+          )
+        ])
+
+        // Have to wait for the next block
+
+        await lib.waitForNBlocks(1)
+      })
+
+      const buildTransaction = (seed: string, assetId: string, org: string) => {
+        return invokeScript(
+          {
+            dApp: ctx.dapp.address,
+            call: {
+              function: 'deviceActionAs',
+              args: [
+                { type: 'string', value: assetId },
+                { type: 'string', value: 'open' },
+                { type: 'string', value: org }
+              ]
+            },
+            chainId: BLOCKCHAIN_CHAIN_ID,
+            version: 1
+          },
+          seed
+        )
+      }
+
+      it('valid request', async () => {
+        const res = await req()
+          .post(`/devices/${device}/validate_transaction/${ctx.key.assetId}`)
+          .send(buildTransaction(ctx.user.seed, ctx.key.assetId, ctx.org.address))
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
+
+        // console.log(res.body)
+
+        expect(res.body).toEqual({ verified: true })
+      })
+
+      describe('invalid requests', () => {
+        const testCases = [
+          {
+            toString: () => 'invalid transaction',
+            device: () => device,
+            assetId: () => ctx.key.assetId,
+            params: () => {
+              const transaction = buildTransaction(
+                ctx.user.seed,
+                ctx.key.assetId,
+                ctx.org.address
+              )
+              transaction.proofs = []
+              return transaction
+            },
+            httpCode: 400,
+            error: 'Transaction not verified'
+          },
+          {
+            toString: () => 'invalid type of transaction',
+            device: () => device,
+            assetId: () => ctx.key.assetId,
+            params: () =>
+              transfer(
+                { recipient: ctx.dapp.address, amount: 0.01 * WVS },
+                ctx.user.seed
+              ),
+            httpCode: 400,
+            error:
+              'Invalid transaction type. Only InvokeScript transactions are supported.'
+          },
+          {
+            toString: () => 'not a transaction',
+            device: () => device,
+            assetId: () => ctx.key.assetId,
+            params: () => ({ foo: 'bar', baz: 'qux' }),
+            httpCode: 400,
+            error: 'No transaction found'
+          },
+          {
+            toString: () => 'device does not exist',
+            device: () => 'foobar',
+            assetId: () => ctx.key.assetId,
+            params: () =>
+              buildTransaction(ctx.user.seed, ctx.key.assetId, ctx.org.address),
+            httpCode: 404
+          },
+          {
+            toString: () => 'asset does not exist',
+            device: () => device,
+            assetId: () => 'foobar',
+            params: () =>
+              buildTransaction(ctx.user.seed, ctx.key.assetId, ctx.org.address),
+            httpCode: 404
+          }
+        ]
+
+        it.each(testCases)('%s', async ({ device, assetId, params, httpCode, error }) => {
+          const res = await req()
+            .post(`/devices/${device()}/validate_transaction/${assetId()}`)
+            .send(params())
+            .set('Authorization', `Bearer ${token}`)
+            .expect(httpCode)
+
+          if (error) {
+            expect(res.body).toEqual({
+              verified: false,
+              error: error
+            })
+          }
+        })
+      })
+
+      it('unauthorized', async () => {
+        await req()
+          .post(`/devices/${device}/validate_transaction/${ctx.key.assetId}`)
+          .send(buildTransaction(ctx.user.seed, ctx.key.assetId, ctx.org.address))
+          .expect(401)
+      })
     })
   })
 
