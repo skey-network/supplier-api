@@ -241,7 +241,8 @@ export class DevicesService {
       { key: 'version', value: config().device.schemaVersion },
       { key: 'active', value: true },
       { key: 'connected', value: true },
-      { key: 'visible', value: true }
+      { key: 'visible', value: true },
+      { key: 'type', value: 'device' }
     ]
 
     return [...entries, ...dappEntries]
