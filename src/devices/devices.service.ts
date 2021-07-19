@@ -239,9 +239,9 @@ export class DevicesService {
       { key: 'supplier', value: config().blockchain.dappAddress },
       { key: 'owner', value: config().blockchain.dappAddress },
       { key: 'version', value: config().device.schemaVersion },
-      { key: 'active', value: true },
-      { key: 'connected', value: true },
-      { key: 'visible', value: true },
+      { key: 'active', value: payload.active ?? true },
+      { key: 'connected', value: payload.connected ?? true },
+      { key: 'visible', value: payload.visible ?? true },
       { key: 'type', value: 'device' }
     ]
 
@@ -249,12 +249,16 @@ export class DevicesService {
   }
 
   private objectToBlockchainEntries = (entries: any): { key: string; value: any }[] => {
-    return Object.entries(entries).map(([key, value]) => {
-      return {
-        key,
-        value: this.blockchainValue(value)
-      }
-    })
+    const blacklist = Object.freeze(['type', 'active', 'visible', 'connected'])
+
+    return Object.entries(entries)
+      .filter(([key]) => !blacklist.includes(key))
+      .map(([key, value]) => {
+        return {
+          key,
+          value: this.blockchainValue(value)
+        }
+      })
   }
 
   private blockchainValue(value: any) {
