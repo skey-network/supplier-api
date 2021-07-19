@@ -75,6 +75,11 @@ export interface SetupAction {
   txHash: string
 }
 
+export interface DataEntry {
+  key: string
+  value: string
+}
+
 export class SetupActionResponse implements SetupAction {
   @ApiProperty({
     description: 'Name of the aciton',
