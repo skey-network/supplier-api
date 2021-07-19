@@ -116,7 +116,7 @@ describe('utils controller', () => {
         .expect(201)
 
       expect(res.body).toBeInstanceOf(Array)
-      expect(res.body.length).toBe(4)
+      expect(res.body.length).toBe(3)
       expect(typeof res.body[0].action).toBe('string')
       expect(typeof res.body[0].txHash).toBe('string')
     })

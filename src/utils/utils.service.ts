@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { BlockchainReadService } from '../blockchain/blockchain.read.service'
-import { FaucetDto, SetupAction, SetupDto, StatusResponse } from './utils.model'
+import { FaucetDto, DataEntry, SetupAction, SetupDto } from './utils.model'
 import config from '../config'
 import { BlockchainCompilerService } from '../blockchain/blockchain.compiler.service'
 
@@ -29,31 +29,36 @@ export class UtilsService {
       steps.push({ action: 'setScript', txHash })
     }
 
+    const dataEntries: DataEntry[] = []
+
     if (setupDto.name) {
-      const txHash = await this.blockchainWriteService.insertData([
-        {
-          key: 'name',
-          value: setupDto.name
-        }
-      ])
-      steps.push({ action: 'setName', txHash })
+      dataEntries.push({
+        key: 'name',
+        value: setupDto.name
+      })
     }
 
     if (setupDto.description) {
-      const txHash = await this.blockchainWriteService.insertData([
-        {
-          key: 'description',
-          value: setupDto.description
-        }
-      ])
-      steps.push({ action: 'setDescription', txHash })
+      dataEntries.push({
+        key: 'description',
+        value: setupDto.description
+      })
     }
+
+    dataEntries.push({
+      key: 'type',
+      value: 'supplier'
+    })
 
     if (setupDto.alias) {
       const txHash = await this.blockchainWriteService.setDAppAlias(setupDto.alias)
 
       steps.push({ action: 'setAlias', txHash })
     }
+
+    const txHash = await this.blockchainWriteService.insertData([...dataEntries])
+
+    steps.push({ action: 'setDataEntries', txHash })
 
     return steps
   }
