@@ -196,23 +196,29 @@ export class CreateDeviceDto {
   })
   name: string
 
-  // @IsNotEmpty()
-  // @IsBoolean()
-  // @ApiProperty({
-  //   description: 'Flag to determine if the device is active',
-  //   required: true,
-  //   example: true
-  // })
-  // active: boolean
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({
+    description: 'Flag to determine if the device is active',
+    example: true
+  })
+  active?: boolean
 
-  // @IsNotEmpty()
-  // @IsBoolean()
-  // @ApiProperty({
-  //   description: 'Flag to determine if the device is connected',
-  //   required: true,
-  //   example: true
-  // })
-  // connected: boolean
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({
+    description: 'Flag to determine if the device is connected',
+    example: true
+  })
+  connected?: boolean
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({
+    description: 'Flag to determine if the device is visible',
+    example: true
+  })
+  visible?: boolean
 
   @IsString()
   @IsOptional()
