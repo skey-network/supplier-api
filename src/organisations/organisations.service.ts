@@ -10,7 +10,7 @@ export class OrganisationsService {
   constructor(private readonly blockchainWriteService: BlockchainWriteService) {}
 
   get lib() {
-    return getInstance({ nodeUrl, chainId })
+    return getInstance({ nodeUrl, chainId }) as any
   }
 
   async removeKey(organisationAddress: string, keyAssetId: string) {

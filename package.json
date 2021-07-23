@@ -38,7 +38,7 @@
     "@types/node-fetch": "^2.5.8",
     "@waves/surfboard": "2.0.0-beta.7",
     "@waves/ts-lib-crypto": "^1.4.3",
-    "@waves/waves-transactions": "^4.1.8",
+    "@waves/waves-transactions": "4.1.7",
     "bcrypt": "^5.0.1",
     "bull": "^3.22.8",
     "chalk": "^4.1.0",

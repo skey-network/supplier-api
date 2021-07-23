@@ -9,7 +9,7 @@ const { nodeUrl, chainId, dappAddress, seed: dappSeed } = config().blockchain
 export class ValidationError extends Error {}
 
 export abstract class TransactionValidator {
-  protected lib = getInstance({ nodeUrl, chainId })
+  protected lib: any = getInstance({ nodeUrl, chainId })
 
   async validate(
     deviceAddress: string,
