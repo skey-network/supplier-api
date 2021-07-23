@@ -161,7 +161,7 @@ describe('devices controller', () => {
         {
           toString: () => 'active is invalid type',
           params: {
-            active: null
+            active: { hello: 42 }
           },
           response: ['active must be a boolean value']
         },
@@ -188,6 +188,77 @@ describe('devices controller', () => {
         expect(res.status).toEqual(400)
         expect(res.body.message).toEqual(response)
       })
+    })
+  })
+
+  describe('PUT /devices/:address', () => {
+    let device = ''
+
+    beforeAll(async () => {
+      device = (await createTestDevice(req, token)).address
+    })
+
+    const cases = [
+      {
+        toString: () => 'basic example',
+        input: {
+          name: 'test_device',
+          lat: 52.13,
+          active: false,
+          details: {
+            url: 'http://google.com',
+            physicalAddress: {
+              country: 'Poland'
+            }
+          },
+          custom: {
+            powerLevel: 10
+          }
+        },
+        expected: [
+          { key: 'active', type: 'string', value: 'false' },
+          { key: 'connected', type: 'boolean', value: true },
+          { key: 'custom', type: 'string', value: JSON.stringify({ powerLevel: 10 }) },
+          {
+            key: 'details',
+            type: 'string',
+            value: JSON.stringify({
+              url: 'http://google.com',
+              physicalAddress: {
+                country: 'Poland'
+              }
+            })
+          },
+          { key: 'lat', type: 'string', value: '52.13' },
+          { key: 'name', type: 'string', value: 'test_device' },
+          {
+            key: 'owner',
+            type: 'string',
+            value: config().blockchain.dappAddress
+          },
+          {
+            key: 'supplier',
+            type: 'string',
+            value: config().blockchain.dappAddress
+          },
+          { key: 'type', type: 'string', value: 'device' },
+          { key: 'version', type: 'string', value: '1.0' },
+          { key: 'visible', type: 'boolean', value: true }
+        ]
+      }
+    ]
+
+    it.each(cases)('%s', async ({ input, expected }) => {
+      const res = await req()
+        .put(`/devices/${device}`)
+        .send(input)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
+
+      const entries = await lib.fetchDataWithRegex('.*', device)
+
+      expect(res.body.txHash).toBeDefined()
+      expect(entries).toEqual(expected)
     })
   })
 

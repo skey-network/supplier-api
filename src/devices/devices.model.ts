@@ -302,7 +302,7 @@ export class CreateDeviceDto {
 }
 
 export interface EditDeviceDto {
-  [key: string]: string | number | boolean | null
+  [key: string]: any
 }
 
 export class EditDevice {
