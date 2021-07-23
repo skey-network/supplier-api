@@ -117,10 +117,7 @@ export class DevicesService {
   }
 
   async edit(address: string, editDeviceDto: EditDeviceDto) {
-    const entries = Object.entries(editDeviceDto).map(([key, value]) => ({
-      value: value === null ? undefined : value,
-      key
-    }))
+    const entries = this.objectToBlockchainEntries(editDeviceDto, ['type'])
 
     const txHash = await this.blockchainWriteService.updateDeviceData(address, entries)
     return { txHash }
@@ -233,7 +230,12 @@ export class DevicesService {
   }
 
   private entriesForNewDevice = (payload: CreateDeviceDto) => {
-    const entries = this.objectToBlockchainEntries(payload)
+    const entries = this.objectToBlockchainEntries(payload, [
+      'type',
+      'active',
+      'visible',
+      'connected'
+    ])
 
     const dappEntries = [
       { key: 'supplier', value: config().blockchain.dappAddress },
@@ -248,9 +250,10 @@ export class DevicesService {
     return [...entries, ...dappEntries]
   }
 
-  private objectToBlockchainEntries = (entries: any): { key: string; value: any }[] => {
-    const blacklist = Object.freeze(['type', 'active', 'visible', 'connected'])
-
+  private objectToBlockchainEntries = (
+    entries: any,
+    blacklist: string[]
+  ): { key: string; value: any }[] => {
     return Object.entries(entries)
       .filter(([key]) => !blacklist.includes(key))
       .map(([key, value]) => {
