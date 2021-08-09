@@ -215,10 +215,51 @@ describe('DevicesCommandService', () => {
         invokeTx = buildTransaction(ctx.user.seed, ctx.key.assetId)
       })
 
-      it('validates transaction correctly', async () => {
-        expect(
-          await service.validateTransaction(ctx.device.address, ctx.key.assetId, invokeTx)
-        ).toEqual({ verified: true })
+      describe('successfull validation', () => {
+        const testCases = [
+          {
+            toString: () => 'basic case',
+            setup: async () => {},
+            teardown: async () => {},
+            device: () => ctx.device.address,
+            key: () => ctx.key.assetId,
+            tx: () => invokeTx
+          },
+          {
+            toString: () => 'dApp whitelist entry has something else than active',
+            setup: async () => {
+              await lib.insertData(
+                [{ key: `device_${ctx.device.address}`, value: 'open' }],
+                ctx.dapp.seed
+              )
+            },
+            teardown: async () => {
+              await lib.insertData(
+                [{ key: `device_${ctx.device.address}`, value: 'active' }],
+                ctx.dapp.seed
+              )
+            },
+            device: () => ctx.device.address,
+            key: () => ctx.key.assetId,
+            tx: () => invokeTx
+          }
+        ]
+
+        it.each(testCases)('%s', async (args) => {
+          try {
+            await args.setup()
+
+            const result = await service.validateTransaction(
+              args.device(),
+              args.key(),
+              args.tx()
+            )
+
+            expect(result.verified).toEqual(true)
+          } finally {
+            await args.teardown()
+          }
+        })
       })
 
       describe('validation errors', () => {
@@ -453,10 +494,51 @@ describe('DevicesCommandService', () => {
         invokeTx = buildTransaction(ctx.user.seed, ctx.key.assetId)
       })
 
-      it('validates transaction correctly', async () => {
-        expect(
-          await service.validateTransaction(ctx.device.address, ctx.key.assetId, invokeTx)
-        ).toEqual({ verified: true })
+      describe('successfull validation', () => {
+        const testCases = [
+          {
+            toString: () => 'basic case',
+            setup: async () => {},
+            teardown: async () => {},
+            device: () => ctx.device.address,
+            key: () => ctx.key.assetId,
+            tx: () => invokeTx
+          },
+          {
+            toString: () => 'dApp whitelist entry has something else than active',
+            setup: async () => {
+              await lib.insertData(
+                [{ key: `device_${ctx.device.address}`, value: 'open' }],
+                ctx.dapp.seed
+              )
+            },
+            teardown: async () => {
+              await lib.insertData(
+                [{ key: `device_${ctx.device.address}`, value: 'active' }],
+                ctx.dapp.seed
+              )
+            },
+            device: () => ctx.device.address,
+            key: () => ctx.key.assetId,
+            tx: () => invokeTx
+          }
+        ]
+
+        it.each(testCases)('%s', async (args) => {
+          try {
+            await args.setup()
+
+            const result = await service.validateTransaction(
+              args.device(),
+              args.key(),
+              args.tx()
+            )
+
+            expect(result.verified).toEqual(true)
+          } finally {
+            await args.teardown()
+          }
+        })
       })
 
       describe('validation errors', () => {

@@ -39,9 +39,7 @@ export class OpenDeviceTransactionValidator extends TransactionValidator {
   }
 
   protected async deviceIsWhitelisted(device: string, supplier: string) {
-    const whitelist = (await this.lib.fetchDevices(supplier))
-      .filter((item) => item.status === 'active')
-      .map((item) => item.address)
+    const whitelist = (await this.lib.fetchDevices(supplier)).map((item) => item.address)
 
     if (whitelist.includes(device)) {
       return true
