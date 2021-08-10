@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { OrganisationsService } from './organisations.service'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import config from '../config'
+import { UnprocessableEntityException } from '@nestjs/common'
 
 const { dappAddress } = config().blockchain
 
@@ -102,6 +103,69 @@ describe('OrganisationsService', () => {
       const { txHashes } = await service.removeKey(args.org, args.asset)
 
       expect(txHashes).toEqual(['hash', 'hash'])
+    })
+  })
+
+  describe('addOrganisation', () => {
+    const cases = [
+      {
+        toString: () => 'basic example',
+        org: '3PEfcM3MkYCQAvMknZanC8mM3x9ENvMKpTy',
+        entries: [],
+        assert: async (serviceFn: () => any) => {
+          const res = await serviceFn()
+          expect(res).toEqual({ txHashes: ['hash'] })
+        }
+      },
+      {
+        toString: () => 'organisation already added',
+        org: '3PEfcM3MkYCQAvMknZanC8mM3x9ENvMKpTy',
+        entries: [
+          {
+            key: 'org_3PEfcM3MkYCQAvMknZanC8mM3x9ENvMKpTy',
+            value: 'active',
+            type: 'string'
+          }
+        ],
+        assert: async (serviceFn: () => any) => {
+          expect.assertions(2)
+
+          try {
+            await serviceFn()
+          } catch (e) {
+            expect(e).toBeInstanceOf(UnprocessableEntityException)
+            expect(e.message).toEqual('Organisation has already been added')
+          }
+        }
+      },
+      {
+        toString: () => "supplier has entry, but it's something else",
+        org: '3PEfcM3MkYCQAvMknZanC8mM3x9ENvMKpTy',
+        entries: [
+          {
+            key: 'org_3PEfcM3MkYCQAvMknZanC8mM3x9ENvMKpTy',
+            value: 'foobar',
+            type: 'string'
+          }
+        ],
+        assert: async (serviceFn: () => any) => {
+          const res = await serviceFn()
+          expect(res).toEqual({ txHashes: ['hash'] })
+        }
+      }
+    ]
+
+    test.each(cases)('%s', async (args) => {
+      jest.spyOn(service, 'lib', 'get').mockReturnValue({
+        fetchDataWithRegex: () => args.entries
+      } as any)
+
+      jest.spyOn(blockchainWriteService, 'broadcast').mockResolvedValue('hash')
+      const execute = async () => {
+        return await service.addOrganisation(args.org)
+      }
+
+      await args.assert(execute)
     })
   })
 })

@@ -39,4 +39,16 @@ describe('OrganisationsController', () => {
       expect(await controller.removeKey('org', 'key')).toEqual(result)
     })
   })
+
+  describe('addOrganisation', () => {
+    it('returns array with hash', async () => {
+      const result = { txHashes: ['hash'] }
+
+      jest.spyOn(service, 'addOrganisation').mockResolvedValue(result)
+
+      expect(
+        await controller.addOrganisation('3MPrus28cW4x6XePSF3Fb1eMHSfUsirZ4a5')
+      ).toEqual(result)
+    })
+  })
 })

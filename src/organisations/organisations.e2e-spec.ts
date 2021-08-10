@@ -133,4 +133,78 @@ describe('Organisations e2e', () => {
     expect(state.keyExists).toBe(false)
     expect(state.keyWhitelisted).toBe(false)
   })
+
+  describe('POST /organisations/:address', () => {
+    const testOrgAddress = '3M8swwPfYAw72JhdNDDNfUH3Tv2Bm5RQV98'
+    const path = `/organisations/${testOrgAddress}`
+
+    describe('valid request', () => {
+      it('adds organisation to data storage', async () => {
+        const res = await request(app.getHttpServer())
+          .post(path)
+          .set('Authorization', `Bearer ${ctx.token}`)
+          .expect(201)
+
+        expect(res.body.txHashes.length).toBe(1)
+      })
+
+      afterEach(async () => {
+        const deleteEntry: DeleteEntry = { key: `org_${testOrgAddress}`, value: null }
+        await lib.insertData([deleteEntry], seed)
+      })
+    })
+
+    describe('invalid request', () => {
+      const defaults = {
+        toString: () => 'invalid request test example',
+        orgAddress: testOrgAddress,
+        setup: async () => {},
+        teardown: async () => {},
+        authToken: () => ctx.token,
+        httpCode: 422
+      }
+
+      const cases = [
+        {
+          ...defaults,
+          toString: () => 'organisation has already been added',
+          setup: async () => {
+            const orgEntry: StringEntry = {
+              key: `org_${testOrgAddress}`,
+              value: 'active'
+            }
+            await lib.insertData([orgEntry], seed)
+          },
+          teardown: async () => {
+            const orgEntry: DeleteEntry = { key: `org_${testOrgAddress}`, value: null }
+            await lib.insertData([orgEntry], seed)
+          },
+          errorMessage: 'Organisation has already been added'
+        },
+        {
+          ...defaults,
+          toString: () => 'invalid Address',
+          orgAddress: 'foobar',
+          httpCode: 400,
+          errorMessage: ['address is not valid']
+        }
+      ]
+
+      test.each(cases)('%s', async (args) => {
+        await args.setup()
+
+        try {
+          const res = await request(app.getHttpServer())
+            .post(`/organisations/${args.orgAddress}`)
+            .set('Authorization', `Bearer ${args.authToken()}`)
+          expect(res.status).toEqual(args.httpCode)
+          if (args.errorMessage) {
+            expect(res.body.message).toEqual(args.errorMessage)
+          }
+        } finally {
+          await args.teardown()
+        }
+      })
+    })
+  })
 })

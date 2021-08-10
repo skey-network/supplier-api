@@ -44,3 +44,33 @@ export const RemoveKeyProperties = () => {
     })
   )
 }
+
+export const AddOrganisationProperties = () => {
+  return applyDecorators(
+    ApiOperation({
+      summary: 'Add organisation',
+      description: 'Add an organisation to the list of verified organisations'
+    }),
+    ApiBearerAuth(),
+    ApiFilledUnauthorizedResponse(),
+    ApiFilledCustomErrorResponse(),
+    ApiResponse({
+      status: 201,
+      description: 'Organisation has been added',
+      schema: {
+        type: 'object',
+        properties: {
+          txHashes: {
+            type: 'array',
+            example: ['6fE2qRiZrEAEgfU4b12VkLb8UGB9VpM7N4NncNAXoBYP']
+          }
+        }
+      }
+    }),
+    ApiParam({
+      name: 'address',
+      description: 'Address of organisation',
+      example: '3NAyyezdeXvgEwe1qVe3HXpUZBkEgwMEgud'
+    })
+  )
+}
