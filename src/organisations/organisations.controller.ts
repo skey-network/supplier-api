@@ -1,8 +1,8 @@
-import { Controller, Delete, Param, UseGuards } from '@nestjs/common'
+import { Controller, Delete, Param, Post, UseGuards } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../auth/jwt.guard'
 import { AddressValidationPipe, AssetIdValidationPipe } from '../validators'
-import { RemoveKeyProperties } from './organisations.docs'
+import { RemoveKeyProperties, AddOrganisationProperties } from './organisations.docs'
 import { OrganisationsService } from './organisations.service'
 
 @UseGuards(JwtAuthGuard)
@@ -18,5 +18,11 @@ export class OrganisationsController {
     @Param('key', AssetIdValidationPipe) key: string
   ) {
     return await this.organisationsService.removeKey(organisation, key)
+  }
+
+  @Post(':address')
+  @AddOrganisationProperties()
+  async addOrganisation(@Param('address', AddressValidationPipe) address: string) {
+    return await this.organisationsService.addOrganisation(address)
   }
 }

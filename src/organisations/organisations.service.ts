@@ -1,9 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException
+} from '@nestjs/common'
 import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 import { getInstance } from 'skey-lib'
 import config from '../config'
 
-const { chainId, nodeUrl, dappAddress } = config().blockchain
+const { chainId, nodeUrl, dappAddress, seed } = config().blockchain
 
 @Injectable()
 export class OrganisationsService {
@@ -26,6 +30,32 @@ export class OrganisationsService {
     const txHashes = await Promise.all([
       this.blockchainWriteService.burnKeyOnOrganisation(organisationAddress, keyAssetId),
       this.blockchainWriteService.removeKeyFromDevice(keyAssetId, device)
+    ])
+
+    return { txHashes }
+  }
+
+  async addOrganisation(address: string) {
+    const entries: Entry[] = await this.lib.fetchDataWithRegex(
+      `org_${address}`,
+      dappAddress
+    )
+
+    if (entries.length > 0) {
+      const entry: Entry = entries[0]
+      if (entry.value === 'active') {
+        throw new UnprocessableEntityException('Organisation has already been added')
+      }
+    }
+
+    const orgEntry: StringEntry = {
+      key: `org_${address}`,
+      value: 'active',
+      type: 'string'
+    }
+
+    const txHashes = await Promise.all([
+      this.blockchainWriteService.insertData([orgEntry])
     ])
 
     return { txHashes }
