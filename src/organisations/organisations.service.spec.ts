@@ -168,4 +168,33 @@ describe('OrganisationsService', () => {
       await args.assert(execute)
     })
   })
+
+  describe('organisationsIndex', () => {
+    const cases = [
+      {
+        toString: () => 'basic example',
+        entries: [
+          {
+            key: 'org_3PEfcM3MkYCQAvMknZanC8mM3x9ENvMKpTy',
+            value: 'active',
+            type: 'string'
+          }
+        ]
+      },
+      {
+        toString: () => 'empty list',
+        entries: []
+      }
+    ]
+
+    it.each(cases)('%s', async (args) => {
+      jest.spyOn(service, 'lib', 'get').mockReturnValue({
+        fetchDataWithRegex: () => args.entries
+      } as any)
+
+      const res = await service.organisationsIndex()
+
+      expect(res).toEqual(args.entries.map((entry) => entry.key.replace('org_', '')))
+    })
+  })
 })

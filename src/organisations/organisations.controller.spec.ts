@@ -51,4 +51,14 @@ describe('OrganisationsController', () => {
       ).toEqual(result)
     })
   })
+
+  describe('organisationsIndex', () => {
+    it('returns addresses array', async () => {
+      const result = ['foo', 'bar', 'baz']
+
+      jest.spyOn(service, 'organisationsIndex').mockResolvedValue(result)
+
+      expect(await controller.organisationsIndex()).toEqual(result)
+    })
+  })
 })

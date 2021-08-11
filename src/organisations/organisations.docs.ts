@@ -6,6 +6,31 @@ import {
   ApiFilledUnauthorizedResponse
 } from '../common/responses.swagger'
 
+export const OrganisationIndexProperties = () => {
+  return applyDecorators(
+    ApiOperation({
+      summary: 'List verified Organisations',
+      description: 'List all verified Organisations'
+    }),
+    ApiBearerAuth(),
+    ApiFilledUnauthorizedResponse(),
+    ApiResponse({
+      status: 200,
+      description: 'Addresses of verified Organisations',
+      schema: {
+        items: {
+          type: 'string'
+        },
+        example: [
+          '3MwzVVTXiYGQsp48VX8adQ8cpqERGusRZfD',
+          '2NBPqqjDH2eYmoHeXNPnHhLvA7D4UDQXQcx',
+          '7MvTY6UrP8PHPv5DYTs1uCQ8HSQ3tkP6JdQ'
+        ]
+      }
+    })
+  )
+}
+
 export const RemoveKeyProperties = () => {
   return applyDecorators(
     ApiOperation({
