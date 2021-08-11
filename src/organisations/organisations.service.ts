@@ -8,6 +8,7 @@ import { getInstance } from 'skey-lib'
 import config from '../config'
 
 const { chainId, nodeUrl, dappAddress, seed } = config().blockchain
+const ORGANISATION_KEY_REGEX = 'org_[1-9A-HJ-NP-Za-km-z]{35}'
 
 @Injectable()
 export class OrganisationsService {
@@ -59,6 +60,15 @@ export class OrganisationsService {
     ])
 
     return { txHashes }
+  }
+
+  async organisationsIndex() {
+    const entries: Entry[] = await this.lib.fetchDataWithRegex(
+      ORGANISATION_KEY_REGEX,
+      dappAddress
+    )
+
+    return entries.map((entry) => entry.key.replace('org_', ''))
   }
 
   handleNotFound(key: any, entries: Entry[]) {

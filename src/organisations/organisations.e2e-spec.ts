@@ -116,6 +116,44 @@ describe('Organisations e2e', () => {
     expect(txHash).toBeDefined()
   })
 
+  describe('GET /organisations', () => {
+    it('valid', async () => {
+      const addresses = Array.from({ length: 3 }, () => lib.createAccount().address)
+
+      await lib.insertData(
+        addresses.map((address: string) => {
+          return {
+            key: `org_${address}`,
+            value: 'active',
+            type: 'string'
+          }
+        }),
+        seed
+      )
+
+      try {
+        const res = await request(app.getHttpServer())
+          .get('/organisations')
+          .set('Authorization', `Bearer ${ctx.token}`)
+          .expect(200)
+
+        addresses.forEach((address: string) => {
+          expect(res.body.includes(address)).toEqual(true)
+        })
+      } finally {
+        await lib.insertData(
+          addresses.map((address: string) => {
+            return {
+              key: `org_${address}`,
+              value: null
+            }
+          }),
+          seed
+        )
+      }
+    })
+  })
+
   it('DELETE /organisations/:org/keys/:key', async () => {
     const path = `/organisations/${ctx.organisation.address}/keys/${ctx.keyAssetId}`
 
