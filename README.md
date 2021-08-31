@@ -86,6 +86,9 @@ npm test
 - **DEVICE_SCHEMA_VERSION** - Version of device address schema(it's saved on the blockchain)
   **Example value** `1.0`
 
+- **CORS_ORIGIN** - CORS origin [link](https://github.com/expressjs/cors#configuration-options)  
+  **Example value** `http://example.com`
+
 ## Seed phrase encryption
 
 When this API creates a new blockchain account, it's seeds are encrypted with AES using `crypto-js`:
