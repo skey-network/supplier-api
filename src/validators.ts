@@ -1,8 +1,8 @@
 import { BadRequestException, ValidationPipe } from '@nestjs/common'
 import { Matches, isInt } from 'class-validator'
 
-const addressRegex = /^[1-9A-HJ-NP-Za-km-z]{35}$/
-const assetIdRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
+export const addressRegex = /^[1-9A-HJ-NP-Za-km-z]{35}$/
+export const assetIdRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
 
 class ValidationError extends BadRequestException {
   constructor(message: string) {
@@ -15,11 +15,11 @@ class ValidationError extends BadRequestException {
 }
 
 export const IsAddress = Matches(addressRegex, {
-  message: (args) => `${args.property} must be valid waves address`
+  message: (args) => `${args.property} must be valid blockchain address`
 })
 
 export const IsAssetId = Matches(assetIdRegex, {
-  message: (args) => `${args.property} must be valid waves assetId`
+  message: (args) => `${args.property} must be valid blockchain assetId`
 })
 
 export class AddressValidationPipe extends ValidationPipe {

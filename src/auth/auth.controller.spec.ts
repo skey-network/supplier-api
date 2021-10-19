@@ -14,11 +14,12 @@ jest.setTimeout(3600000)
 // ===============================================
 
 describe('auth controller', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -30,6 +31,11 @@ describe('auth controller', () => {
     req = () => request(app.getHttpServer())
   })
 
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
+  })
+
   describe('POST /auth/login', () => {
     it('valid request', async () => {
       const credentials = config().admin
@@ -39,15 +45,12 @@ describe('auth controller', () => {
 
       expect(typeof token).toBe('string')
 
-      await req()
-        .get('/devices')
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200)
+      await req().get('/devices').set('Authorization', `Bearer ${token}`).expect(200)
     })
 
     it('invalid credentials', async () => {
       const credentials = {
-        username: '363456435636',
+        email: '363456435636',
         password: '546364536345'
       }
       await req().post('/auth/login').send(credentials).expect(401)

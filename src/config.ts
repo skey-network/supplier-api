@@ -1,23 +1,30 @@
 import * as Crypto from '@waves/ts-lib-crypto'
 
 export default () => ({
-  logs: process.env.ENABLE_LOGS === 'true',
+  logLevel: (process.env.LOG_LEVEL ?? 'standard') as 'none' | 'standard' | 'debug',
+  port: Number(process.env.PORT ?? '3000'),
+  cors: {
+    origin: process.env.CORS_ORIGIN ?? '*'
+  },
   admin: {
-    username: process.env.ADMIN_USERNAME,
+    email: process.env.ADMIN_EMAIL,
     password: process.env.ADMIN_PASSWORD
   },
   jwt: {
     secret: process.env.JWT_SECRET,
     validTime: process.env.JWT_VALID_TIME ?? '24h'
   },
-  waves: {
-    seed: process.env.WAVES_SEED,
+  blockchain: {
+    seed: process.env.BLOCKCHAIN_SEED,
     dappAddress: Crypto.address(
-      process.env.WAVES_SEED,
-      process.env.WAVES_CHAIN_ID
+      process.env.BLOCKCHAIN_SEED,
+      process.env.BLOCKCHAIN_CHAIN_ID
     ),
-    nodeUrl: process.env.WAVES_NODE_URL,
-    chainId: process.env.WAVES_CHAIN_ID
+    nodeUrl: process.env.BLOCKCHAIN_NODE_URL,
+    chainId: process.env.BLOCKCHAIN_CHAIN_ID
+  },
+  device: {
+    schemaVersion: process.env.DEVICE_SCHEMA_VERSION
   },
   supplier: {
     apiKey: process.env.SUPPLIER_API_KEY,
@@ -28,7 +35,14 @@ export default () => ({
     user: Number(process.env.FAUCET_USER ?? '1000000')
   },
   key: {
-    minDuration: Number(process.env.KEY_MIN_DURATION ?? '3600000'),
-    maxAmount: Number(process.env.KEY_MAX_AMOUNT ?? '50')
+    minDuration: Number(process.env.KEY_MIN_DURATION ?? '3600000')
+  },
+  db: {
+    key: process.env.DB_KEY,
+    path: process.env.DB_PATH
+  },
+  encryption: {
+    salt: process.env.ENCRYPTION_SALT,
+    iv: process.env.ENCRYPTION_IV
   }
 })

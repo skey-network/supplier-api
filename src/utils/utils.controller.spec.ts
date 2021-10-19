@@ -7,6 +7,7 @@ import * as request from 'supertest'
 import { AppModule } from '../app.module'
 import * as Crypto from '@waves/ts-lib-crypto'
 import config from '../config'
+import { BlockchainWriteService } from '../blockchain/blockchain.write.service'
 
 jest.setTimeout(3600000)
 
@@ -15,17 +16,23 @@ jest.setTimeout(3600000)
 // ===============================================
 
 const randomAddress = () => {
-  const { chainId } = config().waves
+  const { chainId } = config().blockchain
   return Crypto.address(Crypto.randomSeed(), chainId)
 }
 
+const randomString = () => {
+  return Math.random().toString(36).substring(10)
+}
+
 describe('utils controller', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
   let token = ''
+  let blockchainWriteService: BlockchainWriteService
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -37,10 +44,15 @@ describe('utils controller', () => {
     req = () => request(app.getHttpServer())
 
     const tokenRequest = await req().post('/auth/login').send({
-      username: process.env.ADMIN_USERNAME,
+      email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD
     })
     token = tokenRequest.body.access_token
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
   })
 
   describe('POST /utils/faucet', () => {
@@ -84,7 +96,7 @@ describe('utils controller', () => {
 
       const { message } = res.body
 
-      expect(message.includes('address must be valid waves address')).toBe(true)
+      expect(message.includes('address must be valid blockchain address')).toBe(true)
       expect(message.includes('amount must be a positive number')).toBe(true)
       expect(message.includes('amount must be an integer number')).toBe(true)
     })
@@ -97,7 +109,8 @@ describe('utils controller', () => {
         .send({
           setScript: true,
           name: 'dApp',
-          description: 'General Kenobi'
+          description: 'General Kenobi',
+          alias: 'dapp_' + randomString()
         })
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
@@ -120,10 +133,64 @@ describe('utils controller', () => {
     })
 
     it('empty request', async () => {
+      await req().post('/utils/setup').set('Authorization', `Bearer ${token}`).expect(201)
+    })
+  })
+
+  describe('GET /utils/status', () => {
+    it('valid request', async () => {
+      await req().get('/utils/status').set('Authorization', `Bearer ${token}`).expect(200)
+    })
+
+    it('valid returned data', async () => {
+      const res = await req().get('/utils/status').set('Authorization', `Bearer ${token}`)
+
+      const {
+        address,
+        script,
+        name,
+        description,
+        nodeUrl,
+        chainId,
+        aliases,
+        balance
+      } = res.body
+
+      expect(address).toEqual(config().blockchain.dappAddress)
+      expect(script).toEqual(true)
+      expect(name).toEqual('dApp')
+      expect(description).toEqual('General Kenobi')
+      expect(nodeUrl).toEqual(config().blockchain.nodeUrl)
+      expect(chainId).toEqual(config().blockchain.chainId)
+      expect(aliases.length).toBeGreaterThan(0)
+      expect(balance).toBeGreaterThanOrEqual(0)
+    })
+
+    it('returns blank data if not present', async () => {
+      blockchainWriteService = new BlockchainWriteService()
+
+      await blockchainWriteService.insertData([
+        { key: 'name', value: undefined },
+        { key: 'description', value: undefined }
+      ])
+
+      const res = await req().get('/utils/status').set('Authorization', `Bearer ${token}`)
+
+      const { name, description } = res.body
+
+      expect(name).toEqual(undefined)
+      expect(description).toEqual(undefined)
+    })
+
+    it('unauthorized', async () => {
+      await req().get('/utils/status').expect(401)
+    })
+
+    it('invalid token', async () => {
       await req()
-        .post('/utils/setup')
-        .set('Authorization', `Bearer ${token}`)
-        .expect(201)
+        .get('/utils/status')
+        .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
+        .expect(401)
     })
   })
 })

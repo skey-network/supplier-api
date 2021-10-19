@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import * as request from 'supertest'
 import { AppModule } from '../app.module'
+import { decrypt } from '../common/aes-encryption'
 
 jest.setTimeout(3600000)
 
@@ -13,12 +14,13 @@ jest.setTimeout(3600000)
 // ===============================================
 
 describe('users controller', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
   let token = ''
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -30,10 +32,15 @@ describe('users controller', () => {
     req = () => request(app.getHttpServer())
 
     const tokenRequest = await req().post('/auth/login').send({
-      username: process.env.ADMIN_USERNAME,
+      email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD
     })
     token = tokenRequest.body.access_token
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
   })
 
   describe('POST /users', () => {
@@ -44,10 +51,23 @@ describe('users controller', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
 
-      const { address, seed } = res.body
+      const { address, encryptedSeed } = res.body
 
       expect(typeof address).toBe('string')
-      expect(typeof seed).toBe('string')
+      expect(typeof encryptedSeed).toBe('string')
+    })
+
+    it('seed is encrypted', async () => {
+      const res = await req()
+        .post('/users')
+        .send({ name: 'a', description: 'b' })
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201)
+
+      const { encryptedSeed } = res.body
+      let seedRegex = /(?:[a-z]{3,}\s){14}[a-z]{3,}/
+      expect(encryptedSeed).toEqual(expect.not.stringMatching(seedRegex))
+      expect(typeof decrypt(encryptedSeed)).toBe('string')
     })
 
     it('invalid data', async () => {
@@ -58,9 +78,7 @@ describe('users controller', () => {
         .expect(400)
 
       expect(res.body.message.includes('name must be a string')).toBe(true)
-      expect(res.body.message.includes('description must be a string')).toBe(
-        true
-      )
+      expect(res.body.message.includes('description must be a string')).toBe(true)
     })
 
     it('unauthorized', async () => {
@@ -79,9 +97,7 @@ describe('users controller', () => {
     let user = ''
 
     beforeAll(async () => {
-      const res = await req()
-        .post('/users')
-        .set('Authorization', `Bearer ${token}`)
+      const res = await req().post('/users').set('Authorization', `Bearer ${token}`)
 
       user = res.body.address
     })

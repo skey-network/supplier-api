@@ -14,6 +14,7 @@ jest.setTimeout(3600000)
 // ===============================================
 
 describe('app e2e', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
 
@@ -24,8 +25,12 @@ describe('app e2e', () => {
     key: ''
   }
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+  const randomString = () => {
+    return Math.random().toString(36).substring(6)
+  }
+
+  beforeAll(async () => {
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -37,11 +42,16 @@ describe('app e2e', () => {
     req = () => request(app.getHttpServer())
   })
 
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
+  })
+
   it('POST /auth/login', async () => {
     const res = await req()
       .post('/auth/login')
       .send({
-        username: process.env.ADMIN_USERNAME,
+        email: process.env.ADMIN_EMAIL,
         password: process.env.ADMIN_PASSWORD
       })
       .expect(201)
@@ -54,7 +64,8 @@ describe('app e2e', () => {
       .send({
         setScript: true,
         name: 'test name',
-        description: 'test description'
+        description: 'test description',
+        alias: 'test_' + randomString()
       })
       .set('Authorization', `Bearer ${ctx.token}`)
       .expect(201)
@@ -63,6 +74,9 @@ describe('app e2e', () => {
   it('POST /devices', async () => {
     const res = await req()
       .post('/devices')
+      .send({
+        name: 'testDevice'
+      })
       .set('Authorization', `Bearer ${ctx.token}`)
       .expect(201)
     ctx.device = res.body.address
@@ -105,7 +119,11 @@ describe('app e2e', () => {
     const res = await req()
       .post('/keys')
       .set('Authorization', `Bearer ${ctx.token}`)
-      .send({ device: ctx.device, validTo, amount: 1 })
+      .send({
+        device: ctx.device,
+        validTo,
+        amount: 1
+      })
       .expect(201)
     ctx.key = res.body[0].assetId
   })
@@ -118,10 +136,7 @@ describe('app e2e', () => {
   })
 
   it('GET /keys', async () => {
-    await req()
-      .get('/keys')
-      .set('Authorization', `Bearer ${ctx.token}`)
-      .expect(200)
+    await req().get('/keys').set('Authorization', `Bearer ${ctx.token}`).expect(200)
   })
 
   it('PUT /keys/:assetId/transfer/:address', async () => {
@@ -134,13 +149,6 @@ describe('app e2e', () => {
   it('DELETE /devices/:address', async () => {
     await req()
       .delete(`/devices/${ctx.device}`)
-      .set('Authorization', `Bearer ${ctx.token}`)
-      .expect(200)
-  })
-
-  it('DELETE /keys/:assetId/device/:address', async () => {
-    await req()
-      .delete(`/keys/${ctx.key}/device/${ctx.device}`)
       .set('Authorization', `Bearer ${ctx.token}`)
       .expect(200)
   })
