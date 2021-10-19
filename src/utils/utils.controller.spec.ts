@@ -145,7 +145,16 @@ describe('utils controller', () => {
     it('valid returned data', async () => {
       const res = await req().get('/utils/status').set('Authorization', `Bearer ${token}`)
 
-      const { address, script, name, description, nodeUrl, chainId, aliases } = res.body
+      const {
+        address,
+        script,
+        name,
+        description,
+        nodeUrl,
+        chainId,
+        aliases,
+        balance
+      } = res.body
 
       expect(address).toEqual(config().blockchain.dappAddress)
       expect(script).toEqual(true)
@@ -154,6 +163,7 @@ describe('utils controller', () => {
       expect(nodeUrl).toEqual(config().blockchain.nodeUrl)
       expect(chainId).toEqual(config().blockchain.chainId)
       expect(aliases.length).toBeGreaterThan(0)
+      expect(balance).toBeGreaterThanOrEqual(0)
     })
 
     it('returns blank data if not present', async () => {

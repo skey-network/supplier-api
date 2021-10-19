@@ -79,12 +79,21 @@ export class UtilsService {
       }
     }
 
-    const [script, data, aliases] = await Promise.all([
+    const [script, data, aliases, balance] = await Promise.all([
       this.blockchainReadService.fetchScript(),
       getData(),
-      this.blockchainReadService.fetchDAppAliases()
+      this.blockchainReadService.fetchDAppAliases(),
+      this.blockchainReadService.balance(dappAddress)
     ])
 
-    return { address: dappAddress, script: !!script, ...data, nodeUrl, chainId, aliases }
+    return {
+      address: dappAddress,
+      script: !!script,
+      ...data,
+      nodeUrl,
+      chainId,
+      aliases,
+      balance
+    }
   }
 }
