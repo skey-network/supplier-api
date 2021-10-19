@@ -6,7 +6,9 @@ import { INestApplication, ValidationPipe } from '@nestjs/common'
 import * as request from 'supertest'
 import { AppModule } from '../app.module'
 import config from '../config'
-import { userInfo } from 'os'
+import { SupplierService } from '../supplier/supplier.service'
+import * as Crypto from '@waves/ts-lib-crypto'
+import { createTestDevice } from '../common/spec-helpers'
 
 jest.setTimeout(3600000)
 
@@ -18,14 +20,15 @@ describe('keys controller', () => {
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
   let token = ''
+  let moduleFixture: TestingModule
 
   const ctx = {
     device: '',
     user: ''
   }
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -37,44 +40,79 @@ describe('keys controller', () => {
     req = () => request(app.getHttpServer())
 
     const tokenRequest = await req().post('/auth/login').send({
-      username: process.env.ADMIN_USERNAME,
+      email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD
     })
     token = tokenRequest.body.access_token
+
+    ctx.device = (await createTestDevice(req, token)).address
+
+    const userRes = await req().post('/users').set('Authorization', `Bearer ${token}`)
+    ctx.user = userRes.body.address
   })
 
-  describe('prepare', () => {
-    it('create device', async () => {
-      const res = await req()
-        .post('/devices')
-        .set('Authorization', `Bearer ${token}`)
-
-      ctx.device = res.body.address
-    })
-
-    it('create user', async () => {
-      const res = await req()
-        .post('/users')
-        .set('Authorization', `Bearer ${token}`)
-
-      ctx.user = res.body.address
-    })
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
   })
 
   describe('POST /keys', () => {
     it('valid request', async () => {
       const validTo = Date.now() + config().key.minDuration + 3_600_000
-      const amount = config().key.maxAmount < 4 ? 1 : 4
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount })
+        .send({ device: ctx.device, validTo, amount: 4, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
         .expect(201)
 
       expect(res.body).toBeInstanceOf(Array)
-      expect(res.body.length).toBe(amount)
+      expect(res.body.length).toBe(4)
       expect(typeof res.body[0].assetId).toBe('string')
+      expect(typeof res.body[0].transferTx).toBe('string')
+      expect(typeof res.body[0].dataTx).toBe('string')
+      expect(res.body[1].success).toBe(true)
+    })
+
+    it('calls supplier method', async () => {
+      const service = moduleFixture.get<SupplierService>(SupplierService)
+      const spy = jest.spyOn(service, 'onCreateKeys').mockResolvedValue(null)
+
+      const validTo = Date.now() + config().key.minDuration + 3_600_000
+
+      await req()
+        .post('/keys?tags=t1&tags=t2')
+        .send({ device: ctx.device, validTo, amount: 2, recipient: ctx.user })
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201)
+
+      const [createKeyDto, assetIds, tags] = spy.mock.calls[0]
+
+      expect(createKeyDto).toEqual({
+        device: ctx.device,
+        validTo,
+        amount: 2,
+        recipient: ctx.user
+      })
+      expect(assetIds.length).toBe(2)
+      expect(tags).toEqual(['t1', 't2'])
+    })
+
+    it('recipient is skipped', async () => {
+      const validTo = Date.now() + config().key.minDuration + 3_600_000
+
+      const res = await req()
+        .post('/keys')
+        .send({ device: ctx.device, validTo, amount: 4 })
+        .set('Authorization', `Bearer ${token}`)
+        .expect(201)
+
+      expect(res.body).toBeInstanceOf(Array)
+      expect(res.body.length).toBe(4)
+      expect(typeof res.body[0].assetId).toBe('string')
+      expect(typeof res.body[0].transferTx).toBe('undefined')
+      expect(typeof res.body[0].dataTx).toBe('string')
+      expect(res.body[1].success).toBe(true)
     })
 
     it('invalid data', async () => {
@@ -82,40 +120,39 @@ describe('keys controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: 'hello', validTo, amount: -42 })
+        .send({ device: 'hello', validTo, amount: -42, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
         .expect(400)
 
       const { message } = res.body
 
-      expect(message.includes('device must be valid waves address')).toBe(true)
+      expect(message.includes('device must be valid blockchain address')).toBe(true)
       expect(message.includes('amount must be a positive number')).toBe(true)
     })
 
     it('invalid timestamp', async () => {
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo: 1000, amount: 1 })
+        .send({ device: ctx.device, validTo: 1000, amount: 1, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
         .expect(400)
 
       const { message } = res.body
-      expect(/validTo/.test(message[0])).toBe(true)
+
+      expect(message.find((mes) => /validTo/.test(mes))).toBeDefined()
     })
 
     it('invalid amount', async () => {
       const validTo = Date.now() + config().key.minDuration + 3_600_000
-      const amount = config().key.maxAmount + 1
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount })
+        .send({ device: ctx.device, validTo, amount: 5000, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
         .expect(400)
 
       const { message } = res.body
-      const match = `amount cannot exceed ${config().key.maxAmount}`
-      expect(message[0]).toBe(match)
+      expect(message.includes('amount must not be greater than 80')).toBe(true)
     })
 
     it('unauthorized', async () => {
@@ -130,6 +167,262 @@ describe('keys controller', () => {
     })
   })
 
+  describe('POST /keys/multi', () => {
+    const validTo = Date.now() + config().key.minDuration + 3_600_000
+    let secondDevice = ''
+
+    const assertValidDeviceKey = (deviceKey) => {
+      expect(deviceKey.assetId).toBeDefined()
+      expect(deviceKey.transferTx).toBeDefined()
+      expect(deviceKey.dataTx).toBeDefined()
+      expect(deviceKey.success).toEqual(true)
+    }
+
+    beforeAll(async () => {
+      secondDevice = (await createTestDevice(req, token)).address
+    })
+
+    describe('valid request', () => {
+      it('valid request', async () => {
+        const res = await req()
+          .post('/keys/multi')
+          .send({
+            requests: [{ recipient: ctx.user, device: ctx.device, validTo, amount: 2 }]
+          })
+          .set('Authorization', `Bearer ${token}`)
+
+        expect(res.status).toEqual(201)
+        expect(res.body.length).toEqual(1)
+
+        const deviceKeys = res.body[0]
+        expect(deviceKeys.device).toEqual(ctx.device)
+        expect(deviceKeys.keys.length).toEqual(2)
+        deviceKeys.keys.map((deviceKey) => {
+          assertValidDeviceKey(deviceKey)
+        })
+      })
+
+      it('valid request for multiple devices', async () => {
+        const res = await req()
+          .post('/keys/multi')
+          .send({
+            requests: [
+              { recipient: ctx.user, device: ctx.device, validTo, amount: 1 },
+              { recipient: ctx.user, device: secondDevice, validTo, amount: 1 }
+            ]
+          })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
+
+        expect(res.status).toEqual(201)
+
+        expect(
+          res.body.map((deviceKeys) => {
+            return deviceKeys.device
+          })
+        ).toEqual([ctx.device, secondDevice])
+
+        res.body.map((deviceKeys) => {
+          expect(deviceKeys.keys.length).toEqual(1)
+          assertValidDeviceKey(deviceKeys.keys[0])
+        })
+      })
+
+      it('valid request - multiple requests for a single device', async () => {
+        const res = await req()
+          .post('/keys/multi')
+          .send({
+            requests: [
+              { recipient: ctx.user, device: ctx.device, validTo, amount: 1 },
+              { recipient: ctx.user, device: ctx.device, validTo, amount: 1 }
+            ]
+          })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
+
+        expect(res.status).toEqual(201)
+        expect(
+          res.body.map((deviceKeys) => {
+            return deviceKeys.device
+          })
+        ).toEqual([ctx.device, ctx.device])
+
+        res.body.map((deviceKeys) => {
+          expect(deviceKeys.keys.length).toEqual(1)
+          assertValidDeviceKey(deviceKeys.keys[0])
+        })
+      })
+
+      it('recipient is skipped', async () => {
+        const res = await req()
+          .post('/keys/multi')
+          .send({ requests: [{ device: ctx.device, validTo, amount: 4 }] })
+          .set('Authorization', `Bearer ${token}`)
+          .expect(201)
+
+        expect(res.body).toBeInstanceOf(Array)
+        expect(res.body.length).toBe(1)
+        const keyResponse = res.body[0].keys[0]
+        expect(typeof keyResponse.assetId).toBe('string')
+        expect(typeof keyResponse.transferTx).toBe('undefined')
+        expect(typeof keyResponse.dataTx).toBe('string')
+        expect(res.body[0].keys[1].success).toBe(true)
+      })
+    })
+
+    describe('invalid request', () => {
+      it('unauthorized', async () => {
+        await req().post('/keys/multi').expect(401)
+      })
+
+      it('invalid token', async () => {
+        await req()
+          .post('/keys/multi')
+          .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
+          .expect(401)
+      })
+
+      describe('device', () => {
+        const testCases = [
+          {
+            toString: () => 'is an empty string',
+            device: ''
+          },
+          {
+            toString: () => 'not provided',
+            device: null
+          },
+          {
+            toString: () => 'is invalid',
+            device: 'foobar'
+          }
+        ]
+
+        it.each(testCases)('%s', async (testCase) => {
+          await req()
+            .post('/keys/multi')
+            .send({
+              requests: [
+                { recipient: ctx.user, device: testCase.device, validTo, amount: 1 }
+              ]
+            })
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
+        })
+      })
+
+      describe('recipient', () => {
+        const testCases = [
+          {
+            toString: () => 'is an empty string',
+            recipient: ''
+          },
+          {
+            toString: () => 'is invalid',
+            recipient: 'foobar'
+          },
+          {
+            toString: () => 'is blockchain address, but an invalid one',
+            recipient: Crypto.address('foobar', 'X')
+          }
+        ]
+
+        it.each(testCases)('%s', async (testCase) => {
+          const params = {
+            requests: [
+              { recipient: testCase.recipient, device: ctx.device, validTo, amount: 1 }
+            ]
+          }
+          await req()
+            .post('/keys/multi')
+            .send(params)
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
+        })
+      })
+
+      describe('amount', () => {
+        const testCases = [
+          {
+            toString: () => 'is negative',
+            amount: -1
+          },
+          {
+            toString: () => 'equals 0',
+            amount: 0
+          },
+          {
+            toString: () => 'exceeds the limit',
+            amount: 81
+          },
+          {
+            toString: () => 'is null',
+            amount: null
+          },
+          {
+            toString: () => 'is not a number',
+            amount: '12'
+          },
+          {
+            toString: () => 'is undefined',
+            amount: undefined
+          }
+        ]
+
+        it.each(testCases)('%s', async (testCase) => {
+          await req()
+            .post('/keys/multi')
+            .send({
+              requests: [
+                {
+                  recipient: ctx.user,
+                  device: ctx.device,
+                  validTo,
+                  amount: testCase.amount
+                }
+              ]
+            })
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
+        })
+      })
+
+      describe('validTo', () => {
+        const testCases = [
+          {
+            toString: () => 'is in the past',
+            invalidTo: Date.now() - 1_000
+          },
+          {
+            toString: () => 'is not provided',
+            invalidTo: null
+          },
+          {
+            toString: () => 'is too late',
+            invalidTo: Date.now() + config().key.minDuration - 1_000
+          }
+        ]
+
+        it.each(testCases)('%s', async (testCase) => {
+          await req()
+            .post('/keys/multi')
+            .send({
+              requests: [
+                {
+                  recipient: ctx.user,
+                  device: ctx.device,
+                  validTo: testCase.invalidTo,
+                  amount: 1
+                }
+              ]
+            })
+            .set('Authorization', `Bearer ${token}`)
+            .expect(400)
+        })
+      })
+    })
+  })
+
   describe('GET /keys/:assetId', () => {
     let assetId = ''
 
@@ -138,7 +431,7 @@ describe('keys controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount: 1 })
+        .send({ device: ctx.device, validTo, amount: 1, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
 
       assetId = res.body[0].assetId
@@ -152,7 +445,7 @@ describe('keys controller', () => {
 
       expect(res.body).toBeInstanceOf(Object)
       expect(res.body.assetId).toBe(assetId)
-      expect(res.body.issuer).toBe(config().waves.dappAddress)
+      expect(res.body.issuer).toBe(config().blockchain.dappAddress)
       expect(res.body.issueTimestamp).toBeGreaterThanOrEqual(0)
       expect(res.body.device).toBe(ctx.device)
       expect(res.body.validTo).toBeGreaterThanOrEqual(res.body.issueTimestamp)
@@ -187,7 +480,7 @@ describe('keys controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount: 1 })
+        .send({ device: ctx.device, validTo, amount: 1, recipient: ctx.user })
         .set('Authorization', `Bearer ${token}`)
 
       assetId = res.body[0].assetId
@@ -215,15 +508,18 @@ describe('keys controller', () => {
     })
   })
 
-  describe('POST /keys/:assetId/transfer/:address', () => {
+  describe('PUT /keys/:assetId/transfer/:address', () => {
+    const validTo = Date.now() + config().key.minDuration + 3_600_000
     let assetId = ''
 
-    beforeAll(async () => {
-      const validTo = Date.now() + config().key.minDuration + 3_600_000
-
+    beforeEach(async () => {
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount: 1 })
+        .send({
+          device: ctx.device,
+          validTo,
+          amount: 1
+        })
         .set('Authorization', `Bearer ${token}`)
 
       assetId = res.body[0].assetId
@@ -236,6 +532,30 @@ describe('keys controller', () => {
         .expect(200)
 
       expect(typeof res.body.txHash).toBe('string')
+    })
+
+    it('calls supplier method', async () => {
+      const service = moduleFixture.get<SupplierService>(SupplierService)
+      const spy = jest.spyOn(service, 'onCreateKeys').mockResolvedValue(null)
+
+      jest.clearAllMocks()
+
+      const res = await req()
+        .put(`/keys/${assetId}/transfer/${ctx.user}?tags=t1&tags=t2`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
+
+      const [createKeyDto, assetIds, tags] = spy.mock.calls[0]
+
+      expect(createKeyDto).toEqual({
+        device: ctx.device,
+        validTo,
+        amount: 1,
+        recipient: ctx.user
+      })
+
+      expect(assetIds).toEqual([assetId])
+      expect(tags).toEqual(['t1', 't2'])
     })
 
     it('unauthorized', async () => {
@@ -270,77 +590,79 @@ describe('keys controller', () => {
     })
   })
 
-  describe('POST /keys/generate_and_transfer', () => {
-    it('valid request', async () => {
-      const validTo = Date.now() + config().key.minDuration + 3_600_000
-      const amount = config().key.maxAmount < 4 ? 1 : 4
+  // describe('POST /keys/generate_and_transfer', () => {
+  // What to do with supplier api
 
-      const res = await req()
-        .post('/keys/generate_and_transfer')
-        .send({ device: ctx.device, validTo, amount, user: ctx.user })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(201)
+  // it('valid request', async () => {
+  //   const validTo = Date.now() + config().key.minDuration + 3_600_000
+  //   const amount = 80 < 4 ? 1 : 4
 
-      expect(res.body).toBeInstanceOf(Array)
-      expect(res.body.length).toBe(amount)
-      expect(typeof res.body[0].assetId).toBe('string')
-    })
+  //   const res = await req()
+  //     .post('/keys/generate_and_transfer')
+  //     .send({ device: ctx.device, validTo, amount, user: ctx.user })
+  //     .set('Authorization', `Bearer ${token}`)
+  //     .expect(201)
 
-    it('invalid data', async () => {
-      const validTo = Date.now() + config().key.minDuration + 3_600_000
+  //   expect(res.body).toBeInstanceOf(Array)
+  //   expect(res.body.length).toBe(amount)
+  //   expect(typeof res.body[0].assetId).toBe('string')
+  // })
 
-      const res = await req()
-        .post('/keys/generate_and_transfer')
-        .send({ device: 'hello', validTo, amount: -42 })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(400)
+  //   it('invalid data', async () => {
+  //     const validTo = Date.now() + config().key.minDuration + 3_600_000
 
-      const { message } = res.body
+  //     const res = await req()
+  //       .post('/keys/generate_and_transfer')
+  //       .send({ device: 'hello', validTo, amount: -42 })
+  //       .set('Authorization', `Bearer ${token}`)
+  //       .expect(400)
 
-      expect(message.includes('device must be valid waves address')).toBe(true)
-      expect(message.includes('user must be valid waves address')).toBe(true)
-      expect(message.includes('user must be a string')).toBe(true)
-      expect(message.includes('user should not be empty')).toBe(true)
-      expect(message.includes('amount must be a positive number')).toBe(true)
-    })
+  //     const { message } = res.body
 
-    it('invalid timestamp', async () => {
-      const res = await req()
-        .post('/keys/generate_and_transfer')
-        .send({ device: ctx.device, validTo: 1000, amount: 1, user: ctx.user })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(400)
+  //     expect(message.includes('device must be valid blockchain address')).toBe(true)
+  //     expect(message.includes('user must be valid blockchain address')).toBe(true)
+  //     expect(message.includes('user must be a string')).toBe(true)
+  //     expect(message.includes('user should not be empty')).toBe(true)
+  //     expect(message.includes('amount must be a positive number')).toBe(true)
+  //   })
 
-      const { message } = res.body
-      expect(/validTo/.test(message[0])).toBe(true)
-    })
+  //   it('invalid timestamp', async () => {
+  //     const res = await req()
+  //       .post('/keys/generate_and_transfer')
+  //       .send({ device: ctx.device, validTo: 1000, amount: 1, user: ctx.user })
+  //       .set('Authorization', `Bearer ${token}`)
+  //       .expect(400)
 
-    it('invalid amount', async () => {
-      const validTo = Date.now() + config().key.minDuration + 3_600_000
-      const amount = config().key.maxAmount + 1
+  //     const { message } = res.body
+  //     expect(/validTo/.test(message[0])).toBe(true)
+  //   })
 
-      const res = await req()
-        .post('/keys/generate_and_transfer')
-        .send({ device: ctx.device, validTo, amount, user: ctx.user })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(400)
+  //   it('invalid amount', async () => {
+  //     const validTo = Date.now() + config().key.minDuration + 3_600_000
+  //     const amount = 80 + 1
 
-      const { message } = res.body
-      const match = `amount cannot exceed ${config().key.maxAmount}`
-      expect(message[0]).toBe(match)
-    })
+  //     const res = await req()
+  //       .post('/keys/generate_and_transfer')
+  //       .send({ device: ctx.device, validTo, amount, user: ctx.user })
+  //       .set('Authorization', `Bearer ${token}`)
+  //       .expect(400)
 
-    it('unauthorized', async () => {
-      await req().post('/keys/generate_and_transfer').expect(401)
-    })
+  //     const { message } = res.body
+  //     const match = `amount cannot exceed ${80}`
+  //     expect(message[0]).toBe(match)
+  //   })
 
-    it('invalid token', async () => {
-      await req()
-        .post('/keys/generate_and_transfer')
-        .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
-        .expect(401)
-    })
-  })
+  //   it('unauthorized', async () => {
+  //     await req().post('/keys/generate_and_transfer').expect(401)
+  //   })
+
+  //   it('invalid token', async () => {
+  //     await req()
+  //       .post('/keys/generate_and_transfer')
+  //       .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
+  //       .expect(401)
+  //   })
+  // })
 
   describe('DELETE /keys/:assetId', () => {
     let assetId = ''
@@ -350,16 +672,19 @@ describe('keys controller', () => {
 
       const res = await req()
         .post('/keys')
-        .send({ device: ctx.device, validTo, amount: 1 })
+        .send({
+          device: ctx.device,
+          validTo,
+          amount: 1,
+          recipient: config().blockchain.dappAddress
+        })
         .set('Authorization', `Bearer ${token}`)
 
       assetId = res.body[0].assetId
     })
 
     it('address not found', async () => {
-      await req()
-        .delete(`/keys/${ctx.user}`)
-        .set('Authorization', `Bearer ${token}`)
+      await req().delete(`/keys/${ctx.user}`).set('Authorization', `Bearer ${token}`)
     })
 
     it('valid request', async () => {
@@ -378,41 +703,6 @@ describe('keys controller', () => {
     it('invalid token', async () => {
       await req()
         .delete(`/keys/${assetId}`)
-        .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
-        .expect(401)
-    })
-  })
-
-  describe('DELETE /keys/:assetId/device/:address', () => {
-    let assetId = ''
-
-    beforeAll(async () => {
-      const validTo = Date.now() + config().key.minDuration + 3_600_000
-
-      const res = await req()
-        .post('/keys/generate_and_transfer')
-        .send({ device: ctx.device, validTo, amount: 1, user: ctx.user })
-        .set('Authorization', `Bearer ${token}`)
-
-      assetId = res.body[0].assetId
-    })
-
-    it('valid request', async () => {
-      const res = await req()
-        .delete(`/keys/${assetId}/device/${ctx.device}`)
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200)
-
-      expect(typeof res.body.txHash).toBe('string')
-    })
-
-    it('unauthorized', async () => {
-      await req().delete(`/keys/${assetId}/device/${ctx.device}`).expect(401)
-    })
-
-    it('invalid token', async () => {
-      await req()
-        .delete(`/keys/${assetId}/device/${ctx.device}`)
         .set('Authorization', 'Bearer jg8g0uhrtiughertkghdfjklhgiou64hg903hgji')
         .expect(401)
     })

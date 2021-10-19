@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common'
-import { WavesModule } from '../waves/waves.module'
+import { BlockchainModule } from '../blockchain/blockchain.module'
 import { UtilsController } from './utils.controller'
 import { UtilsService } from './utils.service'
 
 @Module({
-  imports: [WavesModule],
+  imports: [BlockchainModule],
   controllers: [UtilsController],
   providers: [UtilsService]
 })

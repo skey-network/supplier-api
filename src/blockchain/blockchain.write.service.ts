@@ -1,9 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import * as Transactions from '@waves/waves-transactions'
 import { IInvokeScriptCallStringArgument } from '@waves/waves-transactions/dist/transactions'
+import { Logger } from '../logger/Logger.service'
 import config from '../config'
+import { BlockchainReadService } from './blockchain.read.service'
+import * as Crypto from '@waves/ts-lib-crypto'
 
-const { nodeUrl, seed, chainId } = config().waves
+const { nodeUrl, seed, chainId, dappAddress } = config().blockchain
 const feeMultiplier = 10 ** 5
 
 interface Entry {
@@ -12,17 +15,46 @@ interface Entry {
 }
 
 @Injectable()
-export class WavesWriteService {
+export class BlockchainWriteService {
+  private logger = new Logger(BlockchainWriteService.name)
+  private blockchainReadService = new BlockchainReadService()
+
   // save data in dApp data storage
   async insertData(data: Entry[], accountSeed = seed) {
     const params: Transactions.IDataParams = {
       data: data,
-      fee: 5 * feeMultiplier,
+      fee: 9 * feeMultiplier,
       chainId
     }
 
     const tx = Transactions.data(params, accountSeed)
     return await this.broadcast(tx)
+  }
+
+  // change name of a key in key/value storage
+  async renameDataKey(oldKey: string, newKey: string, accountSeed = seed) {
+    // read data from blockchain
+    const oldValue = await this.blockchainReadService.readData(
+      oldKey,
+      Crypto.address(accountSeed, chainId)
+    )
+
+    if (!oldValue) {
+      throw new Error(`No data found in key '${oldKey}'. Maybe a spelling error?`)
+    }
+
+    // create the transaction
+    const replaceParams = {
+      data: [
+        { key: oldKey, value: null },
+        { key: newKey, value: oldValue }
+      ],
+      fee: 5 * feeMultiplier,
+      chainId
+    }
+
+    const rTx = Transactions.data(replaceParams, accountSeed)
+    return await this.broadcast(rTx)
   }
 
   // generate NFT key for device
@@ -171,6 +203,57 @@ export class WavesWriteService {
     return await this.broadcast(tx)
   }
 
+  // Burn key with organisation dapp script
+  async burnKeyOnOrganisation(organisation: string, key: string) {
+    const params: Transactions.IInvokeScriptParams = {
+      dApp: organisation,
+      call: {
+        function: 'removeKey',
+        args: [{ type: 'string', value: key }]
+      },
+      fee: 9 * 10 ** 5,
+      chainId
+    }
+
+    const tx = Transactions.invokeScript(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  // Interact with device via key, ex open
+  async interactWithDevice(action: string, key: string, seed: string) {
+    const params: Transactions.IInvokeScriptParams = {
+      dApp: dappAddress,
+      call: {
+        function: 'deviceAction',
+        args: [
+          { type: 'string', value: key },
+          { type: 'string', value: action }
+        ]
+      },
+      chainId,
+      fee: 9 * feeMultiplier
+    }
+
+    const tx = Transactions.invokeScript(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  // Set an alias to dApp
+  async setAlias(alias: string, seed: string) {
+    const params: Transactions.IAliasParams = {
+      alias: alias,
+      chainId,
+      fee: 5 * feeMultiplier
+    }
+
+    const tx = Transactions.alias(params, seed)
+    return await this.broadcast(tx)
+  }
+
+  async setDAppAlias(alias: string) {
+    return await this.setAlias(alias, seed)
+  }
+
   private parseEntries(entries: Entry[]): IInvokeScriptCallStringArgument[] {
     return entries.map((entry) => {
       const type = typeof entry.value === 'number' ? 'int' : 'string'
@@ -181,10 +264,11 @@ export class WavesWriteService {
     })
   }
 
-  private async broadcast(payload: Transactions.TTx) {
+  async broadcast(payload: Transactions.TTx) {
     try {
       const tx = await Transactions.broadcast(payload, nodeUrl)
       await Transactions.waitForTx(tx.id, { apiBase: nodeUrl })
+      this.logger.debug(`Tx ${tx.id} sent, type ${tx.type}`)
       return tx.id
     } catch (err) {
       throw new BadRequestException({

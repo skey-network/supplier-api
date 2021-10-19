@@ -36,3 +36,9 @@ lerna-debug.log*
 .env
 .env.test
 */**/*.cache
+
+# database
+db.sqlite3
+
+# logs
+logs.txt

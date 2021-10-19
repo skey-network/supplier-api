@@ -36,43 +36,85 @@ npm test
 ## Environment variables
 
 - **PORT** - Port to run the app  
-**Example value** - `3000`
+  **Example value** - `3000`
 
--  **ADMIN_USERNAME** - Admin username  
-**Example value** - `admin`
+- **LOG_LEVEL** - Set log level. Available modes are ( none, standard, debug ). Logs are also saved in logs.txt file.
+  **Example value** - `standard`
 
--  **ADMIN_PASSWORD** - Admin password  
-**Example value** - `password`
+- **ADMIN_EMAIL** - Admin email  
+  **Example value** - `admin@admin.com`
+
+- **ADMIN_PASSWORD** - Admin password  
+  **Example value** - `password`
 
 - **JWT_SECRET** - String to use for creating JWT tokens  
-**Example value** - `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+  **Example value** - `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 - **JWT_VALID_TIME** - Time for which JWT token is valid  
-**Example value** - `1h`
+  **Example value** - `1h`
 
-- **WAVES_SEED** - Waves dApp backup phrase  
-**Example value** - `auto deposit have lake easy minute donkey solution okay account utility lady unusual actual idle`
+- **BLOCKCHAIN_SEED** - Blockchain dApp backup phrase  
+  **Example value** - `auto deposit have lake easy minute donkey solution okay account utility lady unusual actual idle`
 
-- **WAVES_NODE_URL** - Waves public node url  
-**Example value** - `https://nodes-testnet.wavesnodes.com`
+- **BLOCKCHAIN_NODE_URL** - Blockchain public node url  
+  **Example value** - `https://nodes-testnet.blockchainnodes.com`
 
-- **WAVES_CHAIN_ID** - Waves chain id. For example testnet is 'T'  
-**Example value** - `T`
+- **BLOCKCHAIN_CHAIN_ID** - Blockchain chain id. For example testnet is 'T'  
+  **Example value** - `T`
 
-- **SUPPLIER_URL** - Supplier API url  
-**Example value** - `https://liveobjects.Supplier-business.com/api/v1`
+- **SUPPLIER_URL** - IoT platform API url  
+  **Example value** - `https://liveobjects.Supplier-business.com/api/v1`
 
-- **SUPPLIER_API_KEY** - Supplier API key  
-**Example value** - `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+- **SUPPLIER_API_KEY** - IoT platform API key  
+  **Example value** - `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 - **FAUCET_DEVICE** - Amount of tokens to transfer when creating new device  
-**Example value** - `10000000`
+  **Example value** - `10000000`
 
 - **FAUCET_USER** - Amount of tokens to transfer when creating new user  
-**Example value** - `10000000`
+  **Example value** - `10000000`
 
 - **KEY_MIN_DURATION** - Minimal time in milliseconds when key is valid  
-**Example value** - `3600000`
+  **Example value** - `3600000`
 
-- **KEY_MAX_AMOUNT** - Maximal amount of keys to generate in single request
-**Example value** - `50`
+- **ENCRYPTION_SALT** - Salt phrase used to encrypt account seeds while creating blockchain accounts.
+  **Example value** - `foobar`
+
+- **ENCRYPTION_IV** - Initial vector used to encrypt account seeds while creating blockchain accounts.
+  **Example value** - `0d8fa75738410842`
+
+- **DEVICE_SCHEMA_VERSION** - Version of device address schema(it's saved on the blockchain)
+  **Example value** `1.0`
+
+- **CORS_ORIGIN** - CORS origin [link](https://github.com/expressjs/cors#configuration-options)  
+  **Example value** `http://example.com`
+
+## Seed phrase encryption
+
+When this API creates a new blockchain account, it's seeds are encrypted with AES using `crypto-js`:
+
+https://www.npmjs.com/package/crypto-js
+
+Example usage:
+
+```javascript
+const CryptoJS = require('crypto-js')
+
+function decrypt(message) {
+  const salt = 'foobar'
+  const iv = '0d8fa75738410842'
+
+  return CryptoJS.AES.decrypt(message, salt, { iv }).toString(CryptoJS.enc.Utf8)
+}
+```
+
+## Encryption details
+
+Test over here:
+https://www.devglan.com/online-tools/aes-encryption-decryption
+
+- mode: CBC
+- keySize: 256
+- IV: set in ENV variable **ENCRYPTION_IV**
+- SecretKey: **ENCRYPTION_SALT** => SHA256 => first 32 letters
+- outputFormat: Base64

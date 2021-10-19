@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common'
 import { DevicesController } from './devices.controller'
 import { DevicesService } from './devices.service'
+import { BlockchainModule } from '../blockchain/blockchain.module'
 import { SupplierModule } from '../supplier/supplier.module'
-import { WavesModule } from '../waves/waves.module'
+import { DevicesCommandService } from './command.service'
 
 @Module({
-  imports: [SupplierModule, WavesModule],
+  imports: [BlockchainModule, SupplierModule],
   controllers: [DevicesController],
-  providers: [DevicesService]
+  providers: [DevicesService, DevicesCommandService]
 })
 export class DevicesModule {}

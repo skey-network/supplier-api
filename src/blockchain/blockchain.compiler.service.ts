@@ -4,10 +4,10 @@ import config from '../config'
 import * as fs from 'fs'
 import { exec } from 'child_process'
 
-const { seed, chainId } = config().waves
+const { seed, chainId } = config().blockchain
 
 @Injectable()
-export class WavesCompilerService {
+export class BlockchainCompilerService {
   private getFromCache(): string | null {
     const dappAddress = Crypto.address(seed, chainId)
     const path = `./assets/${dappAddress}.cache`

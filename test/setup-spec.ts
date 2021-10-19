@@ -7,16 +7,19 @@ import * as chalk from 'chalk'
 
 const wvs = 10 ** 8
 
+jest.setTimeout(3600000)
+
 describe('setup', () => {
   it('creates account with funds', async () => {
     const genesis = 'waves private node seed with waves tokens'
     const seed = Crypto.randomSeed(15)
     const address = Crypto.address(seed, 'R')
-    const nodeUrl = 'http://192.168.99.101:6869'
+    const nodeUrl = 'http://localhost:6869'
 
     const params: Transactions.ITransferParams = {
       recipient: address,
-      amount: 10000 * wvs
+      amount: 10000 * wvs,
+      chainId: 'R'
     }
 
     const payload = Transactions.transfer(params, genesis)
