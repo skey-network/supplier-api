@@ -8,6 +8,8 @@ RUN npm install
 
 ADD . /app
 
+VOLUME /var/volume/
+
 RUN npm run build
 
 CMD ["node", "dist/main"]
