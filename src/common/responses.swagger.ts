@@ -1,5 +1,6 @@
 import {
   ApiProperty,
+  ApiBody,
   ApiResponse,
   ApiResponseOptions,
   ApiUnauthorizedResponse,
@@ -106,4 +107,32 @@ export const ApiFilledCustomErrorResponse = (options: ApiResponseOptions = {}) =
     description: 'Custom error messsage',
     type: CustomErrorMessage,
     ...options
+  })
+
+export const ApiValidateTransactionBody = () =>
+  ApiBody({
+    required: true,
+    schema: {
+      example: {
+        type: 16,
+        version: 1,
+        senderPublicKey: '2pMQFrA5wh7Eh24zwwDXUZgbxCKhXBecmwvkabsVMUZG',
+        dApp: '3MJ4QsJfxzp81RLVWzn3sY8WQ6PfXp38uCd',
+        call: {
+          args: [
+            { type: 'string', value: 'R6NF7LuXKDrXS2jqvbMa4QAQFVvD89Z6e6TFjM2gHah' },
+            { type: 'string', value: 'open' }
+          ],
+          function: 'deviceAction'
+        },
+        payment: [],
+        fee: 500000,
+        feeAssetId: null,
+        timestamp: 1623417987075,
+        proofs: [
+          '2c5YUgyGo6yG4EQ5wGofP5jmFtVnm4wRYPHwRFuS5HFira4gxDNRvqViJn38A5XdTWLFy3Sef1URe6H1tcjt8W1r'
+        ],
+        id: '7g5m3wSUw6gck84fRPXZt7bDg3hhJxT4g3WxxeXY9pKM'
+      }
+    }
   })

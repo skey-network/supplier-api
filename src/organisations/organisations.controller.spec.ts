@@ -7,18 +7,23 @@ import { OrganisationsService } from './organisations.service'
 import { BlockchainModule } from '../blockchain/blockchain.module'
 
 describe('OrganisationsController', () => {
+  let moduleFixture: TestingModule
   let controller: OrganisationsController
   let service: OrganisationsService
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    moduleFixture = await Test.createTestingModule({
       imports: [BlockchainModule],
       controllers: [OrganisationsController],
       providers: [OrganisationsService]
     }).compile()
 
-    controller = module.get<OrganisationsController>(OrganisationsController)
-    service = module.get<OrganisationsService>(OrganisationsService)
+    controller = moduleFixture.get<OrganisationsController>(OrganisationsController)
+    service = moduleFixture.get<OrganisationsService>(OrganisationsService)
+  })
+
+  afterAll(async () => {
+    await moduleFixture.close()
   })
 
   it('should be defined', () => {
@@ -32,6 +37,28 @@ describe('OrganisationsController', () => {
       jest.spyOn(service, 'removeKey').mockResolvedValue(result)
 
       expect(await controller.removeKey('org', 'key')).toEqual(result)
+    })
+  })
+
+  describe('addOrganisation', () => {
+    it('returns array with hash', async () => {
+      const result = { txHashes: ['hash'] }
+
+      jest.spyOn(service, 'addOrganisation').mockResolvedValue(result)
+
+      expect(
+        await controller.addOrganisation('3MPrus28cW4x6XePSF3Fb1eMHSfUsirZ4a5')
+      ).toEqual(result)
+    })
+  })
+
+  describe('organisationsIndex', () => {
+    it('returns addresses array', async () => {
+      const result = ['foo', 'bar', 'baz']
+
+      jest.spyOn(service, 'organisationsIndex').mockResolvedValue(result)
+
+      expect(await controller.organisationsIndex()).toEqual(result)
     })
   })
 })

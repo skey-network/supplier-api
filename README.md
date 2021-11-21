@@ -62,10 +62,10 @@ npm test
 - **BLOCKCHAIN_CHAIN_ID** - Blockchain chain id. For example testnet is 'T'  
   **Example value** - `T`
 
-- **SUPPLIER_URL** - Supplier API url  
+- **SUPPLIER_URL** - IoT platform API url  
   **Example value** - `https://liveobjects.Supplier-business.com/api/v1`
 
-- **SUPPLIER_API_KEY** - Supplier API key  
+- **SUPPLIER_API_KEY** - IoT platform API key  
   **Example value** - `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 
 - **FAUCET_DEVICE** - Amount of tokens to transfer when creating new device  
@@ -82,6 +82,12 @@ npm test
 
 - **ENCRYPTION_IV** - Initial vector used to encrypt account seeds while creating blockchain accounts.
   **Example value** - `0d8fa75738410842`
+
+- **DEVICE_SCHEMA_VERSION** - Version of device address schema(it's saved on the blockchain)
+  **Example value** `1.0`
+
+- **CORS_ORIGIN** - CORS origin [link](https://github.com/expressjs/cors#configuration-options)  
+  **Example value** `http://example.com`
 
 ## Seed phrase encryption
 

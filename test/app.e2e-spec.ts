@@ -14,6 +14,7 @@ jest.setTimeout(3600000)
 // ===============================================
 
 describe('app e2e', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
 
@@ -25,11 +26,11 @@ describe('app e2e', () => {
   }
 
   const randomString = () => {
-    return(Math.random().toString(36).substring(6))
+    return Math.random().toString(36).substring(6)
   }
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -39,6 +40,11 @@ describe('app e2e', () => {
     await app.init()
 
     req = () => request(app.getHttpServer())
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
   })
 
   it('POST /auth/login', async () => {
@@ -68,6 +74,9 @@ describe('app e2e', () => {
   it('POST /devices', async () => {
     const res = await req()
       .post('/devices')
+      .send({
+        name: 'testDevice'
+      })
       .set('Authorization', `Bearer ${ctx.token}`)
       .expect(201)
     ctx.device = res.body.address
@@ -113,8 +122,7 @@ describe('app e2e', () => {
       .send({
         device: ctx.device,
         validTo,
-        amount: 1,
-        recipient: config().blockchain.dappAddress
+        amount: 1
       })
       .expect(201)
     ctx.key = res.body[0].assetId

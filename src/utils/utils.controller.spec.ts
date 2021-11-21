@@ -21,17 +21,18 @@ const randomAddress = () => {
 }
 
 const randomString = () => {
-  return(Math.random().toString(36).substring(10))
+  return Math.random().toString(36).substring(10)
 }
 
 describe('utils controller', () => {
+  let moduleFixture: TestingModule
   let app: INestApplication
   let req: () => request.SuperTest<request.Test>
   let token = ''
   let blockchainWriteService: BlockchainWriteService
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule]
     }).compile()
 
@@ -47,6 +48,11 @@ describe('utils controller', () => {
       password: process.env.ADMIN_PASSWORD
     })
     token = tokenRequest.body.access_token
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await moduleFixture.close()
   })
 
   describe('POST /utils/faucet', () => {
@@ -110,7 +116,7 @@ describe('utils controller', () => {
         .expect(201)
 
       expect(res.body).toBeInstanceOf(Array)
-      expect(res.body.length).toBe(4)
+      expect(res.body.length).toBe(3)
       expect(typeof res.body[0].action).toBe('string')
       expect(typeof res.body[0].txHash).toBe('string')
     })
@@ -139,7 +145,16 @@ describe('utils controller', () => {
     it('valid returned data', async () => {
       const res = await req().get('/utils/status').set('Authorization', `Bearer ${token}`)
 
-      const { address, script, name, description, nodeUrl, chainId, aliases } = res.body
+      const {
+        address,
+        script,
+        name,
+        description,
+        nodeUrl,
+        chainId,
+        aliases,
+        balance
+      } = res.body
 
       expect(address).toEqual(config().blockchain.dappAddress)
       expect(script).toEqual(true)
@@ -148,6 +163,7 @@ describe('utils controller', () => {
       expect(nodeUrl).toEqual(config().blockchain.nodeUrl)
       expect(chainId).toEqual(config().blockchain.chainId)
       expect(aliases.length).toBeGreaterThan(0)
+      expect(balance).toBeGreaterThanOrEqual(0)
     })
 
     it('returns blank data if not present', async () => {

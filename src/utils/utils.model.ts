@@ -75,6 +75,11 @@ export interface SetupAction {
   txHash: string
 }
 
+export interface DataEntry {
+  key: string
+  value: string
+}
+
 export class SetupActionResponse implements SetupAction {
   @ApiProperty({
     description: 'Name of the aciton',
@@ -138,10 +143,7 @@ export class Status implements StatusResponse {
   @ApiProperty({
     description: 'Aliases of the dApp',
     isArray: true,
-    example: [
-      'alias:R:foobar',
-      'alias:R:dapp@rbb'
-    ]
+    example: ['alias:R:foobar', 'alias:R:dapp@rbb']
   })
   aliases: string[]
 }

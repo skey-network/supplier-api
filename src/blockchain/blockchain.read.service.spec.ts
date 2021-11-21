@@ -11,26 +11,31 @@ const { chainId } = config().blockchain
 const feeMultiplier = 10 ** 5
 
 const generateAlias = (): string => {
-  return("testalias_" + Math.random().toString(36).substring(7))
+  return 'testalias_' + Math.random().toString(36).substring(7)
 }
 
 const fullAlias = (alias: string) => {
-  return(`alias:${chainId}:${alias}`)
+  return `alias:${chainId}:${alias}`
 }
 
 jest.setTimeout(3600000)
 
 describe('BlockchainReadService', () => {
+  let moduleFixture: TestingModule
   let service: BlockchainReadService
   let writeService: BlockchainWriteService
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    moduleFixture = await Test.createTestingModule({
       providers: [BlockchainReadService, BlockchainWriteService]
     }).compile()
 
-    service = module.get<BlockchainReadService>(BlockchainReadService)
-    writeService = module.get<BlockchainWriteService>(BlockchainWriteService)
+    service = moduleFixture.get<BlockchainReadService>(BlockchainReadService)
+    writeService = moduleFixture.get<BlockchainWriteService>(BlockchainWriteService)
+  })
+
+  afterAll(async () => {
+    await moduleFixture.close()
   })
 
   it('should be defined', () => {
@@ -104,7 +109,7 @@ describe('BlockchainReadService', () => {
     expect(result.map((item) => item.assetId).sort()).toEqual(keys.sort())
   })
 
-  it('fetchAliases', async() => {
+  it('fetchAliases', async () => {
     const account = service.generateAccount()
     await writeService.faucet(account.address, 5 * feeMultiplier)
 

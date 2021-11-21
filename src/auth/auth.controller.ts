@@ -1,4 +1,4 @@
-import { Controller, Post, Query, Req, UseGuards } from '@nestjs/common'
+import { Controller, Post, Req, UseGuards } from '@nestjs/common'
 import { LocalAuthGuard } from './local.guard'
 import { AuthService } from './auth.service'
 import { AuthResponse, QueryParams } from './auth.entity.swagger'
@@ -20,7 +20,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Log in and get JWT token' })
   @ApiQuery({ type: QueryParams })
   @ApiFilledUnauthorizedResponse()
-  @ApiResponse({ status: 200, description: 'User logged in', type: AuthResponse })
+  @ApiResponse({ status: 201, description: 'User logged in', type: AuthResponse })
   @UseGuards(LocalAuthGuard)
   async login(@Req() req) {
     return this.authService.login(req.user)

@@ -4,7 +4,7 @@ configure()
 import { Test, TestingModule } from '@nestjs/testing'
 import { DevicesService } from './devices.service'
 import { BlockchainModule } from '../blockchain/blockchain.module'
-import { SupplierModule } from '../supplier/supplier.module'
+import { SupplierService } from '../supplier/supplier.service'
 
 interface Entry {
   key: string
@@ -12,15 +12,42 @@ interface Entry {
 }
 
 describe('devices service', () => {
+  let module: TestingModule
   let service: DevicesService
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [BlockchainModule, SupplierModule],
-      providers: [DevicesService]
+    module = await Test.createTestingModule({
+      imports: [BlockchainModule],
+      providers: [
+        DevicesService,
+        {
+          // mocking SupplierService to avoid hitting suppliers' API
+          provide: SupplierService,
+          useValue: {
+            connectDevice: (_payload, _secret) => {
+              ok: true
+            },
+            disconnectDevice: (_address) => {
+              ok: true
+            },
+            connectionInfo: (_address) => {
+              ok: true
+            },
+            updateDeviceId: (_deviceId, _address) => {
+              data: {
+                foo: 'bar'
+              }
+            }
+          }
+        }
+      ]
     }).compile()
 
     service = module.get<DevicesService>(DevicesService)
+  })
+
+  afterAll(async () => {
+    await module.close()
   })
 
   describe('parseLocation', () => {
@@ -68,7 +95,7 @@ describe('devices service', () => {
       const message = {
         timestamp: '2021-03-19T10:06:34Z',
         payload: '',
-        source: `urn:lo:nsid:sms:${address}`
+        source: `urn:lo:nsid:blockchain:${address}`
       }
 
       const { txHash } = await service.deviceMessage(message)
@@ -82,7 +109,7 @@ describe('devices service', () => {
       const message = {
         timestamp: '2021-03-19T10:06:34Z',
         payload: '',
-        source: `urn:lo:nsid:sms:${address}`
+        source: `urn:lo:nsid:blockchain:${address}`
       }
 
       const obj = await service.deviceMessage(message)

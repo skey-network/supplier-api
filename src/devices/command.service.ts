@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
 import config from '../config'
 import { DeviceCommandPayload, DeviceCommandResponse } from './devices.model'
 import { getInstance } from 'skey-lib'
+import { IInvokeScriptTransaction } from '@waves/waves-transactions'
+import { TransactionValidator } from './transactionValidators/transaction.validator'
+import { OpenDeviceTransactionValidator } from './transactionValidators/openDevice.transaction.validator'
+import { OpenDeviceAsTransactionValidator } from './transactionValidators/openDeviceAs.transaction.validator'
+import { BlockchainReadService } from '../blockchain/blockchain.read.service'
 
 const { nodeUrl, chainId, dappAddress, seed: dappSeed } = config().blockchain
 
@@ -12,6 +17,61 @@ export class DevicesCommandService {
   async deviceCommand(payload: DeviceCommandPayload): Promise<DeviceCommandResponse> {
     const key = await this.lib.fetchKey(payload.keyAssetId)
     return await this.interactWithDevice(payload, key.issuer)
+  }
+
+  async validateTransaction(
+    deviceAddress: string,
+    assetId: string,
+    txParams: IInvokeScriptTransaction
+  ): Promise<{ verified: boolean; error?: string }> {
+    try {
+      await this.lib.fetchDevice(deviceAddress)
+    } catch (e) {
+      throw new NotFoundException('device not found')
+    }
+
+    // Change chain ID to correct one
+    txParams.chainId = chainId.charCodeAt(0)
+
+    if (!txParams.type) {
+      return this.verificationError('No transaction found')
+    } else if (txParams.type !== 16) {
+      return this.verificationError(
+        'Invalid transaction type. Only InvokeScript transactions are supported.'
+      )
+    }
+
+    // Validate transaction
+
+    let validator: TransactionValidator
+
+    switch (txParams.call.function) {
+      case 'deviceAction':
+        validator = new OpenDeviceTransactionValidator()
+        break
+      case 'deviceActionAs':
+        validator = new OpenDeviceAsTransactionValidator(new BlockchainReadService())
+        break
+      default:
+        return this.verificationError(
+          'Function not supported. Only supported functions are `deviceAction` and `deviceActionAs`'
+        )
+    }
+
+    const validationRes = await validator.validate(deviceAddress, assetId, txParams)
+
+    if (validationRes.verified) {
+      // TODO enqueue the transaction
+    }
+
+    return validationRes
+  }
+
+  private verificationError(error: string) {
+    return {
+      verified: false,
+      error: error
+    }
   }
 
   private async interactWithDevice(
@@ -49,53 +109,4 @@ export class DevicesCommandService {
       { waitForTx: payload.waitForTx }
     )
   }
-
-  // private async canInteractDirectly(
-  //   payload: DeviceCommandPayload
-  // ): Promise<[boolean, string | undefined]> {
-  //   const [keyIsWhitelisted, addressOwnsKey, dappIsWhitelisted] = await Promise.all([
-  //     this.keyIsWhitelisted(payload.keyAssetId, payload.deviceAddress),
-  //     this.addressOwnsKey(payload.keyAssetId, payload.keyOwnerAddress),
-  //     this.dappIsWhitelisted(payload.keyOwnerAddress)
-  //   ])
-
-  //   let error: string | undefined
-
-  //   if (!keyIsWhitelisted) {
-  //     error = 'key is not whitelisted in device'
-  //   }
-  //   if (!addressOwnsKey) {
-  //     error = 'address is not key owner'
-  //   }
-  //   if (!dappIsWhitelisted) {
-  //     error = 'dapp is not whitelisted in given address'
-  //   }
-
-  //   const result = addressOwnsKey && keyIsWhitelisted && dappIsWhitelisted
-
-  //   return [result, error]
-  // }
-
-  // private async keyIsWhitelisted(assetId: string, address: string) {
-  //   const whitelist = (await this.lib.fetchKeyWhitelist(address))
-  //     .filter((item) => item.status === 'active')
-  //     .map((item) => item.assetId)
-
-  //   return whitelist.includes(assetId)
-  // }
-
-  // private async addressOwnsKey(assetId: string, address: string) {
-  //   const height = await this.lib.fetchHeight()
-  //   const owner = await this.lib.fetchKeyOwner(assetId, height - 1)
-
-  //   return owner === address
-  // }
-
-  // private async dappIsWhitelisted(address: string) {
-  //   const whitelist = (await this.lib.fetchDataWithRegex('user_.{35}', address))
-  //     .filter((item) => item.value === 'active')
-  //     .map((item) => item.key.replace('user_', ''))
-
-  //   return whitelist.includes(dappAddress)
-  // }
 }

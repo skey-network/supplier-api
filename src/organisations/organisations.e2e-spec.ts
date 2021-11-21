@@ -76,7 +76,7 @@ describe('Organisations e2e', () => {
       lib.insertData([{ key: `org_${ctx.organisation.address}`, value: 'active' }], seed),
       lib.insertData(
         [
-          { key: 'dapp', value: dappAddress },
+          { key: 'supplier', value: dappAddress },
           { key: 'owner', value: dappAddress },
           { key: `key_${ctx.keyAssetId}`, value: 'active' }
         ],
@@ -116,6 +116,44 @@ describe('Organisations e2e', () => {
     expect(txHash).toBeDefined()
   })
 
+  describe('GET /organisations', () => {
+    it('valid', async () => {
+      const addresses = Array.from({ length: 3 }, () => lib.createAccount().address)
+
+      await lib.insertData(
+        addresses.map((address: string) => {
+          return {
+            key: `org_${address}`,
+            value: 'active',
+            type: 'string'
+          }
+        }),
+        seed
+      )
+
+      try {
+        const res = await request(app.getHttpServer())
+          .get('/organisations')
+          .set('Authorization', `Bearer ${ctx.token}`)
+          .expect(200)
+
+        addresses.forEach((address: string) => {
+          expect(res.body.includes(address)).toEqual(true)
+        })
+      } finally {
+        await lib.insertData(
+          addresses.map((address: string) => {
+            return {
+              key: `org_${address}`,
+              value: null
+            }
+          }),
+          seed
+        )
+      }
+    })
+  })
+
   it('DELETE /organisations/:org/keys/:key', async () => {
     const path = `/organisations/${ctx.organisation.address}/keys/${ctx.keyAssetId}`
 
@@ -132,5 +170,79 @@ describe('Organisations e2e', () => {
 
     expect(state.keyExists).toBe(false)
     expect(state.keyWhitelisted).toBe(false)
+  })
+
+  describe('POST /organisations/:address', () => {
+    const testOrgAddress = '3M8swwPfYAw72JhdNDDNfUH3Tv2Bm5RQV98'
+    const path = `/organisations/${testOrgAddress}`
+
+    describe('valid request', () => {
+      it('adds organisation to data storage', async () => {
+        const res = await request(app.getHttpServer())
+          .post(path)
+          .set('Authorization', `Bearer ${ctx.token}`)
+          .expect(201)
+
+        expect(res.body.txHashes.length).toBe(1)
+      })
+
+      afterEach(async () => {
+        const deleteEntry: DeleteEntry = { key: `org_${testOrgAddress}`, value: null }
+        await lib.insertData([deleteEntry], seed)
+      })
+    })
+
+    describe('invalid request', () => {
+      const defaults = {
+        toString: () => 'invalid request test example',
+        orgAddress: testOrgAddress,
+        setup: async () => {},
+        teardown: async () => {},
+        authToken: () => ctx.token,
+        httpCode: 422
+      }
+
+      const cases = [
+        {
+          ...defaults,
+          toString: () => 'organisation has already been added',
+          setup: async () => {
+            const orgEntry: StringEntry = {
+              key: `org_${testOrgAddress}`,
+              value: 'active'
+            }
+            await lib.insertData([orgEntry], seed)
+          },
+          teardown: async () => {
+            const orgEntry: DeleteEntry = { key: `org_${testOrgAddress}`, value: null }
+            await lib.insertData([orgEntry], seed)
+          },
+          errorMessage: 'Organisation has already been added'
+        },
+        {
+          ...defaults,
+          toString: () => 'invalid Address',
+          orgAddress: 'foobar',
+          httpCode: 400,
+          errorMessage: ['address is not valid']
+        }
+      ]
+
+      test.each(cases)('%s', async (args) => {
+        await args.setup()
+
+        try {
+          const res = await request(app.getHttpServer())
+            .post(`/organisations/${args.orgAddress}`)
+            .set('Authorization', `Bearer ${args.authToken()}`)
+          expect(res.status).toEqual(args.httpCode)
+          if (args.errorMessage) {
+            expect(res.body.message).toEqual(args.errorMessage)
+          }
+        } finally {
+          await args.teardown()
+        }
+      })
+    })
   })
 })

@@ -19,6 +19,7 @@ export const bootstrap = async () => {
 
   const { httpAdapter } = app.get(HttpAdapterHost)
 
+  app.enableCors(config().cors)
   app.useGlobalPipes(new ValidationPipe({ disableErrorMessages: false }))
   app.useGlobalInterceptors(new LoggerInterceptor())
   app.useGlobalFilters(new LoggerExceptionFilter(httpAdapter))

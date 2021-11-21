@@ -3,6 +3,9 @@ import * as Crypto from '@waves/ts-lib-crypto'
 export default () => ({
   logLevel: (process.env.LOG_LEVEL ?? 'standard') as 'none' | 'standard' | 'debug',
   port: Number(process.env.PORT ?? '3000'),
+  cors: {
+    origin: process.env.CORS_ORIGIN ?? '*'
+  },
   admin: {
     email: process.env.ADMIN_EMAIL,
     password: process.env.ADMIN_PASSWORD
@@ -19,6 +22,9 @@ export default () => ({
     ),
     nodeUrl: process.env.BLOCKCHAIN_NODE_URL,
     chainId: process.env.BLOCKCHAIN_CHAIN_ID
+  },
+  device: {
+    schemaVersion: process.env.DEVICE_SCHEMA_VERSION
   },
   supplier: {
     apiKey: process.env.SUPPLIER_API_KEY,

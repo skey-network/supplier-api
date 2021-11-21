@@ -43,7 +43,7 @@ export class BlockchainReadService {
 
   async fetchScript(address = Crypto.address(seed, chainId)) {
     const res = await this.request(`/addresses/scriptInfo/${address}`)
-    return res
+    return res?.script
   }
 
   async fetchNFTs(limit: number, after?: string | undefined, address = dappAddress) {
@@ -80,11 +80,11 @@ export class BlockchainReadService {
 
   async fetchAliases(address: string) {
     const res = await this.request(`/alias/by-address/${address}`)
-    return res;
+    return res
   }
 
   async fetchDAppAliases() {
-    return await this.fetchAliases(dappAddress);
+    return await this.fetchAliases(dappAddress)
   }
 
   private async request(path: string) {

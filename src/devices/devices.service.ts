@@ -43,13 +43,13 @@ export class DevicesService {
 
     // set device script
     const script = await this.blockchainCompilerService.fetchScript('device')
-    await this.blockchainWriteService.setScript(script, seed)
 
     const promises = [
-      // save device in dApp data storage
+      // save device in supplier data storage
       this.blockchainWriteService.insertData([
-        { key: this.deviceKey(address), value: false }
-      ])
+        { key: this.deviceKey(address), value: 'active' }
+      ]),
+      this.blockchainWriteService.setScript(script, seed)
     ]
 
     if (createDeviceDto) {
@@ -89,7 +89,7 @@ export class DevicesService {
       ownerDapp: dappAddress,
       address,
       balance,
-      connected
+      connected: connected === 'active'
     }
   }
 
@@ -117,10 +117,7 @@ export class DevicesService {
   }
 
   async edit(address: string, editDeviceDto: EditDeviceDto) {
-    const entries = Object.entries(editDeviceDto).map(([key, value]) => ({
-      value: value === null ? undefined : value,
-      key
-    }))
+    const entries = this.objectToBlockchainEntries(editDeviceDto, ['type'])
 
     const txHash = await this.blockchainWriteService.updateDeviceData(address, entries)
     return { txHash }
@@ -156,7 +153,7 @@ export class DevicesService {
   async deviceMessage(message: DeviceMessageDto) {
     this.logger.log('Received new message')
 
-    const SOURCE_PREFIX = 'urn:lo:nsid:sms:'
+    const SOURCE_PREFIX = 'urn:lo:nsid:blockchain:'
 
     const address = message.source.replace(SOURCE_PREFIX, '')
     this.logger.log(`Address is ${address}`)
@@ -167,9 +164,9 @@ export class DevicesService {
     }
 
     const { lat, lng } = this.parseLocation(message.payload)
-    this.logger.log(`${lat}, ${lng}`)
-
     if (!lat && !lng) return {}
+
+    this.logger.log(`Location is ${lat}, ${lng}`)
 
     const txHash = await this.blockchainWriteService.updateDeviceData(address, [
       { key: 'lat', value: lat },
@@ -233,16 +230,48 @@ export class DevicesService {
   }
 
   private entriesForNewDevice = (payload: CreateDeviceDto) => {
-    const entries = Object.entries(payload).map(([key, value]) => ({
-      value: typeof value === 'number' ? value.toString() : value,
-      key
-    }))
+    const entries = this.objectToBlockchainEntries(payload, [
+      'type',
+      'active',
+      'visible',
+      'connected'
+    ])
 
     const dappEntries = [
-      { key: 'dapp', value: config().blockchain.dappAddress },
-      { key: 'owner', value: config().blockchain.dappAddress }
+      { key: 'supplier', value: config().blockchain.dappAddress },
+      { key: 'owner', value: config().blockchain.dappAddress },
+      { key: 'version', value: config().device.schemaVersion },
+      { key: 'active', value: payload.active ?? true },
+      { key: 'connected', value: payload.connected ?? true },
+      { key: 'visible', value: payload.visible ?? true },
+      { key: 'type', value: 'device' }
     ]
 
     return [...entries, ...dappEntries]
+  }
+
+  private objectToBlockchainEntries = (
+    entries: any,
+    blacklist: string[]
+  ): { key: string; value: any }[] => {
+    return Object.entries(entries)
+      .filter(([key]) => !blacklist.includes(key))
+      .map(([key, value]) => {
+        return {
+          key,
+          value: this.blockchainValue(value)
+        }
+      })
+  }
+
+  private blockchainValue(value: any) {
+    switch (typeof value) {
+      case 'object':
+        return JSON.stringify(value)
+      case 'number':
+        return value.toString()
+      default:
+        return value
+    }
   }
 }
